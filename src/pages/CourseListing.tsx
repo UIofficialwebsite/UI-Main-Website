@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import CourseCard from "@/components/courses/CourseCard";
-import { supabase } from "@/integrations/supabase/client";
+import HeroCarousel from "@/components/HeroCarousel";
 import { 
   ChevronRight,
   Home,
@@ -20,8 +20,6 @@ const CourseListing = () => {
   const location = useLocation();
   const { courses, contentLoading } = useBackend();
   
-  const [bannerImage, setBannerImage] = useState<string | null>(null);
-  const [bannerLoading, setBannerLoading] = useState(true);
   
   // Applied Filter States
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
@@ -60,23 +58,6 @@ const CourseListing = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [filterOffset]);
 
-  useEffect(() => {
-    const fetchBanner = async () => {
-      setBannerLoading(true);
-      try {
-        const { data } = await supabase.from('page_banners').select('image_url, page_path');
-        if (data) {
-          const currentFullPath = location.pathname + location.search;
-          const match = data.find(b => {
-            const dbPath = b.page_path.replace(/^(?:\/\/|[^\/]+)*\//, '/');
-            return dbPath === currentFullPath || dbPath === location.pathname || dbPath === (examCategory || 'courses');
-          });
-          setBannerImage(match?.image_url || null);
-        }
-      } catch (err) { console.error('Error fetching banner:', err); } finally { setBannerLoading(false); }
-    };
-    fetchBanner();
-  }, [location.pathname, location.search, examCategory]);
 
   const categoryFilteredCourses = useMemo(() => {
     // Check is_live to determine if the course should be displayed
@@ -165,9 +146,7 @@ const CourseListing = () => {
     <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfcfc] relative">
       <NavBar />
       <main className="pt-16">
-        <section className="w-full h-[clamp(120px,20vw,200px)] bg-muted overflow-hidden relative z-10 border-b border-border/50">
-          {bannerLoading ? <div className="w-full h-full animate-pulse bg-muted" /> : bannerImage && <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" />}
-        </section>
+        <HeroCarousel pagePath={location.pathname} />
 
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />

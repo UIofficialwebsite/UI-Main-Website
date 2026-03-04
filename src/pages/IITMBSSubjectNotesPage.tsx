@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useIITMBranchNotes } from "@/components/iitm/hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import NavBar from "@/components/NavBar";
+import HeroCarousel from "@/components/HeroCarousel";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { ArrowLeft, Search, Download } from "lucide-react"; // Removed FileText
 import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+
 import { usePageSEO, getIITMNotesTitleSEO } from "@/utils/seoManager";
 
 const IITMBSSubjectNotesPage = () => {
@@ -28,7 +29,7 @@ const IITMBSSubjectNotesPage = () => {
     branch && level && subjectSlug ? `/exam-preparation/iitm-bs/notes/${branch}/${level}/${subjectSlug}` : undefined
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  
   
   const [isSticky, setIsSticky] = useState(false);
   const [stickyOffset, setStickyOffset] = useState(0);
@@ -42,21 +43,6 @@ const IITMBSSubjectNotesPage = () => {
     }
   }, [groupedData, subjectSlug]);
 
-  // Fetch Banner Image from database according to path
-  useEffect(() => {
-    const fetchBanner = async () => {
-      const { data, error } = await supabase
-        .from("page_banners")
-        .select("image_url")
-        .eq("page_path", location.pathname)
-        .maybeSingle();
-      
-      if (data && !error) {
-        setBannerImage(data.image_url);
-      }
-    };
-    fetchBanner();
-  }, [location.pathname]);
 
   // Handle sticky search bar behavior
   useEffect(() => {
@@ -75,7 +61,7 @@ const IITMBSSubjectNotesPage = () => {
       clearTimeout(timeout);
       window.removeEventListener('resize', updateOffset);
     };
-  }, [loading, bannerImage]);
+  }, [loading]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -160,16 +146,7 @@ const IITMBSSubjectNotesPage = () => {
 
       <main className="pt-16">
         {/* PAGE BANNER */}
-        {bannerImage && (
-          <div className="w-full h-32 md:h-48 lg:h-60 relative overflow-hidden bg-white">
-            <img 
-              src={bannerImage} 
-              alt="Subject Banner" 
-              className="w-full h-full object-cover"
-              onError={() => setBannerImage(null)}
-            />
-          </div>
-        )}
+        <HeroCarousel pagePath={location.pathname} />
 
         {/* EXAM PREP HEADER */}
         <ExamPrepHeader 
