@@ -1,82 +1,38 @@
 
 
-# Plan: Bulk Add 2,971 Emails from TXT File + Auto Cron Job
+## Plan: Multi-Banner Carousel on All Pages
 
-## What will happen
+### Problem
+- **Courses**, **CourseListing**, and **IITMBSSubjectNotesPage** only fetch and display a single banner image with fixed height containers (`h-[clamp(120px,20vw,200px)]` or `h-32 md:h-48 lg:h-60`).
+- The **Index** page already uses `HeroCarousel` which supports multiple banners, but all other pages do not.
 
-1. **Store emails in a new database table** (`google_group_sync_queue`) so the edge function can process them in chunks across multiple runs without needing file access.
+### Solution
+Reuse the existing `HeroCarousel` component on all pages that have banners. It already:
+- Fetches all banners from `page_banners` matching a `pagePath`
+- Renders a carousel with auto-advance, dots, and navigation arrows
+- Uses `object-contain` with natural image height (no fixed dimensions)
 
-2. **Update the bulk-sync edge function** to read from this queue table instead of `profiles`, process emails in batches (~500 per run within the ~150s timeout), and mark each as "done" or "failed" after processing.
+### Changes
 
-3. **Set up a pg_cron job** that automatically calls the edge function every 5 minutes. It will keep running until all emails are processed, then the cron job can be removed or left idle (it will find 0 pending emails and exit quickly).
+#### 1. Courses page (`src/pages/Courses.tsx`)
+- Remove the single-banner fetch logic (`bannerImage`, `bannerLoading`, `setBannerImage`, the `useEffect` fetching banner)
+- Replace the fixed-height `<section>` banner with `<HeroCarousel pagePath={location.pathname} />`
+- The `HeroCarousel` will also try matching by exam category path variants
 
-4. **One-time migration** to insert all 2,971 emails from the uploaded file into the queue table.
+#### 2. CourseListing page (`src/pages/CourseListing.tsx`)
+- Same approach: remove single-banner state and fetch logic
+- Replace the fixed-height banner section with `<HeroCarousel pagePath={location.pathname} />`
 
-## How it works
+#### 3. IITMBSSubjectNotesPage (`src/pages/IITMBSSubjectNotesPage.tsx`)
+- Remove single-banner fetch logic and state
+- Replace the fixed-height banner `<div>` with `<HeroCarousel pagePath={location.pathname} />`
 
-- Each cron run processes ~400-500 emails (200ms delay each = ~80-100s of work, safely under 150s timeout)
-- Emails already in the Google Group get a `409` response and are marked as done (no duplicates)
-- After ~6-7 automatic runs (~30-35 minutes total), all 2,971 emails will be added
-- No manual intervention needed -- just approve and let it run
+#### 4. HeroCarousel adjustments (`src/components/HeroCarousel.tsx`)
+- Remove the `mt-16` class from the wrapper (the parent pages already handle `pt-16` for navbar offset)
+- Keep the existing natural-height image rendering (`w-full h-auto object-contain`) — this ensures dimensions adapt to the uploaded image
 
-## Technical Details
-
-### Step 1: Create `google_group_sync_queue` table
-
-```sql
-CREATE TABLE public.google_group_sync_queue (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  email text NOT NULL,
-  status text NOT NULL DEFAULT 'pending',  -- pending, added, already_member, failed
-  error_message text,
-  processed_at timestamptz,
-  created_at timestamptz DEFAULT now()
-);
-
--- Index for fast pending lookups
-CREATE INDEX idx_sync_queue_status ON public.google_group_sync_queue(status) WHERE status = 'pending';
-
--- RLS: only service role needs access
-ALTER TABLE public.google_group_sync_queue ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Service role full access" ON public.google_group_sync_queue FOR ALL USING (true) WITH CHECK (true);
-```
-
-### Step 2: Insert all 2,971 emails from the TXT file
-
-A migration will bulk-insert all the emails into the queue table using `INSERT INTO ... VALUES (...)`.
-
-### Step 3: Update `bulk-sync-google-group` edge function
-
-- Read from `google_group_sync_queue` WHERE `status = 'pending'` LIMIT 400
-- Process each email with 200ms delay
-- Update each row's `status` to `added`, `already_member`, or `failed`
-- Return summary of how many were processed and how many remain
-
-### Step 4: Set up pg_cron job
-
-```sql
-SELECT cron.schedule(
-  'bulk-google-group-sync',
-  '*/5 * * * *',  -- every 5 minutes
-  $$
-  SELECT net.http_post(
-    url:='https://qzrvctpwefhmcduariuw.supabase.co/functions/v1/bulk-sync-google-group',
-    headers:='{"Content-Type": "application/json", "Authorization": "Bearer <anon_key>"}'::jsonb,
-    body:='{}'::jsonb
-  ) as request_id;
-  $$
-);
-```
-
-The cron job will auto-stop being useful once all emails are processed (function returns 0 pending). You can then unschedule it or leave it -- it will just do a quick check and exit.
-
-### Summary
-
-| Item | Detail |
-|------|--------|
-| Total emails | 2,971 |
-| Emails per run | ~400-500 |
-| Run interval | Every 5 minutes |
-| Estimated completion | ~30-35 minutes |
-| Manual work needed | None after approval |
+### Technical Detail
+- `HeroCarousel` queries `page_banners` with `eq("page_path", pagePath)` — multiple rows per path are supported by design
+- Images render at their natural aspect ratio via `object-contain` + `h-auto`
+- Single banner = no dots/arrows shown; multiple = carousel behavior
 
