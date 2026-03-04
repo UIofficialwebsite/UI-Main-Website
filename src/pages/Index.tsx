@@ -15,7 +15,9 @@ const Index = () => {
   return (
     <>
       <NavBar />
-      <HeroCarousel />
+      <div className="mt-16">
+        <HeroCarousel />
+      </div>
       <WelcomeSection />
       <CategoriesSection />
       <WhyChooseUsSection />

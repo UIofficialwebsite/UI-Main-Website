@@ -73,7 +73,7 @@ const HeroCarousel = ({ pagePath = "/" }: HeroCarouselProps) => {
 
   return (
     <div 
-      className="relative w-full mt-16 group"
+      className="relative w-full group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

@@ -1,11 +1,10 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import CourseCard from "@/components/courses/CourseCard";
-import { supabase } from "@/integrations/supabase/client";
+import HeroCarousel from "@/components/HeroCarousel";
 import { 
   FileText, 
   ChevronRight,
@@ -32,22 +31,6 @@ const Courses = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { courses, contentLoading } = useBackend();
-  const [bannerImage, setBannerImage] = useState<string | null>(null);
-  const [bannerLoading, setBannerLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBanner = async () => {
-      setBannerLoading(true);
-      try {
-        const { data } = await supabase.from('page_banners').select('image_url, page_path');
-        if (data) {
-          const match = data.find(b => b.page_path === location.pathname || b.page_path === (examCategory || 'courses'));
-          setBannerImage(match?.image_url || null);
-        }
-      } catch (err) { console.error(err); } finally { setBannerLoading(false); }
-    };
-    fetchBanner();
-  }, [location.pathname, examCategory]);
 
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
@@ -72,10 +55,7 @@ const Courses = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* Banner Section - Scaled Height */}
-        <section className="w-full h-[clamp(120px,20vw,200px)] bg-muted overflow-hidden relative z-10 border-b border-border/50">
-          {bannerLoading ? <div className="w-full h-full animate-pulse bg-muted" /> : bannerImage && <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" />}
-        </section>
+        <HeroCarousel pagePath={location.pathname} />
 
         {/* Hero Area */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8">
