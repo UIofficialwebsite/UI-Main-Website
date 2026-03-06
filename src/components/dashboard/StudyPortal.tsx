@@ -85,6 +85,7 @@ type RawEnrollment = {
     description: string | null; 
     start_date: string | null; 
     end_date: string | null;   
+    valid_till: string | null;
     image_url: string | null;
     price: number | null; 
     exam_category: string | null;
