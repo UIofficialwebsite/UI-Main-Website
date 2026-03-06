@@ -1019,7 +1019,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
             .select(`
               id, course_id, subject_name, status,
               courses (
-                id, title, description, start_date, end_date, image_url, price,
+                id, title, description, start_date, end_date, valid_till, image_url, price,
                 exam_category, level, bestseller, rating, students_enrolled
               )
             `)
