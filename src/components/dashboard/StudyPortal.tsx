@@ -147,9 +147,11 @@ const EnrollmentListItem = ({
     );
   };
 
-  const formattedEndDate = enrollment.end_date 
-    ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
-    : 'No end date';
+  const formattedValidTill = enrollment.valid_till 
+    ? new Date(enrollment.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
+    : enrollment.end_date 
+      ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
+      : 'No end date';
 
   const PriceDisplay = () => {
     if (enrollment.price === 0) {
@@ -192,12 +194,22 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            <div className="flex items-center gap-1.5 pt-1">
+            <div className="flex items-center justify-between pt-1">
                <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
-                <span>Valid till: {formattedEndDate}</span>
+                <span>Valid till: {formattedValidTill}</span>
                 <span>•</span>
                 <PriceDisplay />
               </p>
+              <a 
+                href="https://ssp.unknowniitians.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs sm:text-sm text-gray-600 underline font-normal whitespace-nowrap ml-2"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                Attend Classes
+              </a>
             </div>
           </div>
           
