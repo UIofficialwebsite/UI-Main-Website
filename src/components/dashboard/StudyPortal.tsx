@@ -102,6 +102,7 @@ type GroupedEnrollment = {
   description: string | null; 
   start_date: string | null; 
   end_date: string | null;   
+  valid_till: string | null;
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
   image_url: string | null;
