@@ -85,6 +85,7 @@ type RawEnrollment = {
     description: string | null; 
     start_date: string | null; 
     end_date: string | null;   
+    valid_till: string | null;
     image_url: string | null;
     price: number | null; 
     exam_category: string | null;
@@ -101,6 +102,7 @@ type GroupedEnrollment = {
   description: string | null; 
   start_date: string | null; 
   end_date: string | null;   
+  valid_till: string | null;
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
   image_url: string | null;
@@ -145,9 +147,11 @@ const EnrollmentListItem = ({
     );
   };
 
-  const formattedEndDate = enrollment.end_date 
-    ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
-    : 'No end date';
+  const formattedValidTill = enrollment.valid_till 
+    ? new Date(enrollment.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
+    : enrollment.end_date 
+      ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
+      : 'No end date';
 
   const PriceDisplay = () => {
     if (enrollment.price === 0) {
@@ -190,12 +194,22 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            <div className="flex items-center gap-1.5 pt-1">
+            <div className="flex items-center justify-between pt-1">
                <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
-                <span>Valid till: {formattedEndDate}</span>
+                <span>Valid till: {formattedValidTill}</span>
                 <span>•</span>
                 <PriceDisplay />
               </p>
+              <a 
+                href="https://ssp.unknowniitians.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs sm:text-sm text-gray-600 underline font-normal whitespace-nowrap ml-2"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                Attend Classes
+              </a>
             </div>
           </div>
           
@@ -205,7 +219,7 @@ const EnrollmentListItem = ({
         </CardContent>
         {enrollment.status === 'Batch Expired' && (
           <div className="bg-red-50 text-red-700 text-sm sm:text-base p-3 sm:p-4 text-center border-t border-red-100">
-            This batch got expired on {formattedEndDate}!
+            This batch got expired on {formattedValidTill}!
           </div>
         )}
       </Card>
@@ -1017,7 +1031,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
             .select(`
               id, course_id, subject_name, status,
               courses (
-                id, title, description, start_date, end_date, image_url, price,
+                id, title, description, start_date, end_date, valid_till, image_url, price,
                 exam_category, level, bestseller, rating, students_enrolled
               )
             `)
@@ -1047,6 +1061,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
                 description: enrollment.courses.description,
                 start_date: enrollment.courses.start_date,
                 end_date: enrollment.courses.end_date,
+                valid_till: enrollment.courses.valid_till,
                 status: status,
                 subjects: [],
                 image_url: enrollment.courses.image_url,
