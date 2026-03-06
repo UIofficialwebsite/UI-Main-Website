@@ -219,7 +219,7 @@ const EnrollmentListItem = ({
         </CardContent>
         {enrollment.status === 'Batch Expired' && (
           <div className="bg-red-50 text-red-700 text-sm sm:text-base p-3 sm:p-4 text-center border-t border-red-100">
-            This batch got expired on {formattedEndDate}!
+            This batch got expired on {formattedValidTill}!
           </div>
         )}
       </Card>
