@@ -1049,6 +1049,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
                 description: enrollment.courses.description,
                 start_date: enrollment.courses.start_date,
                 end_date: enrollment.courses.end_date,
+                valid_till: enrollment.courses.valid_till,
                 status: status,
                 subjects: [],
                 image_url: enrollment.courses.image_url,
