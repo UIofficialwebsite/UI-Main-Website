@@ -177,7 +177,7 @@ export function MobileEnrollmentBar({
       </div>
 
       {/* Action Button */}
-      {!isLive ? (
+      {!isLive || isExpired ? (
         <Button
           disabled
           className="bg-gray-400 text-white border-none px-5 py-2 h-10 rounded-lg text-sm font-medium cursor-not-allowed"
