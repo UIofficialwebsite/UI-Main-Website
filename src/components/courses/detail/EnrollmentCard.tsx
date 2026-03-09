@@ -139,8 +139,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 2. COURSE NOT LIVE OR EXPIRED -> Show disabled enrollment closed state
-        if (!isLive || isExpired) {
+        // 2. COURSE EXPIRED -> Show disabled enrollment closed state based on valid_till date
+        if (isExpired) {
             return (
                 <Button 
                     size="lg" 
