@@ -70,7 +70,7 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [enrolling, setEnrolling] = useState(false);
+  
 
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
