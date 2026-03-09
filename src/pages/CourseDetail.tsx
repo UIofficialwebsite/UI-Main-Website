@@ -221,7 +221,6 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
     ownedAddons,
     customEnrollHandler,
     isFreeCourse: course.price === 0 || course.price === null,
-    enrolling,
     isLive: course.is_live === true
   };
 
