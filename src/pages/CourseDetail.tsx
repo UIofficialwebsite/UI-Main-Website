@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+
 
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer'; 
@@ -70,7 +70,7 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [enrolling, setEnrolling] = useState(false);
+  
 
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
@@ -169,81 +169,10 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
     navigate(`/courses/${courseId}/configure`);
   };
 
-  const handleFreeEnroll = async () => {
-    if (!user) {
-      toast.error("Please login to enroll.");
-      navigate('/auth');
-      return;
-    }
-
-    if (!course) return;
-
-    try {
-      setEnrolling(true);
-
-      const orderId = `free_${Date.now()}_${user.id.substring(0, 8)}`;
-      const paymentId = 'free_enrollment';
-
-      // Fetch profile for phone/email
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('phone, email, dial_code')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      // Build courses string from subject + addons
-      const subjectsList: string[] = [];
-      if (course.subject) subjectsList.push(...course.subject.split(',').map(s => s.trim()));
-      const coursesString = subjectsList.length > 0 ? [...new Set(subjectsList)].join(', ') : 'No subjects';
-
-      // Insert enrollment
-      const { error: enrollError } = await supabase
-        .from('enrollments')
-        .insert({
-          user_id: user.id,
-          course_id: course.id,
-          amount: 0,
-          status: 'active',
-          payment_id: paymentId,
-          order_id: orderId,
-          subject_name: null 
-        });
-
-      if (enrollError) throw enrollError;
-
-      // Insert payment record
-      await supabase.from('payments').insert({
-        order_id: orderId,
-        payment_id: paymentId,
-        user_id: user.id,
-        amount: 0,
-        net_amount: 0,
-        status: 'success',
-        payment_mode: 'free',
-        batch: course.title,
-        courses: coursesString,
-        customer_email: profile?.email || user.email || null,
-        customer_phone: profile?.phone ? `${profile.dial_code || '+91'}${profile.phone}` : null,
-      });
-
-      toast.success("Successfully enrolled in the batch!");
-      setIsMainCourseOwned(true);
-      
-    } catch (err: any) {
-      console.error("Free Enrollment Error:", err);
-      toast.error("Enrollment failed. Please try again.");
-    } finally {
-      setEnrolling(false);
-    }
-  };
-
-  let customEnrollHandler: (() => void) | undefined = undefined;
-
-  if (hasOptionalItems) {
-    customEnrollHandler = handleConfigClick;
-  } else if (course && (course.price === 0 || course.price === null)) {
-    customEnrollHandler = handleFreeEnroll;
-  }
+  // Only set customEnrollHandler for courses with addons (config page).
+  // Free courses without addons will use the default EnrollButton flow,
+  // which already handles phone verification and payments table insertion.
+  const customEnrollHandler = hasOptionalItems ? handleConfigClick : undefined;
 
   if (loading) {
     return (
@@ -292,7 +221,6 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
     ownedAddons,
     customEnrollHandler,
     isFreeCourse: course.price === 0 || course.price === null,
-    enrolling,
     isLive: course.is_live === true
   };
 
