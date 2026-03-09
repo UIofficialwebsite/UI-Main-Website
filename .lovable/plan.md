@@ -1,38 +1,28 @@
 
 
-## Plan: Multi-Banner Carousel on All Pages
+## Problem
 
-### Problem
-- **Courses**, **CourseListing**, and **IITMBSSubjectNotesPage** only fetch and display a single banner image with fixed height containers (`h-[clamp(120px,20vw,200px)]` or `h-32 md:h-48 lg:h-60`).
-- The **Index** page already uses `HeroCarousel` which supports multiple banners, but all other pages do not.
+The `handleFreeEnroll` function in `src/pages/CourseDetail.tsx` (line 172) only inserts a row into the `enrollments` table. It does **not** insert into the `payments` table. This is why free enrollments stopped appearing in payments.
 
-### Solution
-Reuse the existing `HeroCarousel` component on all pages that have banners. It already:
-- Fetches all banners from `page_banners` matching a `pagePath`
-- Renders a carousel with auto-advance, dots, and navigation arrows
-- Uses `object-contain` with natural image height (no fixed dimensions)
+The other two enrollment paths (`EnrollButton.tsx` and `BatchConfiguration.tsx`) correctly insert into both `enrollments` and `payments`.
 
-### Changes
+## Root Cause
 
-#### 1. Courses page (`src/pages/Courses.tsx`)
-- Remove the single-banner fetch logic (`bannerImage`, `bannerLoading`, `setBannerImage`, the `useEffect` fetching banner)
-- Replace the fixed-height `<section>` banner with `<HeroCarousel pagePath={location.pathname} />`
-- The `HeroCarousel` will also try matching by exam category path variants
+Line 212 in `CourseDetail.tsx`: when a course has no optional items and price is 0, it calls the local `handleFreeEnroll` which skips the payments insert entirely.
 
-#### 2. CourseListing page (`src/pages/CourseListing.tsx`)
-- Same approach: remove single-banner state and fetch logic
-- Replace the fixed-height banner section with `<HeroCarousel pagePath={location.pathname} />`
+## Fix
 
-#### 3. IITMBSSubjectNotesPage (`src/pages/IITMBSSubjectNotesPage.tsx`)
-- Remove single-banner fetch logic and state
-- Replace the fixed-height banner `<div>` with `<HeroCarousel pagePath={location.pathname} />`
+Update `handleFreeEnroll` in `src/pages/CourseDetail.tsx` to also insert a record into the `payments` table, matching the pattern used in `EnrollButton.tsx`:
 
-#### 4. HeroCarousel adjustments (`src/components/HeroCarousel.tsx`)
-- Remove the `mt-16` class from the wrapper (the parent pages already handle `pt-16` for navbar offset)
-- Keep the existing natural-height image rendering (`w-full h-auto object-contain`) — this ensures dimensions adapt to the uploaded image
+- Generate an `order_id` (e.g., `free_<timestamp>_<userId>`)
+- Insert into `payments` with `amount: 0`, `net_amount: 0`, `status: 'success'`, `payment_mode: 'free'`, `customer_email`, `batch` (course title), and `courses` (subjects)
+- Also collect phone number from profile for `customer_phone`
 
-### Technical Detail
-- `HeroCarousel` queries `page_banners` with `eq("page_path", pagePath)` — multiple rows per path are supported by design
-- Images render at their natural aspect ratio via `object-contain` + `h-auto`
-- Single banner = no dots/arrows shown; multiple = carousel behavior
+### File: `src/pages/CourseDetail.tsx`
+- Expand the `handleFreeEnroll` function to:
+  1. Fetch user profile for phone/email
+  2. Insert into `enrollments` (existing)
+  3. Insert into `payments` table with free enrollment data (new)
+
+No database changes needed -- the `payments` table already supports this data shape.
 
