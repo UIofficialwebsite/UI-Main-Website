@@ -180,7 +180,23 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
 
     try {
       setEnrolling(true);
-      
+
+      const orderId = `free_${Date.now()}_${user.id.substring(0, 8)}`;
+      const paymentId = 'free_enrollment';
+
+      // Fetch profile for phone/email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone, email, dial_code')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      // Build courses string from subject + addons
+      const subjectsList: string[] = [];
+      if (course.subject) subjectsList.push(...course.subject.split(',').map(s => s.trim()));
+      const coursesString = subjectsList.length > 0 ? [...new Set(subjectsList)].join(', ') : 'No subjects';
+
+      // Insert enrollment
       const { error: enrollError } = await supabase
         .from('enrollments')
         .insert({
@@ -188,11 +204,27 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
           course_id: course.id,
           amount: 0,
           status: 'active',
-          payment_id: 'free_enrollment',
+          payment_id: paymentId,
+          order_id: orderId,
           subject_name: null 
         });
 
       if (enrollError) throw enrollError;
+
+      // Insert payment record
+      await supabase.from('payments').insert({
+        order_id: orderId,
+        payment_id: paymentId,
+        user_id: user.id,
+        amount: 0,
+        net_amount: 0,
+        status: 'success',
+        payment_mode: 'free',
+        batch: course.title,
+        courses: coursesString,
+        customer_email: profile?.email || user.email || null,
+        customer_phone: profile?.phone ? `${profile.dial_code || '+91'}${profile.phone}` : null,
+      });
 
       toast.success("Successfully enrolled in the batch!");
       setIsMainCourseOwned(true);
