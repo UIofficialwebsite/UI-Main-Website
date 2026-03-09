@@ -1,38 +1,28 @@
 
 
-## Plan: Multi-Banner Carousel on All Pages
+## Plan: Require Phone Number for Free Enrollment in CourseDetail
 
 ### Problem
-- **Courses**, **CourseListing**, and **IITMBSSubjectNotesPage** only fetch and display a single banner image with fixed height containers (`h-[clamp(120px,20vw,200px)]` or `h-32 md:h-48 lg:h-60`).
-- The **Index** page already uses `HeroCarousel` which supports multiple banners, but all other pages do not.
+The `handleFreeEnroll` in `CourseDetail.tsx` directly enrolls users without asking for their phone number, unlike the paid flow which uses `EnrollButton`'s phone verification dialog.
 
 ### Solution
-Reuse the existing `HeroCarousel` component on all pages that have banners. It already:
-- Fetches all banners from `page_banners` matching a `pagePath`
-- Renders a carousel with auto-advance, dots, and navigation arrows
-- Uses `object-contain` with natural image height (no fixed dimensions)
+Instead of duplicating the phone dialog UI in `CourseDetail.tsx`, the fix is simpler: for free courses without addons, use the `EnrollButton` component's existing flow which already handles phone verification for both free and paid courses.
 
 ### Changes
 
-#### 1. Courses page (`src/pages/Courses.tsx`)
-- Remove the single-banner fetch logic (`bannerImage`, `bannerLoading`, `setBannerImage`, the `useEffect` fetching banner)
-- Replace the fixed-height `<section>` banner with `<HeroCarousel pagePath={location.pathname} />`
-- The `HeroCarousel` will also try matching by exam category path variants
+#### `src/pages/CourseDetail.tsx`
+- Remove the local `handleFreeEnroll` function entirely
+- Remove the `enrolling` state variable
+- Stop setting `customEnrollHandler` for free courses (let the default `EnrollButton` handle it)
+- The `EnrollButton` inside `EnrollmentCard` already knows how to handle free courses with phone verification
 
-#### 2. CourseListing page (`src/pages/CourseListing.tsx`)
-- Same approach: remove single-banner state and fetch logic
-- Replace the fixed-height banner section with `<HeroCarousel pagePath={location.pathname} />`
+#### `src/components/courses/detail/EnrollmentCard.tsx`
+- Check current code to confirm `EnrollButton` is used and receives `coursePrice` correctly so it can distinguish free vs paid
+- Remove `enrolling` prop if no longer needed
 
-#### 3. IITMBSSubjectNotesPage (`src/pages/IITMBSSubjectNotesPage.tsx`)
-- Remove single-banner fetch logic and state
-- Replace the fixed-height banner `<div>` with `<HeroCarousel pagePath={location.pathname} />`
+#### `src/components/courses/detail/MobileEnrollmentBar.tsx`
+- Same: confirm `EnrollButton` usage, remove `enrolling` prop if unused
 
-#### 4. HeroCarousel adjustments (`src/components/HeroCarousel.tsx`)
-- Remove the `mt-16` class from the wrapper (the parent pages already handle `pt-16` for navbar offset)
-- Keep the existing natural-height image rendering (`w-full h-auto object-contain`) — this ensures dimensions adapt to the uploaded image
-
-### Technical Detail
-- `HeroCarousel` queries `page_banners` with `eq("page_path", pagePath)` — multiple rows per path are supported by design
-- Images render at their natural aspect ratio via `object-contain` + `h-auto`
-- Single banner = no dots/arrows shown; multiple = carousel behavior
+### How it works after the change
+- Free course with no addons → no `customEnrollHandler` set → `EnrollmentCard` renders its default `EnrollButton` → `EnrollButton` checks phone → shows dialog if missing → enrolls with phone number → inserts into both `enrollments` and `payments`
 
