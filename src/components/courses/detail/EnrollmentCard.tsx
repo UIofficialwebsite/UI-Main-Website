@@ -56,7 +56,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const today = new Date();
     // Use valid_till to determine if the enrollment window has passed
     const validTillDate = course.valid_till ? new Date(course.valid_till) : null;
-    const isExpired = validTillDate && today > validTillDate;
+    const isExpired = validTillDate ? today > validTillDate : false;
 
     useEffect(() => {
         const checkAddonsAndPrice = async () => {

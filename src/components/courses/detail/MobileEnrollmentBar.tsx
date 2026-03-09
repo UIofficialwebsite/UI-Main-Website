@@ -24,7 +24,7 @@ export function MobileEnrollmentBar({
   // Expiry logic matching EnrollmentCard
   const today = new Date();
   const validTillDate = course.valid_till ? new Date(course.valid_till) : null;
-  const isExpired = validTillDate && today > validTillDate;
+  const isExpired = validTillDate ? today > validTillDate : false;
   
   // Add-on State
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
