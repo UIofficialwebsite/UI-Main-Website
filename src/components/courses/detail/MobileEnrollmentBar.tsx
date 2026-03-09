@@ -21,6 +21,11 @@ export function MobileEnrollmentBar({
   const { openLogin } = useLoginModal();
   const [isVisible, setIsVisible] = useState(true);
   
+  // Expiry logic matching EnrollmentCard
+  const today = new Date();
+  const validTillDate = course.valid_till ? new Date(course.valid_till) : null;
+  const isExpired = validTillDate && today > validTillDate;
+  
   // Add-on State
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
