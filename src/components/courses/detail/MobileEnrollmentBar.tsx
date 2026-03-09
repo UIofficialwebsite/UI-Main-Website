@@ -21,6 +21,11 @@ export function MobileEnrollmentBar({
   const { openLogin } = useLoginModal();
   const [isVisible, setIsVisible] = useState(true);
   
+  // Expiry logic matching EnrollmentCard
+  const today = new Date();
+  const validTillDate = course.valid_till ? new Date(course.valid_till) : null;
+  const isExpired = validTillDate && today > validTillDate;
+  
   // Add-on State
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
@@ -172,7 +177,7 @@ export function MobileEnrollmentBar({
       </div>
 
       {/* Action Button */}
-      {!isLive ? (
+      {!isLive || isExpired ? (
         <Button
           disabled
           className="bg-gray-400 text-white border-none px-5 py-2 h-10 rounded-lg text-sm font-medium cursor-not-allowed"
