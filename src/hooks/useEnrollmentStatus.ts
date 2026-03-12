@@ -99,7 +99,19 @@ export const useEnrollmentStatus = (courseId: string | undefined) => {
       checkEnrollmentStatus();
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for enrollment updates (e.g., after free enrollment)
+    const handleEnrollmentUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail?.courseId || detail.courseId === courseId) {
+        checkEnrollmentStatus();
+      }
+    };
+    window.addEventListener('enrollment-updated', handleEnrollmentUpdate);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('enrollment-updated', handleEnrollmentUpdate);
+    };
   }, [courseId]);
 
   return status;
