@@ -12,7 +12,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 interface Employee {
-  id: string;
   employee_code: string;
   full_name: string;
   position: string;
@@ -47,9 +46,7 @@ const EmployeeVerification = () => {
 
     try {
       const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('employee_code', employeeCode.trim())
+        .rpc('verify_employee', { p_employee_code: employeeCode.trim() })
         .maybeSingle();
 
       if (error) {

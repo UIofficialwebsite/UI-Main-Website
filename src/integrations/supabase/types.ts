@@ -1508,6 +1508,21 @@ export type Database = {
       is_admin_user: { Args: { user_email: string }; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: { user_email: string }; Returns: boolean }
+      verify_employee: {
+        Args: { p_employee_code: string }
+        Returns: {
+          department: string
+          employee_code: string
+          employee_type: string
+          end_date: string
+          full_name: string
+          is_active: boolean
+          position: string
+          start_date: string
+          status: string
+          verification_certificate_url: string
+        }[]
+      }
     }
     Enums: {
       material_type: "note" | "pyq" | "question_bank" | "ui_ki_padhai"

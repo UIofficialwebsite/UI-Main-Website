@@ -24,7 +24,7 @@ interface PlayerState {
 const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const hideTimer = useRef<NodeJS.Timeout | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTap = useRef<number>(0);
   const isRestoringRef = useRef(false);
   const wasPlayingBeforeHiddenRef = useRef(false);
