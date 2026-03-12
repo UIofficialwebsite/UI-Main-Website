@@ -47,9 +47,7 @@ const EmployeeVerification = () => {
 
     try {
       const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('employee_code', employeeCode.trim())
+        .rpc('verify_employee', { p_employee_code: employeeCode.trim() })
         .maybeSingle();
 
       if (error) {

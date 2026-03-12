@@ -50,9 +50,7 @@ const InternVerification = () => {
 
     try {
       const { data, error } = await supabase
-        .from("employees")
-        .select("*")
-        .eq("employee_code", employeeId.trim())
+        .rpc('verify_employee', { p_employee_code: employeeId.trim() })
         .maybeSingle();
 
       if (error) {
