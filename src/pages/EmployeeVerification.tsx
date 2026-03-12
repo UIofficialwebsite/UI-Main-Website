@@ -12,7 +12,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 interface Employee {
-  id: string;
   employee_code: string;
   full_name: string;
   position: string;
