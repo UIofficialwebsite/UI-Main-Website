@@ -509,6 +509,9 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         // Don't throw - enrollment succeeded, payment record is for tracking only
       }
 
+      // Dispatch event so useEnrollmentStatus re-checks immediately
+      window.dispatchEvent(new CustomEvent('enrollment-updated', { detail: { courseId } }));
+
       toast({
         title: "Success",
         description: "Successfully enrolled in the batch!",
