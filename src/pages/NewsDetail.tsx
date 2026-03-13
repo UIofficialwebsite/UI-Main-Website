@@ -55,7 +55,7 @@ const NewsDetail = () => {
         <div className="hidden print:flex items-center justify-between mb-6 pb-4 border-b border-black">
           <div className="flex items-center">
             <img 
-              src="/lovable-uploads/logo_ui_new.png" 
+              src="/web-uploads/logo_ui_new.png" 
               alt="IITM Logo" 
               className="h-24 w-auto object-contain" 
             />
