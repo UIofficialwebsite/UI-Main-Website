@@ -142,6 +142,9 @@ const App = () => (
                   <Route path="/terms-of-service" element={<TermsOfService />} />
                   <Route path="/faq" element={<FAQ />} />
                   
+                  {/* Redirect to Portal */}
+                  <Route path="/redirect-to-portal" element={<RedirectToPortal />} />
+                  
                   {/* 404 */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

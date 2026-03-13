@@ -367,7 +367,7 @@ const BatchConfiguration = () => {
         }
 
         toast.success("Successfully enrolled!");
-        navigate(`/courses/${courseId}`);
+        navigate('/redirect-to-portal');
         
     } catch (error: any) {
         console.error("Free enrollment error:", error);

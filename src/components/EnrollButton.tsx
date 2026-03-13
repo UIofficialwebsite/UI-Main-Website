@@ -516,6 +516,9 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         title: "Success",
         description: "Successfully enrolled in the batch!",
       });
+
+      // Redirect to Study Portal
+      window.location.href = "/redirect-to-portal";
       
     } catch (err: any) {
       console.error("Free Enrollment Error:", err);
