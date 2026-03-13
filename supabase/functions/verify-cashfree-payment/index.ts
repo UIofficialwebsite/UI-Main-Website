@@ -337,7 +337,9 @@ serve(async (req: Request) => {
     }
 
     // 11. Redirect
-    const redirectUrl = `${frontendUrl}/dashboard?payment=${finalStatus}`;
+    const redirectUrl = finalStatus === "success" 
+      ? `${frontendUrl}/redirect-to-portal`
+      : `${frontendUrl}/dashboard?payment=${finalStatus}`;
     console.log(`🔄 Redirecting to: ${redirectUrl}`);
     return new Response(null, { status: 302, headers: { Location: redirectUrl } });
 

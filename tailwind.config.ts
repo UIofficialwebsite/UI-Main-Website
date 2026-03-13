@@ -132,6 +132,10 @@ export default {
             transform: "translate(calc(100cqw - 100%), 0)",
           },
         },
+				'dot-pulse': {
+					'0%, 80%, 100%': { transform: 'scale(0)', opacity: '0.3' },
+					'40%': { transform: 'scale(1)', opacity: '1' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',

@@ -66,6 +66,7 @@ const TermsOfService = lazyWithRetry(() => import("./pages/TermsOfService"));
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"));
 const IITMCalculators = lazyWithRetry(() => import("./pages/IITMCalculators"));
 const NewsDetail = lazyWithRetry(() => import("./pages/NewsDetail"));
+const RedirectToPortal = lazyWithRetry(() => import("./pages/RedirectToPortal"));
 
 const queryClient = new QueryClient();
 
@@ -141,6 +142,9 @@ const App = () => (
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms-of-service" element={<TermsOfService />} />
                   <Route path="/faq" element={<FAQ />} />
+                  
+                  {/* Redirect to Portal */}
+                  <Route path="/redirect-to-portal" element={<RedirectToPortal />} />
                   
                   {/* 404 */}
                   <Route path="*" element={<NotFound />} />
