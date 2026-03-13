@@ -93,7 +93,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
           {/* Smaller image on mobile (w-24 approx 96px) vs larger on desktop */}
           <div className="flex-shrink-0 w-24 sm:w-48 aspect-video overflow-hidden rounded-md sm:rounded-lg bg-gray-50 border border-gray-100">
             <img 
-              src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
+              src={enrollment.image_url || "/web-uploads/logo_ui_new.png"}
               alt={enrollment.title} 
               className="w-full h-full object-cover object-center"
             />

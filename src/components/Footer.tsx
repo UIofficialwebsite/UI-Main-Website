@@ -42,7 +42,7 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <img
-                src="/lovable-uploads/UI_logo.png"
+                src="/web-uploads/UI_logo.png"
                 alt="Unknown IITians"
                 className="h-12 w-12 "
               />

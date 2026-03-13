@@ -14,7 +14,7 @@ const VideoSection = () => {
             <div className="relative w-full aspect-video bg-gray-900 rounded-xl overflow-hidden">
               {/* Thumbnail image */}
               <img
-                src="public/lovable-uploads/762c4371-c234-41a8-89e6-0c0563f920b2.png"
+                src="/web-uploads/762c4371-c234-41a8-89e6-0c0563f920b2.png"
                 alt="Video thumbnail"
                 className="absolute inset-0 w-full h-full object-cover"
               />
