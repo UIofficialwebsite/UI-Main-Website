@@ -271,7 +271,7 @@ const NavBar = () => {
                 <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px] bg-white">
                   <div className="flex items-center gap-4">
                     {activePane === "main" ? (
-                      <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
+                      <img src="/web-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
                     ) : (
                       <div className="flex items-center gap-3">
                         <button onClick={() => setActivePane("main")} className="text-black">
