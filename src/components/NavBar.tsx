@@ -341,7 +341,7 @@ const NavBar = () => {
             </Sheet>
 
             <Link to="/" className="flex-shrink-0">
-              <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
+              <img src="/web-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
             </Link>
           </div>
 
