@@ -38,9 +38,10 @@ const AboutSection: React.FC<AboutSectionProps> = ({ course }) => {
                 href={urlPart} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline break-words"
+                // Removed 'underline' and 'break-words' as it's just short text now
+                className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
-                {urlPart}
+                Click here
               </a>
             );
           }
