@@ -7,9 +7,12 @@ interface AboutSectionProps {
 
 const AboutSection: React.FC<AboutSectionProps> = ({ course }) => {
   
-  // Custom helper to render basic Markdown formatting (Bold, Italic)
+  // Custom helper to render basic Markdown formatting (Bold, Italic, Links)
   const renderDescription = (text: string) => {
     if (!text) return null;
+
+    // Regex to match URLs starting with http:// or https://
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
 
     // First, split by Bold (**text**)
     const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -25,7 +28,24 @@ const AboutSection: React.FC<AboutSectionProps> = ({ course }) => {
         if (subPart.startsWith('_') && subPart.endsWith('_') && subPart.length >= 2) {
           return <em key={`${i}-${j}`} className="italic">{subPart.slice(1, -1)}</em>;
         }
-        return subPart;
+
+        // Handle URLs within non-italic parts
+        return subPart.split(urlRegex).map((urlPart, k) => {
+          if (urlPart.match(urlRegex)) {
+            return (
+              <a 
+                key={`${i}-${j}-${k}`} 
+                href={urlPart} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline break-words"
+              >
+                {urlPart}
+              </a>
+            );
+          }
+          return urlPart;
+        });
       });
     });
 
