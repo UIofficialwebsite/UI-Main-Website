@@ -47,7 +47,8 @@ const Career = lazyWithRetry(() => import("./pages/Career"));
 const CareerOpportunities = lazyWithRetry(() => import("./pages/CareerOpportunities"));
 const JobDetails = lazyWithRetry(() => import("./pages/JobDetails"));
 const About = lazyWithRetry(() => import("./pages/About"));
-const Contact = lazyWithRetry(() => import("./pages/Contact")); // Added Contact Page
+const Contact = lazyWithRetry(() => import("./pages/Contact"));
+const MerchantContactAnantya = lazyWithRetry(() => import("./pages/MerchantContactAnantya")); // <-- Added new compliance page
 const CourseDetail = lazyWithRetry(() => import("./pages/CourseDetail"));
 const BatchConfiguration = lazyWithRetry(() => import("./pages/BatchConfiguration")); 
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
@@ -122,7 +123,8 @@ const App = () => (
                   <Route path="/career/job/:jobId" element={<JobDetails />} />
                   
                   <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} /> {/* Added Contact Route */}
+                  <Route path="/contact" element={<Contact />} /> 
+                  <Route path="/merchantcontactanantya" element={<MerchantContactAnantya />} /> {/* <-- Added new compliance route */}
                   
                   {/* DASHBOARD ROUTE */}
                   <Route path="/dashboard/:tab?" element={<Dashboard />} />
