@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye, Trash2 } from "lucide-react";
 import { ShimmerButton } from './ui/shimmer-button';
 import { ShareButton } from './ShareButton';
+import { useAuth } from '@/hooks/useAuth';
+import { useLoginModal } from '@/context/LoginModalContext';
 import { slugify } from '@/utils/urlHelpers';
 
 interface Chapter {
