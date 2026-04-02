@@ -3,6 +3,8 @@ import { Subject } from '../types/gradeTypes';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface PredictorInputFormProps {
   subject: Subject;
@@ -17,6 +19,13 @@ export default function PredictorInputForm({
   onInputChange, 
   onCalculate
 }: PredictorInputFormProps) {
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+  
+  const handleCalculateClick = () => {
+    if (!user) { openLogin(); return; }
+    onCalculate();
+  };
   
   // Filter out 'F' (End Term) AND 'Bonus' fields to show only required inputs
   const inputFields = subject.fields.filter(f => f.id !== 'F' && !f.label.toLowerCase().includes('bonus'));
