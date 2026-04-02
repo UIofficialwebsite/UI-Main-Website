@@ -130,7 +130,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     setCourses(newCourses);
   };
 
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+
   const handleCalculate = () => {
+    if (!user) { openLogin(); return; }
     setShowReport(true);
     setTimeout(() => {
       reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
