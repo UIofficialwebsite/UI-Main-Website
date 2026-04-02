@@ -56,6 +56,17 @@ const buildNoteUrl = (chapter: Chapter, contentType: string): string => {
 };
 
 const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onDownload, isAdmin, onDelete, contentType = 'notes' }) => {
+    const { user } = useAuth();
+    const { openLogin } = useLoginModal();
+
+    const requireAuth = (action: () => void) => {
+        if (!user) {
+            openLogin();
+            return;
+        }
+        action();
+    };
+
     return (
         <div className="space-y-4">
             <ul className="space-y-3">
