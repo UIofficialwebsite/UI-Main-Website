@@ -134,13 +134,13 @@ const IITMBSSubjectNotesPage = () => {
         <div className="flex space-x-3 mt-auto font-sans">
           <button 
             className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
-            onClick={() => note.file_link && window.open(note.file_link, '_blank')}
+            onClick={() => requireAuth(() => note.file_link && window.open(note.file_link, '_blank'))}
           >
             View
           </button>
           <button 
             className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
-            onClick={() => handleDownload(note.id, 'notes', note.file_link)}
+            onClick={() => requireAuth(() => handleDownload(note.id, 'notes', note.file_link))}
           >
             Get PDF
           </button>
