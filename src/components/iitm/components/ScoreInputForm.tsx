@@ -3,6 +3,8 @@ import { Subject } from "../types/gradeTypes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface ScoreInputFormProps {
   subject: Subject;
@@ -17,6 +19,13 @@ export default function ScoreInputForm({
   onInputChange, 
   onCalculate
 }: ScoreInputFormProps) {
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+  
+  const handleCalculateClick = () => {
+    if (!user) { openLogin(); return; }
+    onCalculate();
+  };
   
   // Custom handler to enforce max limit
   const handleValueChange = (fieldId: string, value: string, max: number) => {
@@ -78,7 +87,7 @@ export default function ScoreInputForm({
       {/* Calculate Button - Deep Blue, Semi-Bold */}
       <div className="flex justify-start">
         <Button 
-          onClick={onCalculate}
+          onClick={handleCalculateClick}
           className="h-12 px-8 bg-blue-800 text-white hover:bg-blue-900 rounded-sm font-semibold text-base font-['Inter'] transition-all shadow-sm"
         >
           Calculate Grade

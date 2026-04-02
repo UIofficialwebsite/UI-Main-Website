@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye, Trash2 } from "lucide-react";
 import { ShimmerButton } from './ui/shimmer-button';
 import { ShareButton } from './ShareButton';
+import { useAuth } from '@/hooks/useAuth';
+import { useLoginModal } from '@/context/LoginModalContext';
 import { slugify } from '@/utils/urlHelpers';
 
 interface Chapter {
@@ -54,6 +56,17 @@ const buildNoteUrl = (chapter: Chapter, contentType: string): string => {
 };
 
 const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onDownload, isAdmin, onDelete, contentType = 'notes' }) => {
+    const { user } = useAuth();
+    const { openLogin } = useLoginModal();
+
+    const requireAuth = (action: () => void) => {
+        if (!user) {
+            openLogin();
+            return;
+        }
+        action();
+    };
+
     return (
         <div className="space-y-4">
             <ul className="space-y-3">
@@ -70,7 +83,7 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onD
                             </div>
                             {chapter.content_url && (
                                 <Button
-                                    onClick={() => window.open(chapter.content_url!, '_blank')}
+                                    onClick={() => requireAuth(() => window.open(chapter.content_url!, '_blank'))}
                                     variant="outline"
                                     size="sm"
                                     title="Preview notes"
@@ -86,7 +99,7 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onD
                                 size="sm"
                             />
                             <ShimmerButton
-                                onClick={() => onDownload(chapter.id, chapter.file_link || undefined)}
+                                onClick={() => requireAuth(() => onDownload(chapter.id, chapter.file_link || undefined))}
                                 disabled={!chapter.file_link}
                                 title={!chapter.file_link ? "No file available for download" : "Download file"}
                                 background={chapter.file_link ? "rgba(26, 86, 219, 0.8)" : "rgba(107, 114, 128, 0.5)"}

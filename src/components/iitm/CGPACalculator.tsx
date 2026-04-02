@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 import {
   Carousel,
   CarouselContent,
@@ -128,7 +130,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     setCourses(newCourses);
   };
 
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+
   const handleCalculate = () => {
+    if (!user) { openLogin(); return; }
     setShowReport(true);
     setTimeout(() => {
       reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -7,10 +7,12 @@ import HeroCarousel from "@/components/HeroCarousel";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, Download } from "lucide-react"; // Removed FileText
+import { ArrowLeft, Search, Download } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 import { usePageSEO, getIITMNotesTitleSEO } from "@/utils/seoManager";
 
@@ -20,6 +22,13 @@ const IITMBSSubjectNotesPage = () => {
   const location = useLocation();
   const { loading, groupedData } = useIITMBranchNotes(branch || "", level || "");
   const { handleDownload, downloadCounts } = useDownloadHandler();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+  
+  const requireAuth = (action: () => void) => {
+    if (!user) { openLogin(); return; }
+    action();
+  };
   
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   
@@ -125,13 +134,13 @@ const IITMBSSubjectNotesPage = () => {
         <div className="flex space-x-3 mt-auto font-sans">
           <button 
             className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
-            onClick={() => note.file_link && window.open(note.file_link, '_blank')}
+            onClick={() => requireAuth(() => note.file_link && window.open(note.file_link, '_blank'))}
           >
             View
           </button>
           <button 
             className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
-            onClick={() => handleDownload(note.id, 'notes', note.file_link)}
+            onClick={() => requireAuth(() => handleDownload(note.id, 'notes', note.file_link))}
           >
             Get PDF
           </button>
