@@ -22,6 +22,13 @@ const IITMBSSubjectNotesPage = () => {
   const location = useLocation();
   const { loading, groupedData } = useIITMBranchNotes(branch || "", level || "");
   const { handleDownload, downloadCounts } = useDownloadHandler();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+  
+  const requireAuth = (action: () => void) => {
+    if (!user) { openLogin(); return; }
+    action();
+  };
   
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   
