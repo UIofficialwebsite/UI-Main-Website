@@ -70,7 +70,7 @@ export default function PredictorInputForm({
 
       <div className="flex justify-start">
         <Button 
-          onClick={onCalculate}
+          onClick={handleCalculateClick}
           className="h-12 px-8 bg-blue-800 text-white hover:bg-blue-900 rounded-sm font-semibold text-base font-['Inter'] transition-all shadow-sm"
         >
           Calculate Required Scores
