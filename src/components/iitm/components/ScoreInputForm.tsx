@@ -19,6 +19,13 @@ export default function ScoreInputForm({
   onInputChange, 
   onCalculate
 }: ScoreInputFormProps) {
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+  
+  const handleCalculateClick = () => {
+    if (!user) { openLogin(); return; }
+    onCalculate();
+  };
   
   // Custom handler to enforce max limit
   const handleValueChange = (fieldId: string, value: string, max: number) => {
