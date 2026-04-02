@@ -3,6 +3,8 @@ import { Subject } from "../types/gradeTypes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface ScoreInputFormProps {
   subject: Subject;
