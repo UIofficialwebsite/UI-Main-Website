@@ -7,10 +7,12 @@ import HeroCarousel from "@/components/HeroCarousel";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, Download } from "lucide-react"; // Removed FileText
+import { ArrowLeft, Search, Download } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 import { usePageSEO, getIITMNotesTitleSEO } from "@/utils/seoManager";
 
