@@ -1,12 +1,15 @@
-
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ALL_SUBJECTS } from "./data/subjectsData";
-import { calculateFoundationGrade, getGradeLetter } from "./utils/gradeCalculations";
+import { calculateFoundationGrade } from "./utils/gradeCalculations";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
+import { logToolUsage } from "@/utils/toolLogger";
 
 interface FoundationMarksPredictorProps {
   branch: string;
@@ -39,14 +42,12 @@ function checkEligibility(subjectKey: string, inputs: Record<string, number>): s
     return "Eligibility: Assignment average must be at least 40/100 to appear for end term.";
   }
 
-  // Check quiz eligibility for most subjects
   if (!["intro_linux_programming"].includes(subjectKey)) {
     if ((inputs.Qz1 ?? 0) === 0 && (inputs.Qz2 ?? 0) === 0) {
       return "Eligibility: At least one quiz (Qz1 or Qz2) must be attempted (>0).";
     }
   }
 
-  // Special checks for programming subjects
   if (subjectKey === "intro_c_programming") {
     if ((inputs.OPPE1 ?? 0) < 40 && (inputs.OPPE2 ?? 0) < 40) {
       return "Note: To PASS the subject, at least one of OPPE1 or OPPE2 must be ≥ 40.";
@@ -63,7 +64,9 @@ function checkEligibility(subjectKey: string, inputs: Record<string, number>): s
 }
 
 export default function FoundationMarksPredictor({ branch, level }: FoundationMarksPredictorProps) {
-  // Determine which subjects to show based on branch and level
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+
   const getSubjectsKey = () => {
     if (branch === "electronic-systems" && level === "foundation") {
       return "foundation-electronic-systems";
@@ -74,30 +77,50 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
   const subjects = ALL_SUBJECTS[getSubjectsKey()] || [];
   const [subjectKey, setSubjectKey] = useState(subjects[0]?.key || "");
   const [inputs, setInputs] = useState<Record<string, string>>({});
+  const [requiredFs, setRequiredFs] = useState<{ grade: string; mark: number | null; already: boolean }[] | null>(null);
+  const [eligibility, setEligibility] = useState<string | null>(null);
 
   const subjectObj = subjects.find(s => s.key === subjectKey);
 
   const parseInputNumber = (val: string, min: number, max: number): number =>
     val === "" ? 0 : Math.max(min, Math.min(max, Number(val)));
 
-  const numericInputs: Record<string, number> = {};
-  if (subjectObj) {
+  const handleInput = (id: string, val: string) => {
+    if (/^(\d{0,3})$/.test(val) || val === "") {
+      setInputs(prev => ({ ...prev, [id]: val }));
+    }
+  };
+
+  const handleSubjectChange = (newSubjectKey: string) => {
+    setSubjectKey(newSubjectKey);
+    setInputs({});
+    setRequiredFs(null);
+    setEligibility(null);
+  };
+
+  const handleCalculate = () => {
+    if (!user) { openLogin(); return; }
+    if (!subjectObj) return;
+
+    const numericInputs: Record<string, number> = {};
     subjectObj.fields.forEach(field => {
-      if (field.id !== 'F') { // Exclude F from inputs
+      if (field.id !== 'F') {
         numericInputs[field.id] = parseInputNumber(inputs[field.id] ?? "", field.min, field.max);
       }
     });
-  }
 
-  const eligibility = subjectObj ? checkEligibility(subjectKey, numericInputs) : null;
-  const GAA_val = numericInputs.GAA ?? 0;
+    const eligMsg = checkEligibility(subjectKey, numericInputs);
+    setEligibility(eligMsg);
 
-  const currentScore = subjectObj ? calculateFoundationGrade(subjectKey, { ...numericInputs, F: 0 }) : 0;
+    const GAA_val = numericInputs.GAA ?? 0;
 
-  const requiredFs = useMemo(() => {
-    if (!subjectObj || GAA_val < 40) return null;
-    if (eligibility && eligibility.startsWith("Eligibility:")) return null;
-    
+    if (eligMsg && eligMsg.startsWith("Eligibility:")) {
+      setRequiredFs(null);
+      return;
+    }
+
+    const currentScore = calculateFoundationGrade(subjectKey, { ...numericInputs, F: 0 });
+
     const out: { grade: string; mark: number | null; already: boolean }[] = [];
     for (const [grade, threshold] of GRADES) {
       if (currentScore >= threshold) {
@@ -111,18 +134,32 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
         already: false,
       });
     }
-    return out;
-  }, [subjectKey, numericInputs, GAA_val, currentScore, subjectObj]);
+    
+    // Log tool usage silently
+    try {
+      const metaKeys = ["id","name","credits","grade","subject","marks","scores","result","target"];
+      const scores: Record<string, number> = {};
+      Object.entries(numericInputs).forEach(([key, val]) => {
+        if (!metaKeys.includes(key)) {
+          scores[key.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2")] = val;
+        }
+      });
+      logToolUsage({
+        toolName: "Foundation Marks Predictor",
+        branch,
+        level,
+        inputDetails: { subject_details: { subject: subjectObj.name, scores } },
+        resultDetails: out
+      });
+    } catch (e) { /* silent */ }
 
-  const handleInput = (id: string, val: string) => {
-    if (/^(\d{0,3})$/.test(val) || val === "") {
-      setInputs(prev => ({ ...prev, [id]: val }));
-    }
+    setRequiredFs(out);
   };
 
-  const handleSubjectChange = (newSubjectKey: string) => {
-    setSubjectKey(newSubjectKey);
+  const handleReset = () => {
     setInputs({});
+    setRequiredFs(null);
+    setEligibility(null);
   };
 
   if (!subjectObj) {
@@ -176,6 +213,18 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
           ))}
         </div>
 
+        {/* Calculate & Reset Buttons */}
+        <div className="flex gap-3 mb-4">
+          <Button onClick={handleCalculate} className="bg-blue-700 hover:bg-blue-800 text-white">
+            Calculate
+          </Button>
+          {requiredFs && (
+            <Button onClick={handleReset} variant="outline">
+              Reset
+            </Button>
+          )}
+        </div>
+
         {/* Eligibility info */}
         {eligibility && eligibility.startsWith("Eligibility:") ? (
           <div className="p-3 rounded bg-yellow-100 text-yellow-900 font-medium mb-4">
@@ -185,11 +234,11 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
           <div className="p-3 rounded bg-blue-100 text-blue-900 font-medium mb-4">
             {eligibility}
           </div>
-        ) : (
+        ) : requiredFs ? (
           <div className="p-3 rounded bg-green-50 text-green-900 font-medium mb-4">
             Eligible for end term!
           </div>
-        )}
+        ) : null}
 
         {/* Required End Term Marks Table */}
         {requiredFs && (
@@ -225,7 +274,7 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
         )}
 
         <div className="mt-4 text-xs text-gray-500">
-          Enter your scores above to see the minimum Final Exam marks needed for each grade.
+          Enter your scores above and click Calculate to see the minimum Final Exam marks needed for each grade.
         </div>
       </CardContent>
     </Card>

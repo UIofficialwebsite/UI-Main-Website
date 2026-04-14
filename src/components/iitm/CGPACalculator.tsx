@@ -8,6 +8,7 @@ import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
+import { logToolUsage } from "@/utils/toolLogger";
 import {
   Carousel,
   CarouselContent,
@@ -135,6 +136,34 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
   const handleCalculate = () => {
     if (!user) { openLogin(); return; }
+
+    // Log tool usage silently
+    try {
+      const courseDetails = courses.map(c => ({
+        name: c.name || "Unnamed",
+        credits: parseFloat(c.credits) || 0,
+        grade: gradeOptions.find(g => g.value === c.grade)?.label || c.grade
+      }));
+      logToolUsage({
+        toolName: "CGPA Calculator",
+        branch,
+        level,
+        inputDetails: {
+          subject_details: {
+            current_cgpa: parseFloat(currentCGPA) || 0,
+            credits_completed: parseFloat(creditsCompleted) || 0,
+            subjects_completed: parseInt(subjectsCompleted) || 0,
+            courses: courseDetails
+          }
+        },
+        resultDetails: {
+          semester_gpa: Math.round(semesterGPA * 100) / 100,
+          cumulative_cgpa: Math.round(cumulativeCGPA * 100) / 100,
+          total_credits: totalCredits
+        }
+      });
+    } catch (e) { /* silent */ }
+
     setShowReport(true);
     setTimeout(() => {
       reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
