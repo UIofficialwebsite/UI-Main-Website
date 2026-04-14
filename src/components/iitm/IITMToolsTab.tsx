@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import CGPACalculator from "./CGPACalculator";
 import GradeCalculator from "./GradeCalculator";
 import FoundationMarksPredictor from "./FoundationMarksPredictor";
@@ -36,17 +36,35 @@ const IITMToolsTab = ({
 
   const { courses, isLoading: coursesLoading } = useCoursesManager();
 
-  // Filter for Paid courses that match the current Tab's branch & level
+  // --- FILTER LOGIC ---
   const filteredCourses = courses?.filter((course: any) => {
-    // Check if it's a paid course (adjust based on your exact schema)
-    const isPaid = course.price > 0 || course.is_paid === true; 
+    // 1. Safely check if paid (handles both strings and numbers)
+    const isPaid = Number(course.price) > 0 || course.is_paid === true; 
     
-    // Check if the course branch/level matches the current view
-    const matchesBranch = !course.branch || course.branch?.toLowerCase() === branch.toLowerCase();
-    const matchesLevel = !course.level || course.level?.toLowerCase() === level.toLowerCase();
+    // 2. Normalize strings (removes accidental spaces and makes case-insensitive)
+    const courseBranch = String(course.branch || "").trim().toLowerCase();
+    const currentBranch = String(branch || "").trim().toLowerCase();
+    
+    const courseLevel = String(course.level || "").trim().toLowerCase();
+    const currentLevel = String(level || "").trim().toLowerCase();
+    
+    // 3. Match logic (If course doesn't have a branch specified, assume it applies to all)
+    const matchesBranch = !courseBranch || courseBranch === currentBranch;
+    const matchesLevel = !courseLevel || courseLevel === currentLevel;
     
     return isPaid && matchesBranch && matchesLevel;
   }) || [];
+
+  // --- DEBUGGING (Check your browser console) ---
+  useEffect(() => {
+    if (selectedTool === "marks-predictor" && !coursesLoading) {
+      console.log("--- COURSES DEBUG ---");
+      console.log("Current UI State -> Branch:", branch, "| Level:", level);
+      console.log("Raw Courses from DB:", courses);
+      console.log("Courses after filter:", filteredCourses);
+    }
+  }, [selectedTool, coursesLoading, courses, branch, level]);
+
 
   // Render the selected tool directly
   const renderTool = () => {
