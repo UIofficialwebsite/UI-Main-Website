@@ -7,6 +7,7 @@ import ScoreInputForm from "./components/ScoreInputForm";
 import GradeResult from "./components/GradeResult";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { logToolUsage } from "@/utils/toolLogger";
 
 interface GradeCalculatorProps {
   level: string; // Changed to string to safely accept "Foundation" etc.
@@ -91,11 +92,31 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     const safeLevel = (level?.toLowerCase() || "foundation") as Level;
     const score = calculateGradeByLevel(safeLevel, currentSubject.key, numericValues);
     
-    setResult({
+    const resultData = {
       score: Math.round(score * 100) / 100,
       letter: getGradeLetter(score),
       points: getGradePoints(score)
-    });
+    };
+
+    // Log tool usage silently
+    try {
+      const metaKeys = ["id","name","credits","grade","subject","marks","scores","result","target"];
+      const scores: Record<string, number> = {};
+      Object.entries(inputValues).forEach(([key, val]) => {
+        if (!metaKeys.includes(key)) {
+          scores[key.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2")] = parseFloat(val as string) || 0;
+        }
+      });
+      logToolUsage({
+        toolName: "Grade Calculator",
+        branch: branch,
+        level: level,
+        inputDetails: { subject_details: { subject: currentSubject.name, scores } },
+        resultDetails: resultData
+      });
+    } catch (e) { /* silent */ }
+
+    setResult(resultData);
   };
 
   const resetCalculator = () => {

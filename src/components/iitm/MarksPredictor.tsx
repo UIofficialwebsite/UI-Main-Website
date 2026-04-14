@@ -7,6 +7,7 @@ import PredictorInputForm from "./components/PredictorInputForm";
 import PredictorResult from "./components/PredictorResult";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { logToolUsage } from "@/utils/toolLogger";
 
 interface MarksPredictorProps {
   level: string; 
@@ -78,6 +79,24 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     grades.forEach(grade => {
       newResults[grade] = predictRequiredScore(safeLevel, currentSubject.key, numericValues, grade);
     });
+
+    // Log tool usage silently
+    try {
+      const metaKeys = ["id","name","credits","grade","subject","marks","scores","result","target"];
+      const scores: Record<string, number> = {};
+      Object.entries(inputValues).forEach(([key, val]) => {
+        if (!metaKeys.includes(key)) {
+          scores[key.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2")] = parseFloat(val) || 0;
+        }
+      });
+      logToolUsage({
+        toolName: "Marks Predictor",
+        branch: branch,
+        level: level,
+        inputDetails: { subject_details: { subject: currentSubject.name, scores } },
+        resultDetails: newResults
+      });
+    } catch (e) { /* silent */ }
 
     setResults(newResults);
   };
