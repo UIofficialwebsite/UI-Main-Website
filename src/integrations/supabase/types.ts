@@ -1322,6 +1322,45 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_usage_logs: {
+        Row: {
+          branch: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          input_details: Json | null
+          level: string | null
+          phone: string | null
+          result_details: Json | null
+          tool_name: string
+          user_id: string | null
+        }
+        Insert: {
+          branch?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          input_details?: Json | null
+          level?: string | null
+          phone?: string | null
+          result_details?: Json | null
+          tool_name: string
+          user_id?: string | null
+        }
+        Update: {
+          branch?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          input_details?: Json | null
+          level?: string | null
+          phone?: string | null
+          result_details?: Json | null
+          tool_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       updated_profiles: {
         Row: {
           branch: string | null
