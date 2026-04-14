@@ -332,7 +332,7 @@ const InternVerification = () => {
                 Discrepancy Reporting
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-6 text-slate-600 text-sm leading-relaxed">
-                Any inconsistencies in the displayed data should be immediately reported to the Human Resources department at <span className="font-medium text-slate-900">hr@unknowniitians.com</span> with a copy of the original offer letter.
+                Any inconsistencies in the displayed data should be immediately reported to the Human Resources department at <span className="font-medium text-slate-900">corporate@hq.unknowniitians.com</span> with a copy of the original offer letter.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
