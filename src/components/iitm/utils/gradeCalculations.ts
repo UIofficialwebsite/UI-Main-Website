@@ -75,23 +75,25 @@ export function getGradeFormula(subjectKey: string): string {
     case "maths2":
       return "min(100, max(0.6F + 0.3max(Q1,Q2), 0.45F + 0.25Q1 + 0.3Q2) + Bonus)";
     case "python":
-      return "0.15*Qz1 + 0.4*F + 0.25*max(OPPE) + 0.2*min(OPPE)";
+      return "0.15*Qz1 + 0.4*F + 0.25*max(OPPE) + 0.2*min(OPPE) (Req: OPPE >= 40)";
     case "mlf": case "mlt": case "ml_techniques":
       return "0.05*GAA + max(0.6F+0.25max(Qz), 0.4F+0.25Qz1+0.3Qz2) + Bonus";
     case "mlp": case "machinelearning_practice":
-      return "0.1*GAA + 0.3*F + 0.2*OPPE1 + 0.2*OPPE2 + 0.2*KA";
+      return "0.1*GAA + 0.3*F + 0.2*OPPE1 + 0.2*OPPE2 + 0.2*KA (Req: OPPE >= 40)";
     case "bdm": case "business_data_management":
       return "GA + Qz1 + Qz2 + F";
     case "ba": case "business_analytics":
-      return "2*(0.7max(Qz)+0.3min(Qz)) + A + F + Bonus";
-    case "programming_python": case "pdsa": case "databasems": case "dbms":
-      return "0.05*GAA + 0.2*OP + 0.45*F + max(0.2max(Qz), 0.1Qz1+0.2Qz2)";
+      return "2*(0.7max(Qz)+0.3min(Qz)) + A + F + Bonus (Req: F >= 10/40)";
+    case "programming_python": case "pdsa":
+      return "0.05*GAA + 0.2*OP + 0.45*F + max(0.2max(Qz), 0.1Qz1+0.2Qz2) (Req: OPPE >= 40)";
+    case "databasems": case "dbms":
+      return "0.03*GAA2 + 0.02*GAA3 + 0.2*OP + 0.45*F + max(0.2max(Qz), 0.1Qz1+0.2Qz2) (Req: OP >= 35)";
     case "appdev1": case "appdev2":
       return "0.05*GAA + max(0.6F+0.25max(Qz), 0.4F+0.25Qz1+0.3Qz2)";
     case "java": case "java_programming":
-      return "0.05*GAA + 0.2*max(PE) + 0.45*F + max(0.2max(Qz), 0.1Qz1+0.2Qz2) + 0.1*min(PE)";
+      return "0.05*GAA + 0.2*max(PE) + 0.45*F + max(0.2max(Qz), 0.1Qz1+0.2Qz2) + 0.1*min(PE) (Req: PE >= 30)";
     case "systemcommands": case "system-commands":
-      return "0.05*GAA + 0.25*Qz1 + 0.3*OPPE + 0.3*F + 0.1*BPTA";
+      return "0.05*GAA + 0.25*Qz1 + 0.3*OPPE + 0.3*F + 0.1*BPTA (Req: OPPE >= 40)";
     case "tools_data_science": case "tds":
       return "0.2*GAA + 0.2*ROE + 0.2*P1 + 0.2*P2 + 0.2*F";
     case "software_engineering":
@@ -99,11 +101,11 @@ export function getGradeFormula(subjectKey: string): string {
     case "dl-genai": case "intro_dl_genai":
       return "0.1*GAA + 0.2*Qz1 + 0.2*Qz2 + 0.25*F + 0.1*NPPE1 + 0.15*NPPE2";
     case "int_bigdata": case "big-data":
-      return "0.1*GAA + 0.3*F + 0.2*OPPE1 + 0.4*OPPE2 + Bonus";
+      return "0.1*GAA + 0.3*F + 0.2*OPPE1 + 0.4*OPPE2 + Bonus (Req: OPPE >= 40)";
     case "mlops":
       return "0.2*GAA + 0.3*F + 0.25*OPPE1 + 0.25*OPPE2 + Bonus";
     case "c_prog": case "c-programming":
-      return "0.1*GAA + 0.2*Qz1 + 0.2*OPPE1 + 0.2*OPPE2 + 0.3*F";
+      return "0.1*GAA + 0.2*Qz1 + 0.2*OPPE1 + 0.2*OPPE2 + 0.3*F (Req: OPPE >= 40)";
     case "deep-learning": case "deep_learning": case "dl-cv": case "deep_learning_cv":
       return "0.05*GAA + 0.25*Qz1 + 0.25*Qz2 + 0.45*F + Bonus";
     case "llms": case "math_foundations_genai":
@@ -113,9 +115,9 @@ export function getGradeFormula(subjectKey: string): string {
     case "speech_technology":
       return "0.15*GAA + 0.15*V + 0.3*F + 0.2*Qz1 + 0.2*Qz2";
     case "ds_ai_lab":
-      return "0.15*GAA + 0.2*Qz2 + 0.5*P + 0.15*V + Bonus";
+      return "0.15*GAA + 0.2*Qz2 + 0.5*P + 0.15*V + Bonus (Req: Viva >= 55)";
     case "app_dev_lab":
-      return "0.2*Qz2 + 0.3*GA + 0.5*V";
+      return "0.2*Qz2 + 0.3*GA + 0.5*V (Req: Viva >= 50)";
     case "algo_thinking_bio":
       return "0.075*GAA + 0.025*GRPa + 0.25*Qz1 + 0.25*Qz2 + 0.4*F";
     case "market_research":
@@ -134,7 +136,6 @@ export function calculateFoundationGrade(subjectKey: string, values: Record<stri
           GAA = 0, NPPE = 0, OPE = 0, BPTA = 0, VMT = 0, 
           GRPA = 0, EXP = 0, RPT = 0, TLA = 0, IL = 0, OL = 0, Viva = 0 } = values;
 
-  // Electronic Systems Preserved
   if (subjectKey.startsWith("es_")) {
     switch (subjectKey) {
       case "es_english1": case "es_math1": case "es_estc": case "es_english2":
@@ -154,10 +155,11 @@ export function calculateFoundationGrade(subjectKey: string, values: Record<stri
     }
   }
 
-  // Data Science Foundation
   switch (subjectKey) {
     case "python":
-      return 0.15 * Qz1 + 0.4 * F + 0.25 * Math.max(OPPE1, OPPE2) + 0.2 * Math.min(OPPE1, OPPE2);
+      const pythonScore = 0.15 * Qz1 + 0.4 * F + 0.25 * Math.max(OPPE1, OPPE2) + 0.2 * Math.min(OPPE1, OPPE2);
+      // Eligibility: Min score in one OPPE >= 40
+      return Math.max(OPPE1, OPPE2) >= 40 ? pythonScore : Math.min(pythonScore, 39);
     case "statistics1": case "statistics2": case "maths2":
       return calculateDSFoundationStandard(values) + Bonus;
     case "maths2_clamped":
@@ -169,11 +171,10 @@ export function calculateFoundationGrade(subjectKey: string, values: Record<stri
 
 export function calculateDiplomaGrade(subjectKey: string, values: Record<string, number>): number {
   const { GAA = 0, GA = 0, Qz1 = 0, Qz2 = 0, F = 0, OPPE1 = 0, OPPE2 = 0, KA = 0, 
-          Timed = 0, A = 0, Bonus = 0, GLA = 0, PE1 = 0, PE2 = 0, OP = 0,
-          GrPA = 0, GAA1 = 0, GAA2 = 0, LE = 0, LV = 0, WE = 0, ID = 0, ROE = 0, P1 = 0, P2 = 0,
+          A = 0, Bonus = 0, PE1 = 0, PE2 = 0, OP = 0,
+          GrPA = 0, GAA1 = 0, GAA2 = 0, LE = 0, LV = 0, ROE = 0, P1 = 0, P2 = 0,
           NPPE1 = 0, NPPE2 = 0 } = values;
 
-  // Electronic Systems Preserved
   if (subjectKey.startsWith("es_")) {
     switch (subjectKey) {
       case "es_math2": case "es_analog": case "es_sensors": case "es_control":
@@ -190,7 +191,6 @@ export function calculateDiplomaGrade(subjectKey: string, values: Record<string,
     }
   }
 
-  // Data Science Diploma (Updated Jan 2026)
   switch (subjectKey) {
     case "mlf": case "mlt": case "ml_techniques": case "machinelearning":
     case "appdev1": case "appdev2":
@@ -198,22 +198,39 @@ export function calculateDiplomaGrade(subjectKey: string, values: Record<string,
       const opt2 = 0.4 * F + 0.25 * Qz1 + 0.3 * Qz2;
       return 0.05 * GAA + Math.max(opt1, opt2) + Bonus;
     case "mlp": case "machinelearning_practice":
-      return 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.2 * OPPE2 + 0.2 * KA;
+      const mlpScore = 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.2 * OPPE2 + 0.2 * KA;
+      // Eligibility: OPPE score >= 40
+      return Math.max(OPPE1, OPPE2) >= 40 ? mlpScore : Math.min(mlpScore, 39);
     case "bdm": case "business_data_management":
       return GA + Qz1 + Qz2 + F;
     case "ba": case "business_analytics":
       const qzComp = 2 * (0.7 * Math.max(Qz1, Qz2) + 0.3 * Math.min(Qz1, Qz2));
-      return qzComp + A + F + Bonus;
-    case "pdsa": case "programming_python": case "dbms": case "databasems":
+      const baScore = qzComp + A + F + Bonus;
+      // Eligibility: F >= 10/40
+      return F >= 10 ? baScore : Math.min(baScore, 39); 
+    case "pdsa": case "programming_python": 
       const optPDSA1 = 0.2 * Math.max(Qz1, Qz2);
       const optPDSA2 = 0.1 * Qz1 + 0.2 * Qz2;
-      return 0.05 * GAA + 0.2 * OP + 0.45 * F + Math.max(optPDSA1, optPDSA2);
+      const pdsaScore = 0.05 * GAA + 0.2 * OP + 0.45 * F + Math.max(optPDSA1, optPDSA2);
+      // Eligibility: OPPE score >= 40
+      return OP >= 40 ? pdsaScore : Math.min(pdsaScore, 39);
+    case "dbms": case "databasems":
+      const gaaDBMS = 0.03 * (values.GAA2 || 0) + 0.02 * (values.GAA3 || 0);
+      const optDBMS1 = 0.2 * Math.max(Qz1, Qz2);
+      const optDBMS2 = 0.1 * Qz1 + 0.2 * Qz2;
+      const dbmsScore = gaaDBMS + 0.2 * OP + 0.45 * F + Math.max(optDBMS1, optDBMS2);
+      // Eligibility: Overall OPE >= 35%
+      return OP >= 35 ? dbmsScore : Math.min(dbmsScore, 39);
     case "java": case "java_programming":
       const optJ1 = 0.2 * Math.max(Qz1, Qz2);
       const optJ2 = 0.1 * Qz1 + 0.2 * Qz2;
-      return 0.05 * GAA + 0.2 * Math.max(PE1, PE2) + 0.45 * F + Math.max(optJ1, optJ2) + 0.1 * Math.min(PE1, PE2);
+      const javaScore = 0.05 * GAA + 0.2 * Math.max(PE1, PE2) + 0.45 * F + Math.max(optJ1, optJ2) + 0.1 * Math.min(PE1, PE2);
+      // Eligibility: Programming exam >= 30
+      return Math.max(PE1, PE2) >= 30 ? javaScore : Math.min(javaScore, 39);
     case "systemcommands": case "system-commands":
-      return 0.05 * GAA + 0.25 * Qz1 + 0.3 * (values.OPPE || 0) + 0.3 * F + 0.1 * (values.BPTA || 0);
+      const sysScore = 0.05 * GAA + 0.25 * Qz1 + 0.3 * (values.OPPE || 0) + 0.3 * F + 0.1 * (values.BPTA || 0);
+      // Eligibility: OPPE >= 40
+      return (values.OPPE || 0) >= 40 ? sysScore : Math.min(sysScore, 39);
     case "intro_dl_genai": case "dl-genai":
       return 0.1 * GAA + 0.2 * Qz1 + 0.2 * Qz2 + 0.25 * F + 0.1 * NPPE1 + 0.15 * NPPE2;
     case "tools_data_science": case "tds":
@@ -225,10 +242,9 @@ export function calculateDiplomaGrade(subjectKey: string, values: Record<string,
 export function calculateDegreeGrade(subjectKey: string, values: Record<string, number>): number {
   const { GAA = 0, GA = 0, Qz1 = 0, Qz2 = 0, Qz3 = 0, F = 0, Bonus = 0, 
           GP1 = 0, GP2 = 0, PP = 0, CP = 0, GP = 0, 
-          OPPE1 = 0, OPPE2 = 0, GPA = 0, NPPE = 0, 
-          NPPE1 = 0, NPPE2 = 0, NPPE3 = 0, Prog = 0, P = 0, V = 0, GRPa = 0, Viva = 0 } = values;
+          OPPE1 = 0, OPPE2 = 0, NPPE = 0, 
+          NPPE1 = 0, NPPE2 = 0, NPPE3 = 0, P = 0, V = 0, GRPa = 0, Viva = 0 } = values;
 
-  // Electronic Systems Preserved
   if (subjectKey.startsWith("es_")) {
     switch (subjectKey) {
       case "es_comp_org": case "es_em_fields":
@@ -242,7 +258,6 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
     }
   }
 
-  // Data Science Degree (Updated Jan 2026)
   switch (subjectKey) {
     case "software_engineering":
       return 0.05 * GAA + 0.2 * Qz2 + 0.4 * F + 0.1 * GP1 + 0.1 * GP2 + 0.1 * PP + 0.05 * CP;
@@ -253,14 +268,20 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
     case "llms": case "math_foundations_genai":
       return 0.05 * GAA + 0.35 * F + 0.2 * Qz1 + 0.2 * Qz2 + 0.2 * NPPE + Bonus;
     case "int_bigdata": case "big_data":
-      return 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.4 * OPPE2 + Bonus;
+      const bigDataScore = 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.4 * OPPE2 + Bonus;
+      // Eligibility: min score OPPE >= 40
+      return Math.max(OPPE1, OPPE2) >= 40 ? bigDataScore : Math.min(bigDataScore, 39);
     case "mlops":
       return Math.min(100, 0.2 * GAA + 0.3 * F + 0.25 * OPPE1 + 0.25 * OPPE2 + Bonus);
     case "c_prog": case "c-programming":
-      return 0.10 * GAA + 0.20 * Qz1 + 0.20 * OPPE1 + 0.20 * OPPE2 + 0.30 * F;
+      const cScore = 0.10 * GAA + 0.20 * Qz1 + 0.20 * OPPE1 + 0.20 * OPPE2 + 0.30 * F;
+      // Eligibility: OPPE >= 40
+      return Math.max(OPPE1, OPPE2) >= 40 ? cScore : Math.min(cScore, 39);
     case "deep_learning_practice":
       const nppeAvg = (NPPE1 + NPPE2 + NPPE3) / 3;
-      return 0.05 * GA + 0.15 * Qz1 + 0.15 * Qz2 + 0.15 * Qz3 + 0.25 * nppeAvg + 0.25 * Viva;
+      const dlpScore = 0.05 * GA + 0.15 * Qz1 + 0.15 * Qz2 + 0.15 * Qz3 + 0.25 * nppeAvg + 0.25 * Viva;
+      // Eligibility: Viva >= 25/50 (equivalent to 50/100 input)
+      return Viva >= 50 ? dlpScore : Math.min(dlpScore, 39);
     case "managerial-economics": case "advanced_algorithms":
       const optDeg1 = 0.2 * Qz1 + 0.2 * Qz2 + 0.45 * F;
       const optDeg2 = 0.5 * F + 0.25 * Math.max(Qz1, Qz2);
@@ -268,9 +289,13 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
     case "speech_technology":
       return 0.15 * GAA + 0.15 * V + 0.3 * F + 0.2 * Qz1 + 0.2 * Qz2;
     case "ds_ai_lab":
-      return 0.15 * GAA + 0.2 * Qz2 + 0.5 * P + 0.15 * V + Bonus;
+      const dsLabScore = 0.15 * GAA + 0.2 * Qz2 + 0.5 * P + 0.15 * V + Bonus;
+      // Eligibility: Viva >= 55%
+      return V >= 55 ? dsLabScore : Math.min(dsLabScore, 39);
     case "app_dev_lab":
-      return 0.2 * Qz2 + 0.3 * GA + 0.5 * V;
+      const appDevLabScore = 0.2 * Qz2 + 0.3 * GA + 0.5 * V;
+      // Eligibility: Viva >= 25/50 (equivalent to 50/100 input)
+      return V >= 50 ? appDevLabScore : Math.min(appDevLabScore, 39);
     case "algo_thinking_bio":
       return 0.075 * GAA + 0.025 * GRPa + 0.25 * Qz1 + 0.25 * Qz2 + 0.4 * F;
     case "market_research":
