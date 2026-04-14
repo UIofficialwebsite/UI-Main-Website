@@ -1,7 +1,8 @@
 import React, { useRef } from "react";
 import html2canvas from "html2canvas";
-import { Share } from "lucide-react";
+import { Share, AlertCircle } from "lucide-react";
 import { getGradeFormula } from "../utils/gradeCalculations";
+import { checkEligibilityIssues } from "../utils/predictorLogic";
 import { ALL_SUBJECTS } from "../data/subjectsData";
 import { Subject } from '../types/gradeTypes';
 
@@ -29,6 +30,10 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
   };
 
   const subjectDetails = getSubjectDetails();
+
+  // Run the eligibility check on the provided inputs to see if the 'U' grade is due to eligibility failure
+  // We cast inputValues as any because predictorLogic naturally handles the string/number conversions and blank checks
+  const eligibilityWarning = checkEligibilityIssues(subjectKey, inputValues as any);
 
   const getLabelForKey = (key: string) => {
     const field = subjectDetails?.fields.find((f) => f.id === key);
@@ -87,30 +92,52 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
   const gradeColor = result.letter === 'U' ? '#d32f2f' : '#16a34a';
 
   return (
-    <div className="w-full mt-12 font-['Inter'] text-[#000000]">
+    <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-4">
       
       {/* CAPTURE AREA START */}
-      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm relative w-full pb-16">
+      <div ref={resultRef} className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm relative w-full pb-16">
         
+        {/* ELIGIBILITY WARNING BANNER */}
+        {eligibilityWarning && (
+          <div className="flex items-start space-x-3 p-4 bg-red-50 rounded-lg border border-red-100 mb-8">
+            <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="font-bold text-red-900 text-base mb-1">Eligibility Requirements Not Met</h4>
+              <p className="text-red-800 text-sm font-medium">
+                <span className="font-bold text-red-700 mr-2">Reason:</span> 
+                {eligibilityWarning}
+              </p>
+              <p className="text-xs text-red-700 opacity-90 mt-2 bg-red-100/50 p-2 rounded">
+                Because mandatory criteria were not met, your final score is automatically capped, resulting in a 'U' grade.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* SECTION 1: OVERVIEW */}
         <div className="mb-10 w-full">
-          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Overview</span>
-          <table className="w-full border-collapse border border-black table-fixed">
+          <span className="block text-[14px] font-bold text-slate-800 uppercase tracking-wide mb-3 border-b border-slate-200 pb-2">
+            Result Overview
+          </span>
+          <table className="w-full border-collapse border border-slate-300 table-fixed bg-slate-50/30">
             <tbody>
               <tr>
-                <td className="border border-black p-5 text-center w-1/3">
-                  <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">Expected Grade</span>
-                  <span className="text-[40px] font-extrabold" style={{ color: gradeColor }}>
+                <td className="border border-slate-300 p-5 text-center w-1/3">
+                  <span className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Expected Grade</span>
+                  <span className="text-[42px] font-black" style={{ color: gradeColor }}>
                     {result.letter}
                   </span>
                 </td>
-                <td className="border border-black p-5 text-center w-1/3">
-                  <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">Total Marks</span>
-                  <span className="text-[26px] font-extrabold text-black">{result.score}</span>
+                <td className="border border-slate-300 p-5 text-center w-1/3">
+                  <span className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Total Marks</span>
+                  <span className="text-[28px] font-extrabold text-slate-900">
+                    {result.score}
+                    {eligibilityWarning && <span className="text-red-500 text-lg ml-1">*</span>}
+                  </span>
                 </td>
-                <td className="border border-black p-5 text-center w-1/3">
-                  <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">Grade Point</span>
-                  <span className="text-[26px] font-extrabold text-black">{result.points}</span>
+                <td className="border border-slate-300 p-5 text-center w-1/3">
+                  <span className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Grade Point</span>
+                  <span className="text-[28px] font-extrabold text-slate-900">{result.points}</span>
                 </td>
               </tr>
             </tbody>
@@ -119,32 +146,34 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
 
         {/* SECTION 2: SCORE BREAKDOWN */}
         <div className="mb-10 w-full">
-          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Score Breakdown</span>
-          <table className="w-full border-collapse border border-black text-[14px]">
+          <span className="block text-[14px] font-bold text-slate-800 uppercase tracking-wide mb-3 border-b border-slate-200 pb-2">
+            Score Breakdown
+          </span>
+          <table className="w-full border-collapse border border-slate-300 text-[14px]">
             <thead>
               <tr>
-                <th className="border border-black bg-[#f8f9fa] font-bold text-[12px] uppercase tracking-wide p-4 text-left w-2/3">
+                <th className="border border-slate-300 bg-slate-100 font-bold text-[12px] text-slate-600 uppercase tracking-wide p-4 text-left w-2/3">
                   Component Name
                 </th>
-                <th className="border border-black bg-[#f8f9fa] font-bold text-[12px] uppercase tracking-wide p-4 text-right w-1/3">
+                <th className="border border-slate-300 bg-slate-100 font-bold text-[12px] text-slate-600 uppercase tracking-wide p-4 text-right w-1/3">
                   Input Value
                 </th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(inputValues).map(([key, value]) => (
-                <tr key={key}>
-                  <td className="border border-black p-4 text-left font-medium text-gray-800">
+                <tr key={key} className="hover:bg-slate-50 transition-colors">
+                  <td className="border border-slate-300 p-4 text-left font-medium text-slate-700">
                     {getLabelForKey(key)}
                   </td>
-                  <td className="border border-black p-4 text-right font-bold text-black">
-                    {value || "0"}
+                  <td className="border border-slate-300 p-4 text-right font-bold text-slate-900">
+                    {value || "0 (Absent/Blank)"}
                   </td>
                 </tr>
               ))}
-              <tr className="bg-[#fafafa]">
-                <td className="border border-black p-4 text-left font-bold text-black">Final Calculated Score</td>
-                <td className="border border-black p-4 text-right font-bold text-blue-700">{result.score}</td>
+              <tr className="bg-slate-50">
+                <td className="border border-slate-300 p-4 text-left font-bold text-slate-900">Final Calculated Score</td>
+                <td className="border border-slate-300 p-4 text-right font-bold text-blue-700">{result.score}</td>
               </tr>
             </tbody>
           </table>
@@ -152,23 +181,25 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
 
         {/* SECTION 3: CALCULATION LOGIC */}
         <div className="mb-6 w-full">
-          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Calculation Logic</span>
-          <table className="w-full border-collapse border border-black text-[14px]">
+          <span className="block text-[14px] font-bold text-slate-800 uppercase tracking-wide mb-3 border-b border-slate-200 pb-2">
+            Calculation Logic
+          </span>
+          <table className="w-full border-collapse border border-slate-300 text-[14px]">
             <thead>
               <tr>
-                <th className="border border-black bg-[#f8f9fa] font-bold text-[12px] uppercase tracking-wide p-4 text-left">
-                  Applied Formula Formula
+                <th className="border border-slate-300 bg-slate-100 font-bold text-[12px] text-slate-600 uppercase tracking-wide p-4 text-left">
+                  Applied Grading Formula
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="border border-black p-4 bg-white">
-                  <div className="font-mono text-[13px] leading-relaxed text-[#333333] mb-3">
+                <td className="border border-slate-300 p-4 bg-white">
+                  <div className="font-mono text-[13px] leading-relaxed text-slate-800 mb-3 bg-slate-50 p-3 rounded border border-slate-100">
                     {formula}
                   </div>
-                  <div className="text-[11px] text-gray-500 border-t pt-2 mt-1">
-                    <span className="font-bold">Ref: </span>
+                  <div className="text-[11px] text-slate-500 pt-1">
+                    <span className="font-bold text-slate-700">Ref: </span>
                     {getFormulaLegend(formula)}
                   </div>
                 </td>
@@ -178,7 +209,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
         </div>
 
         {/* Branding Watermark (Bottom Right) */}
-        <div className="absolute bottom-4 right-6 text-[10px] font-sans font-semibold text-black uppercase tracking-widest pointer-events-none opacity-90">
+        <div className="absolute bottom-5 right-8 text-[10px] font-sans font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
           predicted by Unknown IITians
         </div>
 
@@ -186,20 +217,20 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
       {/* CAPTURE AREA END */}
 
       {/* FOOTER ACTIONS */}
-      <div className="flex justify-between items-center mt-8 px-2">
+      <div className="flex justify-between items-center mt-6 px-2">
         <button 
           onClick={onReset}
-          className="text-[13px] text-[#999999] underline font-medium hover:text-black transition-colors"
+          className="text-[13px] text-slate-500 underline font-medium hover:text-slate-900 transition-colors"
         >
           Clear everything
         </button>
         
         <button 
           onClick={handleShareImage}
-          className="bg-black text-white px-6 py-3 text-[13px] font-semibold uppercase hover:bg-[#333333] transition-colors flex items-center gap-2 rounded-sm"
+          className="bg-slate-900 text-white px-6 py-3 text-[13px] font-bold uppercase tracking-wide hover:bg-slate-800 transition-colors flex items-center gap-2 rounded-md shadow-sm"
         >
           <Share className="w-4 h-4" />
-          Share Results
+          Download / Share Result
         </button>
       </div>
 
