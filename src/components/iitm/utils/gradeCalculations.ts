@@ -158,7 +158,8 @@ export function calculateFoundationGrade(subjectKey: string, values: Record<stri
   switch (subjectKey) {
     case "python":
       const pythonScore = 0.15 * Qz1 + 0.4 * F + 0.25 * Math.max(OPPE1, OPPE2) + 0.2 * Math.min(OPPE1, OPPE2);
-      return Math.max(OPPE1, OPPE2) >= 40 ? pythonScore : Math.min(pythonScore, 39);
+      // Eligibility handled in global wrapper, just return raw score here
+      return pythonScore;
     case "statistics1": case "statistics2": case "maths2":
       return calculateDSFoundationStandard(values) + Bonus;
     case "maths2_clamped":
@@ -197,33 +198,27 @@ export function calculateDiplomaGrade(subjectKey: string, values: Record<string,
       const opt2 = 0.4 * F + 0.25 * Qz1 + 0.3 * Qz2;
       return 0.05 * GAA + Math.max(opt1, opt2) + Bonus;
     case "mlp": case "machinelearning_practice":
-      const mlpScore = 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.2 * OPPE2 + 0.2 * KA;
-      return Math.max(OPPE1, OPPE2) >= 40 ? mlpScore : Math.min(mlpScore, 39);
+      return 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.2 * OPPE2 + 0.2 * KA;
     case "bdm": case "business_data_management":
       return GA + Qz1 + Qz2 + F;
     case "ba": case "business_analytics":
       const qzComp = 2 * (0.7 * Math.max(Qz1, Qz2) + 0.3 * Math.min(Qz1, Qz2));
-      const baScore = qzComp + A + F + Bonus;
-      return F >= 10 ? baScore : Math.min(baScore, 39); 
+      return qzComp + A + F + Bonus; 
     case "pdsa": case "programming_python": 
       const optPDSA1 = 0.2 * Math.max(Qz1, Qz2);
       const optPDSA2 = 0.1 * Qz1 + 0.2 * Qz2;
-      const pdsaScore = 0.05 * GAA + 0.2 * OP + 0.45 * F + Math.max(optPDSA1, optPDSA2);
-      return OP >= 40 ? pdsaScore : Math.min(pdsaScore, 39);
+      return 0.05 * GAA + 0.2 * OP + 0.45 * F + Math.max(optPDSA1, optPDSA2);
     case "dbms": case "databasems":
       const gaaDBMS = 0.03 * (values.GAA2 || 0) + 0.02 * (values.GAA3 || 0);
       const optDBMS1 = 0.2 * Math.max(Qz1, Qz2);
       const optDBMS2 = 0.1 * Qz1 + 0.2 * Qz2;
-      const dbmsScore = gaaDBMS + 0.2 * OP + 0.45 * F + Math.max(optDBMS1, optDBMS2);
-      return OP >= 35 ? dbmsScore : Math.min(dbmsScore, 39);
+      return gaaDBMS + 0.2 * OP + 0.45 * F + Math.max(optDBMS1, optDBMS2);
     case "java": case "java_programming":
       const optJ1 = 0.2 * Math.max(Qz1, Qz2);
       const optJ2 = 0.1 * Qz1 + 0.2 * Qz2;
-      const javaScore = 0.05 * GAA + 0.2 * Math.max(PE1, PE2) + 0.45 * F + Math.max(optJ1, optJ2) + 0.1 * Math.min(PE1, PE2);
-      return Math.max(PE1, PE2) >= 30 ? javaScore : Math.min(javaScore, 39);
+      return 0.05 * GAA + 0.2 * Math.max(PE1, PE2) + 0.45 * F + Math.max(optJ1, optJ2) + 0.1 * Math.min(PE1, PE2);
     case "systemcommands": case "system-commands":
-      const sysScore = 0.05 * GAA + 0.25 * Qz1 + 0.3 * (values.OPPE || 0) + 0.3 * F + 0.1 * (values.BPTA || 0);
-      return (values.OPPE || 0) >= 40 ? sysScore : Math.min(sysScore, 39);
+      return 0.05 * GAA + 0.25 * Qz1 + 0.3 * (values.OPPE || 0) + 0.3 * F + 0.1 * (values.BPTA || 0);
     case "intro_dl_genai": case "dl-genai":
       return 0.1 * GAA + 0.2 * Qz1 + 0.2 * Qz2 + 0.25 * F + 0.1 * NPPE1 + 0.15 * NPPE2;
     case "tools_data_science": case "tds":
@@ -261,17 +256,14 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
     case "llms": case "math_foundations_genai":
       return 0.05 * GAA + 0.35 * F + 0.2 * Qz1 + 0.2 * Qz2 + 0.2 * NPPE + Bonus;
     case "int_bigdata": case "big_data":
-      const bigDataScore = 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.4 * OPPE2 + Bonus;
-      return Math.max(OPPE1, OPPE2) >= 40 ? bigDataScore : Math.min(bigDataScore, 39);
+      return 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.4 * OPPE2 + Bonus;
     case "mlops":
       return Math.min(100, 0.2 * GAA + 0.3 * F + 0.25 * OPPE1 + 0.25 * OPPE2 + Bonus);
     case "c_prog": case "c-programming":
-      const cScore = 0.10 * GAA + 0.20 * Qz1 + 0.20 * OPPE1 + 0.20 * OPPE2 + 0.30 * F;
-      return Math.max(OPPE1, OPPE2) >= 40 ? cScore : Math.min(cScore, 39);
+      return 0.10 * GAA + 0.20 * Qz1 + 0.20 * OPPE1 + 0.20 * OPPE2 + 0.30 * F;
     case "deep_learning_practice":
       const nppeAvg = (NPPE1 + NPPE2 + NPPE3) / 3;
-      const dlpScore = 0.05 * GA + 0.15 * Qz1 + 0.15 * Qz2 + 0.15 * Qz3 + 0.25 * nppeAvg + 0.25 * Viva;
-      return Viva >= 50 ? dlpScore : Math.min(dlpScore, 39);
+      return 0.05 * GA + 0.15 * Qz1 + 0.15 * Qz2 + 0.15 * Qz3 + 0.25 * nppeAvg + 0.25 * Viva;
     case "managerial-economics": case "advanced_algorithms":
       const optDeg1 = 0.2 * Qz1 + 0.2 * Qz2 + 0.45 * F;
       const optDeg2 = 0.5 * F + 0.25 * Math.max(Qz1, Qz2);
@@ -279,11 +271,9 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
     case "speech_technology":
       return 0.15 * GAA + 0.15 * V + 0.3 * F + 0.2 * Qz1 + 0.2 * Qz2;
     case "ds_ai_lab":
-      const dsLabScore = 0.15 * GAA + 0.2 * Qz2 + 0.5 * P + 0.15 * V + Bonus;
-      return V >= 55 ? dsLabScore : Math.min(dsLabScore, 39);
+      return 0.15 * GAA + 0.2 * Qz2 + 0.5 * P + 0.15 * V + Bonus;
     case "app_dev_lab":
-      const appDevLabScore = 0.2 * Qz2 + 0.3 * GA + 0.5 * V;
-      return V >= 50 ? appDevLabScore : Math.min(appDevLabScore, 39);
+      return 0.2 * Qz2 + 0.3 * GA + 0.5 * V;
     case "algo_thinking_bio":
       return 0.075 * GAA + 0.025 * GRPa + 0.25 * Qz1 + 0.25 * Qz2 + 0.4 * F;
     case "market_research":
@@ -316,7 +306,12 @@ export function getGradePoints(score: number): number {
   return 0;
 }
 
+// ==========================================
+// MASTER WRAPPER (INCLUDES ELIGIBILITY)
+// ==========================================
+
 export function calculateGradeByLevel(level: Level, subjectKey: string, values: Record<string, number>): number {
+  // 1. Calculate raw score
   let rawScore = 0;
   switch (level) {
     case "foundation": rawScore = calculateFoundationGrade(subjectKey, values); break;
@@ -325,35 +320,62 @@ export function calculateGradeByLevel(level: Level, subjectKey: string, values: 
     default: return 0;
   }
 
-  // ==========================================
-  // GLOBAL ELIGIBILITY CHECKS
-  // ==========================================
+  // Helper to check if input is completely empty (absent) vs attended but scored 0
+  const isBlank = (val: any) => val === undefined || val === null || val.toString().trim() === '';
+
+  // 2. Global Eligibility Checks
   let isEligible = true;
+  const formulaText = getGradeFormula(subjectKey);
 
   // A. GAA Check (Must be >= 40%)
-  if ("GAA" in values && (values.GAA || 0) < 40) {
-    isEligible = false;
+  if (formulaText.includes("GAA")) {
+    if (isBlank(values.GAA) || Number(values.GAA) < 40) isEligible = false;
   }
   
-  // Handle subjects that use "GA" instead of "GAA"
-  if ("GA" in values) {
-    // Business Data Management (BDM) has GA out of 10, so min is 4.
-    if (subjectKey === "business_data_management" || subjectKey === "bdm") {
-      if ((values.GA || 0) < 4) isEligible = false;
-    } else {
-      // For other subjects with GA (out of 100), min is 40
-      if ((values.GA || 0) < 40) isEligible = false;
-    }
+  if (subjectKey === "business_data_management" || subjectKey === "bdm") {
+    if (isBlank(values.GA) || Number(values.GA) < 4) isEligible = false;
   }
 
   // B. Quiz Attendance Check (Must attend at least 1 Quiz)
-  const quizKeys = Object.keys(values).filter(key => key.startsWith("Qz"));
-  if (quizKeys.length > 0) {
-    const attendedAtLeastOneQuiz = quizKeys.some(key => (values[key] || 0) > 0);
+  const hasQuizzes = /Qz|Q1|Q2|Quiz/i.test(formulaText);
+  if (hasQuizzes) {
+    const expectedQuizKeys = ["Qz1", "Qz2", "Qz3", "Qz"];
+    // Check if at least one quiz key has a valid input (even if it's 0)
+    const attendedAtLeastOneQuiz = expectedQuizKeys.some(key => !isBlank(values[key]));
+    
     if (!attendedAtLeastOneQuiz) {
       isEligible = false;
     }
   }
 
+  // C. Specific Subject OPPE & Exam Requirements
+  const oppeSubjects = [
+    "python", "mlp", "machinelearning_practice", "pdsa", "programming_python", 
+    "systemcommands", "system-commands", "int_bigdata", "big-data", "c_prog", "c-programming"
+  ];
+  if (oppeSubjects.includes(subjectKey)) {
+    const maxOppe = Math.max(Number(values.OPPE1 || 0), Number(values.OPPE2 || 0), Number(values.OPPE || 0), Number(values.OP || 0));
+    if (maxOppe < 40) isEligible = false;
+  }
+
+  if (subjectKey === "java" || subjectKey === "java_programming") {
+    const maxPe = Math.max(Number(values.PE1 || 0), Number(values.PE2 || 0));
+    if (maxPe < 30) isEligible = false;
+  }
+
+  if (subjectKey === "dbms" || subjectKey === "databasems") {
+    if (Number(values.OP || 0) < 35) isEligible = false;
+  }
+
+  if (subjectKey === "ba" || subjectKey === "business_analytics") {
+    if (Number(values.F || 0) < 10) isEligible = false;
+  }
+
+  // D. Viva Checks
+  if (subjectKey === "ds_ai_lab" && Number(values.V || 0) < 55) isEligible = false;
+  if (subjectKey === "app_dev_lab" && Number(values.V || 0) < 50) isEligible = false;
+  if (subjectKey === "deep_learning_practice" && Number(values.Viva || 0) < 50) isEligible = false;
+
+  // 3. Force cap the final score to 39 if ineligible (Yields a 'U' grade)
   return isEligible ? rawScore : Math.min(rawScore, 39);
 }
