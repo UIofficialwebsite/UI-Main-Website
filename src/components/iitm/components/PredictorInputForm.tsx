@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
+import { Info } from "lucide-react";
 
 interface PredictorInputFormProps {
   subject: Subject;
@@ -46,6 +47,23 @@ export default function PredictorInputForm({
          <Label className="text-xs font-bold uppercase tracking-wide text-gray-500 font-['Inter']">
            02. Enter Internal Scores
          </Label>
+      </div>
+
+      {/* Eligibility Disclaimer */}
+      <div className="flex items-start gap-3 bg-blue-50/80 p-4 rounded-lg border border-blue-100 mb-8">
+        <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+        <div className="text-sm text-blue-800 leading-relaxed space-y-1">
+          <p>
+            <span className="font-semibold text-blue-900">Important Eligibility Rule:</span>
+          </p>
+          <ul className="list-disc pl-4 space-y-0.5">
+            <li>If you were <strong>Absent</strong> for an exam/quiz, leave the input completely blank.</li>
+            <li>If you <strong>Attended</strong> but scored zero, enter <code className="bg-blue-100 px-1 py-0.5 rounded font-bold">0</code>.</li>
+          </ul>
+          <p className="opacity-90 pt-1">
+            Leaving mandatory components (like Quizzes or GAA) blank will result in an automatic 'U' prediction.
+          </p>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-8">
