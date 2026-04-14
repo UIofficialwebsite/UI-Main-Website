@@ -1,38 +1,71 @@
 
 
-## Plan: Multi-Banner Carousel on All Pages
+## Plan: Fix toolLogger + Integrate into All 4 Calculator Tools
 
-### Problem
-- **Courses**, **CourseListing**, and **IITMBSSubjectNotesPage** only fetch and display a single banner image with fixed height containers (`h-[clamp(120px,20vw,200px)]` or `h-32 md:h-48 lg:h-60`).
-- The **Index** page already uses `HeroCarousel` which supports multiple banners, but all other pages do not.
+### 1. Fix `src/utils/toolLogger.ts` (build errors)
 
-### Solution
-Reuse the existing `HeroCarousel` component on all pages that have banners. It already:
-- Fetches all banners from `page_banners` matching a `pagePath`
-- Renders a carousel with auto-advance, dots, and navigation arrows
-- Uses `object-contain` with natural image height (no fixed dimensions)
+- Change `.select("phone_number")` → `.select("phone")` and `profile.phone_number` → `profile.phone`
+- Cast table reference: `.from("tool_usage_logs" as any)` to bypass missing type
+- Add `"Foundation Marks Predictor"` to the `toolName` union type
 
-### Changes
+### 2. Integrate into `CGPACalculator.tsx`
 
-#### 1. Courses page (`src/pages/Courses.tsx`)
-- Remove the single-banner fetch logic (`bannerImage`, `bannerLoading`, `setBannerImage`, the `useEffect` fetching banner)
-- Replace the fixed-height `<section>` banner with `<HeroCarousel pagePath={location.pathname} />`
-- The `HeroCarousel` will also try matching by exam category path variants
+In `handleCalculate()` (line 136), add logging right before `setShowReport(true)`:
+- Extract course data dynamically from `courses` array
+- Log `toolName: "CGPA Calculator"`, with `inputDetails.subject_details` containing current CGPA, credits, and course list
 
-#### 2. CourseListing page (`src/pages/CourseListing.tsx`)
-- Same approach: remove single-banner state and fetch logic
-- Replace the fixed-height banner section with `<HeroCarousel pagePath={location.pathname} />`
+### 3. Integrate into `GradeCalculator.tsx`
 
-#### 3. IITMBSSubjectNotesPage (`src/pages/IITMBSSubjectNotesPage.tsx`)
-- Remove single-banner fetch logic and state
-- Replace the fixed-height banner `<div>` with `<HeroCarousel pagePath={location.pathname} />`
+In `calculateGrade()` (line 82), add logging right before `setResult(...)`:
+- Dynamically iterate `inputValues`, filter metadata keys, format labels
+- Log `toolName: "Grade Calculator"` with branch, level, subject name, and scores
 
-#### 4. HeroCarousel adjustments (`src/components/HeroCarousel.tsx`)
-- Remove the `mt-16` class from the wrapper (the parent pages already handle `pt-16` for navbar offset)
-- Keep the existing natural-height image rendering (`w-full h-auto object-contain`) — this ensures dimensions adapt to the uploaded image
+### 4. Integrate into `MarksPredictor.tsx`
 
-### Technical Detail
-- `HeroCarousel` queries `page_banners` with `eq("page_path", pagePath)` — multiple rows per path are supported by design
-- Images render at their natural aspect ratio via `object-contain` + `h-auto`
-- Single banner = no dots/arrows shown; multiple = carousel behavior
+In `handleCalculate()` (line 66), add logging right before `setResults(newResults)`:
+- Same dynamic extraction pattern from `inputValues`
+- Log `toolName: "Marks Predictor"` with subject, scores, and prediction results
+
+### 5. Refactor `FoundationMarksPredictor.tsx` — add Calculate button + logger
+
+Currently auto-computes via `useMemo`. Changes:
+- Replace reactive `useMemo` for `requiredFs` with a `useState`
+- Add `handleCalculate()` function that computes results and logs usage
+- Add auth gate (login required on Calculate click)
+- Add Calculate and Reset buttons
+- Results table only shows after clicking Calculate
+- Log `toolName: "Foundation Marks Predictor"` with subject, scores, and required marks table
+
+### Logging pattern (applied to all)
+
+```typescript
+import { logToolUsage } from "@/utils/toolLogger";
+
+// Right before setting result state:
+try {
+  const metaKeys = ["id","name","credits","grade","subject","marks","scores","result","target"];
+  const scores: Record<string, number> = {};
+  Object.entries(inputValues).forEach(([key, val]) => {
+    if (!metaKeys.includes(key)) {
+      scores[key.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2")] = parseFloat(val) || 0;
+    }
+  });
+  logToolUsage({ toolName: "...", branch, level,
+    inputDetails: { subject_details: { subject: currentSubject.name, scores } },
+    resultDetails: result
+  });
+} catch (e) { /* silent */ }
+```
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `src/utils/toolLogger.ts` | Fix phone column, type cast, add tool name |
+| `src/components/iitm/CGPACalculator.tsx` | Add logger in `handleCalculate` |
+| `src/components/iitm/GradeCalculator.tsx` | Add logger in `calculateGrade` |
+| `src/components/iitm/MarksPredictor.tsx` | Add logger in `handleCalculate` |
+| `src/components/iitm/FoundationMarksPredictor.tsx` | Add Calculate button + auth gate + logger |
+
+No changes to any calculation formulas or grading logic.
 
