@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ALL_SUBJECTS } from "./data/subjectsData";
-import { predictRequiredScore } from "./utils/predictorLogic";
+import { predictRequiredMarks, PredictionResult } from "./utils/predictorLogic";
 import { Level } from "./types/gradeTypes";
 import PredictorInputForm from "./components/PredictorInputForm";
 import PredictorResult from "./components/PredictorResult";
@@ -14,18 +14,13 @@ interface MarksPredictorProps {
   branch: "data-science" | "electronic-systems" | string;
 }
 
-export type PredictionResultData = { 
-  required: number | null; 
-  possible: boolean; 
-  finalGrade: number 
-};
-
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  const [results, setResults] = useState<Record<string, PredictionResultData> | null>(null);
+  // Updated to use the correct PredictionResult type
+  const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
 
   const filteredSubjects = useMemo(() => {
     const getSubjectsKey = () => {
@@ -74,10 +69,11 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
 
     const safeLevel = (level?.toLowerCase() || "foundation") as Level;
     const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
-    const newResults: Record<string, PredictionResultData> = {};
+    const newResults: Record<string, PredictionResult> = {};
 
     grades.forEach(grade => {
-      newResults[grade] = predictRequiredScore(safeLevel, currentSubject.key, numericValues, grade);
+      // Calling the newly renamed function
+      newResults[grade] = predictRequiredMarks(safeLevel, currentSubject.key, numericValues, grade);
     });
 
     // Log tool usage silently
