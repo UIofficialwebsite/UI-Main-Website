@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import html2canvas from "html2canvas";
-import { Share } from "lucide-react";
+import { Share, AlertCircle, Info } from "lucide-react";
 import { PredictionResult } from "../utils/predictorLogic";
 
 interface PredictorResultProps {
@@ -42,13 +42,32 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
     lowestGradeResult?.message && 
     !lowestGradeResult.message.includes("mathematically unreachable");
 
+  // Dynamic Conclusion Statement
+  const getDynamicConclusion = () => {
+    if (results['S']?.possible) {
+      return { title: "Excellent Standing", text: "You have a clear mathematical path to an 'S' grade. Maintain your momentum and give your best in the End Term exam!" };
+    }
+    if (results['A']?.possible || results['B']?.possible) {
+      return { title: "Strong Position", text: "A top grade is well within your reach. Focus your final revision on high-weightage topics to secure it." };
+    }
+    if (results['C']?.possible || results['D']?.possible) {
+      return { title: "Solid Track", text: "You are on track to pass, but aiming higher will require a solid push in the End Term exam. You've got this!" };
+    }
+    if (results['E']?.possible) {
+      return { title: "Every Mark Counts", text: "It's going to be a tight finish. You need to give the End Term exam your absolute best effort to clear the course. Stay focused!" };
+    }
+    return null;
+  };
+
+  const dynamicMsg = getDynamicConclusion();
+
   return (
     <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700">
       
       {/* CAPTURE AREA - Full Width */}
       <div 
         ref={resultRef} 
-        className="bg-white p-4 sm:p-8 w-full border border-gray-200 rounded-lg shadow-sm relative pb-16"
+        className="bg-white p-4 sm:p-8 w-full border border-gray-200 rounded-sm shadow-sm relative pb-16"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         
@@ -57,13 +76,26 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
           Required End Term Scores
         </h2>
 
-        {/* ELIGIBILITY WARNING (Professional strict styling matching the design) */}
+        {/* ELIGIBILITY WARNING (Matches exact screenshot design) */}
         {isEligibilityFail && (
-          <div className="mb-[20px] p-[15px] border border-[#c62828] bg-[#ffebee]">
-            <span className="block text-[14px] font-bold text-[#c62828] mb-1 uppercase tracking-[0.03em]">Eligibility Requirements Not Met</span>
-            <span className="text-[13px] text-[#333]">
-              <strong className="text-[#c62828]">Reason:</strong> {lowestGradeResult.message}
-            </span>
+          <div className="mb-[25px] p-[20px] bg-[#fef2f2] border border-[#fecaca] rounded-md font-['Inter']">
+            <div className="flex items-center gap-[10px] mb-[16px]">
+              <AlertCircle className="w-[20px] h-[20px] text-[#991b1b]" />
+              <h3 className="text-[16px] font-bold text-[#7f1d1d] m-0 leading-none tracking-wide">Not Possible</h3>
+            </div>
+            
+            <div className="flex items-start gap-[10px] bg-[#fee2e2] p-[12px] rounded-md border border-[#fca5a5] mb-[12px]">
+              <Info className="w-[16px] h-[16px] text-[#991b1b] mt-[2px] flex-shrink-0" />
+              <p className="text-[13px] text-[#991b1b] m-0 leading-relaxed">
+                <strong>"Not Possible"</strong> means that even if you score a perfect 100/100 in the final exam, you cannot reach this grade based on your current marks.
+              </p>
+            </div>
+
+            <div className="bg-white p-[12px] rounded-md border border-[#fecaca]">
+              <p className="text-[13px] text-[#991b1b] m-0">
+                <strong className="text-[#991b1b]">Reason:</strong> {lowestGradeResult.message}
+              </p>
+            </div>
           </div>
         )}
         
@@ -128,6 +160,16 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
             </tbody>
           </table>
         </div>
+
+        {/* DYNAMIC CONCLUSION (Only shows if there is no Eligibility Failure) */}
+        {!isEligibilityFail && dynamicMsg && (
+          <div className="mb-[25px] p-[16px] bg-[#fafafa] border border-gray-200 rounded-sm">
+            <span className="block text-[13px] font-bold text-black mb-1 uppercase tracking-[0.03em]">{dynamicMsg.title}</span>
+            <span className="text-[13px] text-gray-700 font-medium leading-relaxed">
+              {dynamicMsg.text}
+            </span>
+          </div>
+        )}
 
         {/* FOOTER NOTE */}
         <div className="text-[13px] text-[#444] leading-[1.5] p-[15px] bg-[#fafafa] border border-[#ddd]">
