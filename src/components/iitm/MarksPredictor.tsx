@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useState, useMemo, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { ALL_SUBJECTS } from "./data/subjectsData";
 import { predictRequiredMarks, PredictionResult } from "./utils/predictorLogic";
 import { Level } from "./types/gradeTypes";
@@ -7,7 +7,11 @@ import PredictorInputForm from "./components/PredictorInputForm";
 import PredictorResult from "./components/PredictorResult";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { logToolUsage } from "@/utils/toolLogger";
+import { useCoursesManager } from "@/hooks/useCoursesManager";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 interface MarksPredictorProps {
   level: string; 
@@ -17,15 +21,37 @@ interface MarksPredictorProps {
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
+  const navigate = useNavigate();
+  
+  // Carousel Autoplay Plugin
+  const plugin = useRef(
+    Autoplay({ delay: 3500, stopOnInteraction: false })
+  );
+
+  // Fetch courses to check for matching premium content
+  const { courses, isLoading: coursesLoading } = useCoursesManager();
 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  // Updated to use the correct PredictionResult type
   const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
+
+  // Exact letter matching for course availability (ignores spaces/cases/hyphens)
+  const matchingCourses = useMemo(() => {
+    if (!courses || courses.length === 0) return [];
+    const normalize = (str: string) => (str || "").replace(/[^a-zA-Z]/g, "").toLowerCase();
+    const targetBranch = normalize(branch);
+    const targetLevel = normalize(level);
+
+    return courses.filter(c => {
+      const cBranch = normalize(c.branch || c.category);
+      const cLevel = normalize(c.level || c.subcategory);
+      return cBranch === targetBranch && cLevel === targetLevel;
+    });
+  }, [courses, branch, level]);
 
   const filteredSubjects = useMemo(() => {
     const getSubjectsKey = () => {
       const normalizedLevel = level?.toLowerCase() || "foundation";
-      const normalizedBranch = branch?.toLowerCase().replace(" ", "-") || "data-science";
+      const normalizedBranch = branch?.toLowerCase().replace(/\s+/g, "-") || "data-science";
 
       if (normalizedBranch === "electronic-systems") {
         if (normalizedLevel === "foundation") return "foundation-electronic-systems";
@@ -72,11 +98,9 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     const newResults: Record<string, PredictionResult> = {};
 
     grades.forEach(grade => {
-      // Calling the newly renamed function
       newResults[grade] = predictRequiredMarks(safeLevel, currentSubject.key, numericValues, grade);
     });
 
-    // Log tool usage silently
     try {
       const metaKeys = ["id","name","credits","grade","subject","marks","scores","result","target"];
       const scores: Record<string, number> = {};
@@ -104,6 +128,49 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
 
   return (
     <div className="w-full bg-white font-['Inter'] text-gray-900">
+      
+      {/* TOP ROW: COURSE TICKER (Matches CGPA Calculator Design) */}
+      {!coursesLoading && matchingCourses.length > 0 && (
+        <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
+          <Carousel
+            plugins={[plugin.current]}
+            className="w-full"
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+          >
+            <CarouselContent>
+              {matchingCourses.map((course) => (
+                <CarouselItem key={course.id} className="basis-full">
+                  <div className="flex items-center justify-between gap-4 h-9 w-full max-w-[1600px] mx-auto">
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap font-sans">
+                        OPEN NOW
+                      </span>
+                      <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
+                        {course.title || "Premium"} batches for {level} {branch} are live
+                      </span>
+                    </div>
+                    
+                    <Button 
+                      onClick={() => navigate(`/courses/${course.id}`)}
+                      size="sm" 
+                      variant="default" 
+                      className="shrink-0 h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
+                    >
+                      Enroll Now
+                    </Button>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+      )}
+
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
         
         {/* 01. Select Course */}
@@ -146,10 +213,12 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
 
         {/* Result Table */}
         {results && currentSubject && (
-          <PredictorResult 
-            results={results}
-            onReset={handleReset}
-          />
+          <div className="w-full relative z-0">
+            <PredictorResult 
+              results={results}
+              onReset={handleReset}
+            />
+          </div>
         )}
       </div>
     </div>
