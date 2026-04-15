@@ -1,13 +1,10 @@
 import { Level } from "../types/gradeTypes";
+import { ALL_SUBJECTS } from "../data/subjectsData";
 
 // ==========================================
 // HELPER FUNCTIONS
 // ==========================================
 
-/**
- * Standard ES Theory Formula:
- * 0.1*GAA + max(0.6*F + 0.2*max(Qz), 0.4*F + 0.2*Qz1 + 0.3*Qz2)
- */
 function calculateESStandardTheory(values: Record<string, number>): number {
   const { GAA = 0, Qz1 = 0, Qz2 = 0, F = 0 } = values;
   const opt1 = 0.6 * F + 0.2 * Math.max(Qz1, Qz2);
@@ -15,10 +12,6 @@ function calculateESStandardTheory(values: Record<string, number>): number {
   return 0.1 * GAA + Math.max(opt1, opt2);
 }
 
-/**
- * Standard DS Foundation Formula (Jan 2026):
- * max(0.6F + 0.3max(Q1,Q2), 0.45F + 0.25Q1 + 0.3Q2)
- */
 function calculateDSFoundationStandard(values: Record<string, number>): number {
   const { Qz1 = 0, Qz2 = 0, F = 0 } = values;
   const opt1 = 0.6 * F + 0.3 * Math.max(Qz1, Qz2);
@@ -26,10 +19,6 @@ function calculateDSFoundationStandard(values: Record<string, number>): number {
   return Math.max(opt1, opt2);
 }
 
-/**
- * Standard DS Diploma/Degree Baseline:
- * 0.1 * GAA + 0.4 * F + 0.25 * Qz1 + 0.25 * Qz2
- */
 function calculateDSDiplomaStandard(values: Record<string, number>): number {
   const { GAA = 0, Qz1 = 0, Qz2 = 0, F = 0 } = values;
   return 0.1 * GAA + 0.4 * F + 0.25 * Qz1 + 0.25 * Qz2;
@@ -45,7 +34,6 @@ function calculateESStandardLab(values: Record<string, number>): number {
 // ==========================================
 
 export function getGradeFormula(subjectKey: string): string {
-  // --- Electronic Systems (ES) Branch Formulas ---
   if (subjectKey.startsWith("es_")) {
     switch (subjectKey) {
       case "es_estc_lab": return "0.5 * Experiment + 0.5 * Report";
@@ -66,7 +54,6 @@ export function getGradeFormula(subjectKey: string): string {
     }
   }
 
-  // --- Data Science (DS) Branch Formulas (Updated Jan 2026) ---
   switch (subjectKey) {
     case "maths1": case "english1": case "computational": case "english2":
       return "max(0.6F + 0.3max(Q1,Q2), 0.45F + 0.25Q1 + 0.3Q2)";
@@ -157,9 +144,7 @@ export function calculateFoundationGrade(subjectKey: string, values: Record<stri
 
   switch (subjectKey) {
     case "python":
-      const pythonScore = 0.15 * Qz1 + 0.4 * F + 0.25 * Math.max(OPPE1, OPPE2) + 0.2 * Math.min(OPPE1, OPPE2);
-      // Eligibility handled in global wrapper, just return raw score here
-      return pythonScore;
+      return 0.15 * Qz1 + 0.4 * F + 0.25 * Math.max(OPPE1, OPPE2) + 0.2 * Math.min(OPPE1, OPPE2);
     case "statistics1": case "statistics2": case "maths2":
       return calculateDSFoundationStandard(values) + Bonus;
     case "maths2_clamped":
@@ -311,7 +296,6 @@ export function getGradePoints(score: number): number {
 // ==========================================
 
 export function calculateGradeByLevel(level: Level, subjectKey: string, values: Record<string, number>): number {
-  // 1. Calculate raw score
   let rawScore = 0;
   switch (level) {
     case "foundation": rawScore = calculateFoundationGrade(subjectKey, values); break;
@@ -320,35 +304,50 @@ export function calculateGradeByLevel(level: Level, subjectKey: string, values: 
     default: return 0;
   }
 
-  // Helper to check if input is completely empty (absent) vs attended but scored 0
-  const isBlank = (val: any) => val === undefined || val === null || val.toString().trim() === '';
-
-  // 2. Global Eligibility Checks
   let isEligible = true;
-  const formulaText = getGradeFormula(subjectKey);
 
-  // A. GAA Check (Must be >= 40%)
-  if (formulaText.includes("GAA")) {
-    if (isBlank(values.GAA) || Number(values.GAA) < 40) isEligible = false;
-  }
-  
-  if (subjectKey === "business_data_management" || subjectKey === "bdm") {
-    if (isBlank(values.GA) || Number(values.GA) < 4) isEligible = false;
+  // 1. STRICT FOUNDATION SAFETY NET
+  const foundationSubjects = [
+    "maths1", "english1", "computational", "statistics1", "maths2", "english2", "python", "statistics2",
+    "es_english1", "es_math1", "es_estc", "es_intro_c", "es_english2", "es_linux", "es_digital", "es_eec", "es_embedded_c"
+  ];
+  if (foundationSubjects.includes(subjectKey)) {
+    if (values.GAA === undefined || Number(values.GAA) < 40) isEligible = false;
   }
 
-  // B. Quiz Attendance Check (Must attend at least 1 Quiz)
-  const hasQuizzes = /Qz|Q1|Q2|Quiz/i.test(formulaText);
-  if (hasQuizzes) {
-    const expectedQuizKeys = ["Qz1", "Qz2", "Qz3", "Qz"];
-    // Check if at least one quiz key has a valid input (even if it's 0)
-    const attendedAtLeastOneQuiz = expectedQuizKeys.some(key => !isBlank(values[key]));
+  // 2. FETCH BLUEPRINT
+  let subjectDetails;
+  for (const lvl in ALL_SUBJECTS) {
+    const found = ALL_SUBJECTS[lvl].find(s => s.key === subjectKey);
+    if (found) { subjectDetails = found; break; }
+  }
+
+  if (subjectDetails) {
+    // 3. BLUEPRINT GAA/GA CHECKS
+    const hasGAA = subjectDetails.fields.some(f => f.id === "GAA");
+    const hasGA = subjectDetails.fields.some(f => f.id === "GA");
+
+    if (hasGAA && !foundationSubjects.includes(subjectKey)) {
+      if (values.GAA === undefined || Number(values.GAA) < 40) isEligible = false;
+    }
     
-    if (!attendedAtLeastOneQuiz) {
-      isEligible = false;
+    if (hasGA) {
+      if (subjectKey === "business_data_management" || subjectKey === "bdm") {
+        if (values.GA === undefined || Number(values.GA) < 4) isEligible = false;
+      } else {
+        if (values.GA === undefined || Number(values.GA) < 40) isEligible = false;
+      }
+    }
+
+    // 4. QUIZ ATTENDANCE CHECKS
+    const quizFields = subjectDetails.fields.filter(f => f.id.startsWith("Qz") || f.id.startsWith("Q1") || f.id.startsWith("Q2"));
+    if (quizFields.length > 0) {
+      const attendedQuiz = quizFields.some(f => values[f.id] !== undefined);
+      if (!attendedQuiz) isEligible = false;
     }
   }
 
-  // C. Specific Subject OPPE & Exam Requirements
+  // 5. SUBJECT-SPECIFIC EXAMS
   const oppeSubjects = [
     "python", "mlp", "machinelearning_practice", "pdsa", "programming_python", 
     "systemcommands", "system-commands", "int_bigdata", "big-data", "c_prog", "c-programming"
@@ -371,11 +370,10 @@ export function calculateGradeByLevel(level: Level, subjectKey: string, values: 
     if (Number(values.F || 0) < 10) isEligible = false;
   }
 
-  // D. Viva Checks
   if (subjectKey === "ds_ai_lab" && Number(values.V || 0) < 55) isEligible = false;
   if (subjectKey === "app_dev_lab" && Number(values.V || 0) < 50) isEligible = false;
   if (subjectKey === "deep_learning_practice" && Number(values.Viva || 0) < 50) isEligible = false;
 
-  // 3. Force cap the final score to 39 if ineligible (Yields a 'U' grade)
+  // 6. FORCE CAP TO 39 IF INELIGIBLE
   return isEligible ? rawScore : Math.min(rawScore, 39);
 }
