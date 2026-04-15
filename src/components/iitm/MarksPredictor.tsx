@@ -32,7 +32,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
 
-  // Exact letter matching for course availability
+  // Exact letter matching for course availability (ignores spaces/cases/hyphens)
   const matchingCourses = useMemo(() => {
     if (!courses || courses.length === 0) return [];
     const normalize = (str: string) => (str || "").replace(/[^a-zA-Z]/g, "").toLowerCase();
@@ -127,7 +127,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   return (
     <div className="w-full bg-white font-['Inter'] text-gray-900">
       
-      {/* 1. TOP ROW: COURSE TICKER (Matches CGPA Calculator exact design, shows ONLY if results exist) */}
+      {/* TOP ROW: COURSE TICKER (Shows ONLY if results exist and courses match) */}
       {results && !coursesLoading && matchingCourses.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only animate-in fade-in slide-in-from-top-4 duration-500">
           <Carousel
@@ -135,10 +135,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
             className="w-full"
             onMouseEnter={plugin.current.stop}
             onMouseLeave={plugin.current.reset}
-            opts={{
-              align: "start",
-              loop: true,
-            }}
+            opts={{ align: "start", loop: true }}
           >
             <CarouselContent>
               {matchingCourses.map((course) => (
@@ -157,7 +154,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
                       onClick={() => navigate(`/courses/${course.id}`)}
                       size="sm" 
                       variant="default" 
-                      className="shrink-0 h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
+                      className="shrink-0 h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans uppercase"
                     >
                       Enroll Now
                     </Button>
@@ -169,7 +166,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
         </div>
       )}
 
-      {/* 2. MAIN CONTENT */}
+      {/* Adjust top padding if the banner is showing so it doesn't look cramped */}
       <div className={`w-full max-w-[1600px] mx-auto px-6 md:px-10 ${results && matchingCourses.length > 0 ? 'pb-8' : 'py-8'}`}>
         
         {/* 01. Select Course */}
