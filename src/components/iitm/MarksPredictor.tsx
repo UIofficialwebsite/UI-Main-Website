@@ -23,18 +23,16 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const initialSubject = searchParams.get("subject") || "";
   const navigate = useNavigate();
   
-  // Carousel Autoplay Plugin
   const plugin = useRef(
     Autoplay({ delay: 3500, stopOnInteraction: false })
   );
 
-  // Fetch courses to check for matching premium content
   const { courses, isLoading: coursesLoading } = useCoursesManager();
 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
 
-  // Exact letter matching for course availability (ignores spaces/cases/hyphens)
+  // Exact letter matching for course availability
   const matchingCourses = useMemo(() => {
     if (!courses || courses.length === 0) return [];
     const normalize = (str: string) => (str || "").replace(/[^a-zA-Z]/g, "").toLowerCase();
@@ -129,9 +127,9 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   return (
     <div className="w-full bg-white font-['Inter'] text-gray-900">
       
-      {/* TOP ROW: COURSE TICKER (Matches CGPA Calculator Design) */}
-      {!coursesLoading && matchingCourses.length > 0 && (
-        <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
+      {/* 1. TOP ROW: COURSE TICKER (Matches CGPA Calculator exact design, shows ONLY if results exist) */}
+      {results && !coursesLoading && matchingCourses.length > 0 && (
+        <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only animate-in fade-in slide-in-from-top-4 duration-500">
           <Carousel
             plugins={[plugin.current]}
             className="w-full"
@@ -151,7 +149,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
                         OPEN NOW
                       </span>
                       <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
-                        {course.title || "Premium"} batches for {level} {branch} are live
+                        {course.title} batches are live
                       </span>
                     </div>
                     
@@ -171,7 +169,8 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
         </div>
       )}
 
-      <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
+      {/* 2. MAIN CONTENT */}
+      <div className={`w-full max-w-[1600px] mx-auto px-6 md:px-10 ${results && matchingCourses.length > 0 ? 'pb-8' : 'py-8'}`}>
         
         {/* 01. Select Course */}
         <div className="mb-10 w-full max-w-3xl relative z-50">
