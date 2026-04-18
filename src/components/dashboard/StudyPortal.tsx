@@ -710,7 +710,7 @@ const EnrolledView = ({
             </div>
 
             <div 
-              onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
+              onClick={() => window.open('https://ssp.unknowniitians.com', '_blank')}
               className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
             >
               <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
