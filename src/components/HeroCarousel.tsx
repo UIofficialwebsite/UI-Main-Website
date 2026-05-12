@@ -85,7 +85,7 @@ const HeroCarousel = ({ pagePath = "/" }: HeroCarouselProps) => {
           {carouselImages.map((image, index) => (
             <div
               key={index}
-              className="flex-[0_0_100%] md:flex-[0_0_88%] lg:flex-[0_0_85%] min-w-0 px-2 md:px-3"
+              className="flex-[0_0_100%] md:flex-[0_0_80%] lg:flex-[0_0_72%] xl:flex-[0_0_68%] min-w-0 px-2 md:px-3"
             >
               <div
                 className={`overflow-hidden rounded-xl shadow-md transition-all duration-500 ease-out ${
