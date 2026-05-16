@@ -40,8 +40,8 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     const targetLevel = normalize(level);
 
     return courses.filter(c => {
-      const cBranch = normalize(c.branch || c.category);
-      const cLevel = normalize(c.level || c.subcategory);
+      const cBranch = normalize(c.branch || "");
+      const cLevel = normalize(c.level || "");
       return cBranch === targetBranch && cLevel === targetLevel;
     });
   }, [courses, branch, level]);

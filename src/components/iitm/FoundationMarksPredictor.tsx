@@ -64,9 +64,6 @@ function checkEligibility(subjectKey: string, inputs: Record<string, number>): s
 }
 
 export default function FoundationMarksPredictor({ branch, level }: FoundationMarksPredictorProps) {
-  const { user } = useAuth();
-  const { openLogin } = useLoginModal();
-
   const getSubjectsKey = () => {
     if (branch === "electronic-systems" && level === "foundation") {
       return "foundation-electronic-systems";
@@ -99,7 +96,6 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
   };
 
   const handleCalculate = () => {
-    if (!user) { openLogin(); return; }
     if (!subjectObj) return;
 
     const numericInputs: Record<string, number> = {};
