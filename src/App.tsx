@@ -1,7 +1,9 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
@@ -69,10 +71,36 @@ const IITMCalculators = lazyWithRetry(() => import("./pages/IITMCalculators"));
 const NewsDetail = lazyWithRetry(() => import("./pages/NewsDetail"));
 const RedirectToPortal = lazyWithRetry(() => import("./pages/RedirectToPortal"));
 
-const queryClient = new QueryClient();
+const TEN_MINUTES = 1000 * 60 * 10;
+const ONE_DAY = 1000 * 60 * 60 * 24;
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep results "fresh" for 10 minutes — no refetch within this window.
+      staleTime: TEN_MINUTES,
+      // Hold in memory for 24h after the last consumer unmounts.
+      gcTime: ONE_DAY,
+      // Don't auto-refetch when the user tabs back to the window.
+      refetchOnWindowFocus: false,
+      // Don't refetch every time a component remounts if data is still fresh.
+      refetchOnMount: false,
+      retry: 1,
+    },
+  },
+});
+
+const persister = createSyncStoragePersister({
+  storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  key: "ui-website-rq-cache-v1",
+  throttleTime: 1000,
+});
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{ persister, maxAge: ONE_DAY }}
+  >
     <AuthProvider>
       <BackendIntegratedWrapper>
         <TooltipProvider>
@@ -157,7 +185,7 @@ const App = () => (
         </TooltipProvider>
       </BackendIntegratedWrapper>
     </AuthProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
 );
 
 export default App;

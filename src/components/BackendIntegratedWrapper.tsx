@@ -6,12 +6,15 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { Course } from "@/components/admin/courses/types";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { useToast } from "@/components/ui/use-toast";
+
+const TEN_MINUTES = 1000 * 60 * 10;
 
 type Note = Database["public"]["Tables"]["notes"]["Row"];
 type Pyq = Database["public"]["Tables"]["pyqs"]["Row"];
@@ -124,8 +127,11 @@ export const BackendIntegratedWrapper: React.FC<{
   const [error, setError] = useState<Error | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Session-level dedup cache: scope key -> in-flight or completed promise
-  const loadCache = useRef<Map<string, Promise<void>>>(new Map());
+  const queryClient = useQueryClient();
+
+  // Session-level dedup cache for the *state setters* — so we don't re-apply
+  // identical setState calls when React Query serves from its persistent cache.
+  const appliedKeys = useRef<Set<string>>(new Set());
 
   const {
     handleDownload,
@@ -147,239 +153,283 @@ export const BackendIntegratedWrapper: React.FC<{
     checkAdminStatus();
   }, [user]);
 
-  // Generic dedup wrapper: runs `fn` once per `key` per session
-  const runOnce = useCallback((key: string, fn: () => Promise<void>): Promise<void> => {
-    const existing = loadCache.current.get(key);
-    if (existing) return existing;
-    const promise = fn().catch((err) => {
-      // On failure, drop the cache entry so future calls can retry
-      loadCache.current.delete(key);
-      throw err;
-    });
-    loadCache.current.set(key, promise);
-    return promise;
-  }, []);
+  // Run a fetcher through React Query's persistent cache.
+  // - `key` becomes the queryKey, so identical calls across pages/tab-reopens
+  //   share one cached payload (persisted in localStorage by App.tsx).
+  // - `apply` updates the local React state slice. We dedupe apply() per mount
+  //   so we don't re-setState on every consumer mount when RQ serves from cache.
+  const runCached = useCallback(
+    async <T,>(
+      key: string,
+      fetcher: () => Promise<T>,
+      apply: (data: T) => void
+    ): Promise<void> => {
+      try {
+        const data = await queryClient.fetchQuery({
+          queryKey: [key],
+          queryFn: fetcher,
+          staleTime: TEN_MINUTES,
+        });
+        if (!appliedKeys.current.has(key)) {
+          appliedKeys.current.add(key);
+          apply(data);
+        }
+      } catch (err) {
+        console.error(`runCached(${key}) failed:`, err);
+      }
+    },
+    [queryClient]
+  );
+
+  const invalidate = useCallback(
+    (prefix: string) => {
+      // Drop both React-Query cache entries and the local "applied" guard so
+      // the next loader call re-fetches and re-applies state.
+      for (const k of Array.from(appliedKeys.current)) {
+        if (k.startsWith(prefix)) appliedKeys.current.delete(k);
+      }
+      queryClient
+        .getQueryCache()
+        .findAll()
+        .forEach((q) => {
+          const k = q.queryKey?.[0];
+          if (typeof k === "string" && k.startsWith(prefix)) {
+            queryClient.removeQueries({ queryKey: q.queryKey });
+          }
+        });
+    },
+    [queryClient]
+  );
 
   const loadCourses = useCallback(
     () =>
-      runOnce("courses:public", async () => {
-        const { data, error: e } = await supabase
-          .from("courses")
-          .select("*")
-          .eq("is_live", true);
-        if (e) {
-          console.error("loadCourses error:", e);
-          return;
-        }
-        if (data) setCourses((prev) => mergeById(prev, data as unknown as Course[]));
-      }),
-    [runOnce]
+      runCached(
+        "courses:public",
+        async () => {
+          const { data, error: e } = await supabase
+            .from("courses")
+            .select("*")
+            .eq("is_live", true);
+          if (e) throw e;
+          return (data ?? []) as unknown as Course[];
+        },
+        (data) => setCourses((prev) => mergeById(prev, data))
+      ),
+    [runCached]
   );
 
   const loadAllCourses = useCallback(
     () =>
-      runOnce("courses:all", async () => {
-        const { data, error: e } = await supabase.from("courses").select("*");
-        if (e) {
-          console.error("loadAllCourses error:", e);
-          return;
-        }
-        if (data) setCourses(data as unknown as Course[]);
-      }),
-    [runOnce]
+      runCached(
+        "courses:all",
+        async () => {
+          const { data, error: e } = await supabase.from("courses").select("*");
+          if (e) throw e;
+          return (data ?? []) as unknown as Course[];
+        },
+        (data) => setCourses(data)
+      ),
+    [runCached]
   );
 
   const loadNotes = useCallback(
     (examType?: string) => {
       const key = examType ? `notes:${examType}` : "notes:public";
-      return runOnce(key, async () => {
-        let q = supabase.from("notes").select("*").eq("is_active", true);
-        if (examType) q = q.eq("exam_type", examType);
-        const { data, error: e } = await q;
-        if (e) {
-          console.error("loadNotes error:", e);
-          return;
-        }
-        if (data) setNotes((prev) => mergeById(prev, data));
-      });
+      return runCached(
+        key,
+        async () => {
+          let q = supabase.from("notes").select("*").eq("is_active", true);
+          if (examType) q = q.eq("exam_type", examType);
+          const { data, error: e } = await q;
+          if (e) throw e;
+          return (data ?? []) as Note[];
+        },
+        (data) => setNotes((prev) => mergeById(prev, data))
+      );
     },
-    [runOnce]
+    [runCached]
   );
 
   const loadAllNotes = useCallback(
     () =>
-      runOnce("notes:all", async () => {
-        const { data, error: e } = await supabase.from("notes").select("*");
-        if (e) {
-          console.error("loadAllNotes error:", e);
-          return;
-        }
-        if (data) setNotes(data);
-      }),
-    [runOnce]
+      runCached(
+        "notes:all",
+        async () => {
+          const { data, error: e } = await supabase.from("notes").select("*");
+          if (e) throw e;
+          return (data ?? []) as Note[];
+        },
+        (data) => setNotes(data)
+      ),
+    [runCached]
   );
 
   const loadPyqs = useCallback(
     (examType?: string) => {
       const key = examType ? `pyqs:${examType}` : "pyqs:public";
-      return runOnce(key, async () => {
-        let q = supabase.from("pyqs").select("*").eq("is_active", true);
-        if (examType) q = q.eq("exam_type", examType);
-        const { data, error: e } = await q;
-        if (e) {
-          console.error("loadPyqs error:", e);
-          return;
-        }
-        if (data) setPyqs((prev) => mergeById(prev, data));
-      });
+      return runCached(
+        key,
+        async () => {
+          let q = supabase.from("pyqs").select("*").eq("is_active", true);
+          if (examType) q = q.eq("exam_type", examType);
+          const { data, error: e } = await q;
+          if (e) throw e;
+          return (data ?? []) as Pyq[];
+        },
+        (data) => setPyqs((prev) => mergeById(prev, data))
+      );
     },
-    [runOnce]
+    [runCached]
   );
 
   const loadAllPyqs = useCallback(
     () =>
-      runOnce("pyqs:all", async () => {
-        const { data, error: e } = await supabase.from("pyqs").select("*");
-        if (e) {
-          console.error("loadAllPyqs error:", e);
-          return;
-        }
-        if (data) setPyqs(data);
-      }),
-    [runOnce]
+      runCached(
+        "pyqs:all",
+        async () => {
+          const { data, error: e } = await supabase.from("pyqs").select("*");
+          if (e) throw e;
+          return (data ?? []) as Pyq[];
+        },
+        (data) => setPyqs(data)
+      ),
+    [runCached]
   );
 
   const loadImportantDates = useCallback(
     (examType?: string) => {
       const key = examType ? `important_dates:${examType}` : "important_dates:public";
-      return runOnce(key, async () => {
-        let q = supabase.from("important_dates").select("*");
-        if (examType) q = q.eq("exam_type", examType);
-        const { data, error: e } = await q;
-        if (e) {
-          console.error("loadImportantDates error:", e);
-          return;
-        }
-        if (data) setImportantDates((prev) => mergeById(prev, data));
-      });
+      return runCached(
+        key,
+        async () => {
+          let q = supabase.from("important_dates").select("*");
+          if (examType) q = q.eq("exam_type", examType);
+          const { data, error: e } = await q;
+          if (e) throw e;
+          return (data ?? []) as ImportantDate[];
+        },
+        (data) => setImportantDates((prev) => mergeById(prev, data))
+      );
     },
-    [runOnce]
+    [runCached]
   );
 
   const loadNewsUpdates = useCallback(
     (examType?: string) => {
       const key = examType ? `news_updates:${examType}` : "news_updates:public";
-      return runOnce(key, async () => {
-        let q = supabase.from("news_updates").select("*");
-        if (examType) q = q.eq("exam_type", examType);
-        const { data, error: e } = await q;
-        if (e) {
-          console.error("loadNewsUpdates error:", e);
-          return;
-        }
-        if (data) setNewsUpdates((prev) => mergeById(prev, data));
-      });
+      return runCached(
+        key,
+        async () => {
+          let q = supabase.from("news_updates").select("*");
+          if (examType) q = q.eq("exam_type", examType);
+          const { data, error: e } = await q;
+          if (e) throw e;
+          return (data ?? []) as NewsUpdate[];
+        },
+        (data) => setNewsUpdates((prev) => mergeById(prev, data))
+      );
     },
-    [runOnce]
+    [runCached]
   );
 
   const loadCommunities = useCallback(
     (examType?: string) => {
       const key = examType ? `communities:${examType}` : "communities:public";
-      return runOnce(key, async () => {
-        let q = supabase.from("communities").select("*");
-        if (examType) q = q.eq("exam_type", examType);
-        const { data, error: e } = await q;
-        if (e) {
-          console.error("loadCommunities error:", e);
-          return;
-        }
-        if (data) setCommunities((prev) => mergeById(prev, data));
-      });
+      return runCached(
+        key,
+        async () => {
+          let q = supabase.from("communities").select("*");
+          if (examType) q = q.eq("exam_type", examType);
+          const { data, error: e } = await q;
+          if (e) throw e;
+          return (data ?? []) as Community[];
+        },
+        (data) => setCommunities((prev) => mergeById(prev, data))
+      );
     },
-    [runOnce]
+    [runCached]
   );
 
   const loadIitmBranchNotes = useCallback(
     () =>
-      runOnce("iitm_branch_notes:public", async () => {
-        const { data, error: e } = await supabase
-          .from("iitm_branch_notes")
-          .select("*")
-          .eq("is_active", true);
-        if (e) {
-          console.error("loadIitmBranchNotes error:", e);
-          return;
-        }
-        if (data) setIitmBranchNotes(data);
-      }),
-    [runOnce]
+      runCached(
+        "iitm_branch_notes:public",
+        async () => {
+          const { data, error: e } = await supabase
+            .from("iitm_branch_notes")
+            .select("*")
+            .eq("is_active", true);
+          if (e) throw e;
+          return (data ?? []) as IITMBranchNote[];
+        },
+        (data) => setIitmBranchNotes(data)
+      ),
+    [runCached]
   );
 
   const loadIitmBranchPyqs = useCallback(
     () =>
-      runOnce("iitm_branch_pyqs", async () => {
-        const { data, error: e } = await supabase
-          .from("pyqs")
-          .select("*")
-          .eq("is_active", true)
-          .or("exam_type.eq.IITM_BS,exam_type.eq.IITM BS");
-        if (e) {
-          console.error("loadIitmBranchPyqs error:", e);
-          return;
-        }
-        if (data) {
+      runCached(
+        "iitm_branch_pyqs",
+        async () => {
+          const { data, error: e } = await supabase
+            .from("pyqs")
+            .select("*")
+            .eq("is_active", true)
+            .or("exam_type.eq.IITM_BS,exam_type.eq.IITM BS");
+          if (e) throw e;
+          return (data ?? []) as Pyq[];
+        },
+        (data) => {
           setIitmBranchPyqs(data);
           setPyqs((prev) => mergeById(prev, data));
         }
-      }),
-    [runOnce]
+      ),
+    [runCached]
   );
 
   const loadJobs = useCallback(
     () =>
-      runOnce("jobs:public", async () => {
-        const { data, error: e } = await supabase
-          .from("jobs")
-          .select("*")
-          .eq("is_active", true);
-        if (e) {
-          console.error("loadJobs error:", e);
-          return;
-        }
-        if (data) setJobs(data);
-      }),
-    [runOnce]
+      runCached(
+        "jobs:public",
+        async () => {
+          const { data, error: e } = await supabase
+            .from("jobs")
+            .select("*")
+            .eq("is_active", true);
+          if (e) throw e;
+          return (data ?? []) as Job[];
+        },
+        (data) => setJobs(data)
+      ),
+    [runCached]
   );
 
   const loadRecommendedCourses = useCallback(
     () =>
-      runOnce(`recommended_courses:${user?.id ?? "anon"}`, async () => {
-        if (!user) return;
-        const { data, error: e } = await supabase
-          .from("user_recommendations")
-          .select(
-            `score, courses ( id, title, description, price, discounted_price,
-             duration, rating, features, bestseller, image_url,
-             created_at, updated_at, subject, start_date, course_type,
-             branch, level, enroll_now_link, students_enrolled,
-             end_date, language, is_live, expiry_date, tags, exam_category )`
-          )
-          .order("score", { ascending: false })
-          .limit(3);
-
-        if (e) {
-          console.error("loadRecommendedCourses error:", e);
-          return;
-        }
-        if (data) {
-          const formatted = data
+      runCached(
+        `recommended_courses:${user?.id ?? "anon"}`,
+        async () => {
+          if (!user) return [] as any[];
+          const { data, error: e } = await supabase
+            .from("user_recommendations")
+            .select(
+              `score, courses ( id, title, description, price, discounted_price,
+               duration, rating, features, bestseller, image_url,
+               created_at, updated_at, subject, start_date, course_type,
+               branch, level, enroll_now_link, students_enrolled,
+               end_date, language, is_live, expiry_date, tags, exam_category )`
+            )
+            .order("score", { ascending: false })
+            .limit(3);
+          if (e) throw e;
+          return (data ?? [])
             .filter((rec: any) => rec.courses && rec.courses.is_live === true)
             .map((rec: any) => rec.courses);
-          setRecommendedCourses(formatted);
-        }
-      }),
-    [runOnce, user]
+        },
+        (data) => setRecommendedCourses(data)
+      ),
+    [runCached, user]
   );
 
   // Dashboard helper — loads everything the StudyPortal needs for the user's profile,
@@ -433,10 +483,7 @@ export const BackendIntegratedWrapper: React.FC<{
   const refreshNotes = useCallback(async () => {
     setContentLoading(true);
     try {
-      // Drop all notes:* cache entries so any page calling loadNotes(scope) re-fetches
-      for (const k of Array.from(loadCache.current.keys())) {
-        if (k.startsWith("notes:")) loadCache.current.delete(k);
-      }
+      invalidate("notes:");
       const { data, error: e } = await supabase.from("notes").select("*");
       if (e) throw e;
       if (data) setNotes(data);
@@ -445,14 +492,13 @@ export const BackendIntegratedWrapper: React.FC<{
     } finally {
       setContentLoading(false);
     }
-  }, []);
+  }, [invalidate]);
 
   const refreshPyqs = useCallback(async () => {
     setContentLoading(true);
     try {
-      for (const k of Array.from(loadCache.current.keys())) {
-        if (k.startsWith("pyqs:") || k === "iitm_branch_pyqs") loadCache.current.delete(k);
-      }
+      invalidate("pyqs:");
+      invalidate("iitm_branch_pyqs");
       const { data, error: e } = await supabase.from("pyqs").select("*");
       if (e) throw e;
       if (data) setPyqs(data);
@@ -461,7 +507,7 @@ export const BackendIntegratedWrapper: React.FC<{
     } finally {
       setContentLoading(false);
     }
-  }, []);
+  }, [invalidate]);
 
   const getFilteredContent = useCallback(
     (profile: Database["public"]["Tables"]["profiles"]["Row"] | null) => {
@@ -674,12 +720,10 @@ export const BackendIntegratedWrapper: React.FC<{
   );
 
   const refreshCoursesFull = useCallback(async () => {
-    for (const k of Array.from(loadCache.current.keys())) {
-      if (k.startsWith("courses:")) loadCache.current.delete(k);
-    }
+    invalidate("courses:");
     const { data } = await supabase.from("courses").select("*");
     if (data) setCourses(data as unknown as Course[]);
-  }, []);
+  }, [invalidate]);
 
   const createCourse = useCallback(
     async (course: any): Promise<boolean> => {
