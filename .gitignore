@@ -12,6 +12,18 @@ dist
 dist-ssr
 *.local
 
+# Environment variables — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Lovable AI session artifacts
+.lovable/
+
+# Bun lockfiles (project uses npm)
+bun.lock
+bun.lockb
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
