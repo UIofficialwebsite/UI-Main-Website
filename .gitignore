@@ -12,8 +12,7 @@ dist
 dist-ssr
 *.local
 
-# Environment variables — never commit secrets
-.env
+# Local-only env overrides (the tracked .env holds the shared dev config)
 .env.local
 .env.*.local
 
