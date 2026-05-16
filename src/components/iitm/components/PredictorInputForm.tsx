@@ -19,11 +19,7 @@ export default function PredictorInputForm({
   onInputChange, 
   onCalculate
 }: PredictorInputFormProps) {
-  const { user } = useAuth();
-  const { openLogin } = useLoginModal();
-  
   const handleCalculateClick = () => {
-    if (!user) { openLogin(); return; }
     onCalculate();
   };
   

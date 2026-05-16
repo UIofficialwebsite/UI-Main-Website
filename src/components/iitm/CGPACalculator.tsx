@@ -131,12 +131,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     setCourses(newCourses);
   };
 
-  const { user } = useAuth();
-  const { openLogin } = useLoginModal();
-
   const handleCalculate = () => {
-    if (!user) { openLogin(); return; }
-
     // Log tool usage silently
     try {
       const courseDetails = courses.map(c => ({
