@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -30,7 +30,8 @@ const Courses = () => {
   );
   const navigate = useNavigate();
   const location = useLocation();
-  const { courses, contentLoading } = useBackend();
+  const { courses, contentLoading, loadCourses } = useBackend();
+  useEffect(() => { loadCourses(); }, [loadCourses]);
 
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };

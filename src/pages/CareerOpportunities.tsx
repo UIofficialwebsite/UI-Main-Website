@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -113,7 +113,8 @@ const HeroBanner = ({
 
 const CareerOpportunities = () => {
   usePageSEO(SEO_TITLES.CAREER_OPENINGS, "/career/openings");
-  const { jobs, contentLoading } = useBackend();
+  const { jobs, contentLoading, loadJobs } = useBackend();
+  useEffect(() => { loadJobs(); }, [loadJobs]);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 

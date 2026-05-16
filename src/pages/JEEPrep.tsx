@@ -16,7 +16,14 @@ import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const JEEPrep = () => {
   usePageSEO(SEO_TITLES.JEE_PREP, "/exam-preparation/jee");
-  const { notes, pyqs, contentLoading } = useBackend();
+  const { notes, pyqs, contentLoading, loadNotes, loadPyqs, loadImportantDates, loadNewsUpdates, loadCommunities } = useBackend();
+  useEffect(() => {
+    loadNotes("JEE");
+    loadPyqs("JEE");
+    loadImportantDates("JEE");
+    loadNewsUpdates("JEE");
+    loadCommunities("JEE");
+  }, [loadNotes, loadPyqs, loadImportantDates, loadNewsUpdates, loadCommunities]);
   const navigate = useNavigate();
   const location = useLocation();
   

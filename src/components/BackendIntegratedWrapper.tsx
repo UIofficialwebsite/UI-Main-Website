@@ -2,6 +2,7 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
 } from "react";
@@ -12,7 +13,6 @@ import { Course } from "@/components/admin/courses/types";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { useToast } from "@/components/ui/use-toast";
 
-// Define content types
 type Note = Database["public"]["Tables"]["notes"]["Row"];
 type Pyq = Database["public"]["Tables"]["pyqs"]["Row"];
 type ImportantDate = Database["public"]["Tables"]["important_dates"]["Row"];
@@ -66,6 +66,23 @@ interface BackendContextType {
   createCourse: (course: any) => Promise<boolean>;
   updateCourse: (id: string, course: any) => Promise<boolean>;
   deleteCourse: (id: string) => Promise<void>;
+  // Scoped lazy loaders (call from pages — only fetches once per scope per session)
+  loadCourses: () => Promise<void>;
+  loadAllCourses: () => Promise<void>;
+  loadNotes: (examType?: string) => Promise<void>;
+  loadAllNotes: () => Promise<void>;
+  loadPyqs: (examType?: string) => Promise<void>;
+  loadAllPyqs: () => Promise<void>;
+  loadImportantDates: (examType?: string) => Promise<void>;
+  loadNewsUpdates: (examType?: string) => Promise<void>;
+  loadCommunities: (examType?: string) => Promise<void>;
+  loadIitmBranchNotes: () => Promise<void>;
+  loadIitmBranchPyqs: () => Promise<void>;
+  loadJobs: () => Promise<void>;
+  loadDashboardData: (
+    profile: Database["public"]["Tables"]["profiles"]["Row"] | null
+  ) => Promise<void>;
+  loadRecommendedCourses: () => Promise<void>;
 }
 
 const BackendContext = createContext<BackendContextType | undefined>(undefined);
@@ -77,6 +94,14 @@ const emptyFilteredContent = {
   importantDates: [] as ImportantDate[],
   newsUpdates: [] as NewsUpdate[],
   communities: [] as Community[],
+};
+
+const mergeById = <T extends { id: string | number }>(prev: T[], next: T[]): T[] => {
+  if (prev.length === 0) return next;
+  const map = new Map<string | number, T>();
+  for (const row of prev) map.set(row.id, row);
+  for (const row of next) map.set(row.id, row);
+  return Array.from(map.values());
 };
 
 export const BackendIntegratedWrapper: React.FC<{
@@ -94,23 +119,26 @@ export const BackendIntegratedWrapper: React.FC<{
   const [iitmBranchNotes, setIitmBranchNotes] = useState<IITMBranchNote[]>([]);
   const [iitmBranchPyqs, setIitmBranchPyqs] = useState<IITMBranchPyq[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [contentLoading, setContentLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const { 
-    handleDownload, 
-    downloadCounts, 
+  // Session-level dedup cache: scope key -> in-flight or completed promise
+  const loadCache = useRef<Map<string, Promise<void>>>(new Map());
+
+  const {
+    handleDownload,
+    downloadCounts,
     updateDownloadCount,
-    isInitialized: isDownloadCountsInitialized 
+    isInitialized: isDownloadCountsInitialized,
   } = useDownloadHandler();
 
-  // Check admin status
+  // Admin check is cheap (one rpc) — keep automatic
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (user?.email) {
-        const { data } = await supabase.rpc('is_current_user_admin');
+        const { data } = await supabase.rpc("is_current_user_admin");
         setIsAdmin(data || false);
       } else {
         setIsAdmin(false);
@@ -119,48 +147,298 @@ export const BackendIntegratedWrapper: React.FC<{
     checkAdminStatus();
   }, [user]);
 
-  const fetchRecommendedCourses = useCallback(async () => {
-    if (!user) return;
+  // Generic dedup wrapper: runs `fn` once per `key` per session
+  const runOnce = useCallback((key: string, fn: () => Promise<void>): Promise<void> => {
+    const existing = loadCache.current.get(key);
+    if (existing) return existing;
+    const promise = fn().catch((err) => {
+      // On failure, drop the cache entry so future calls can retry
+      loadCache.current.delete(key);
+      throw err;
+    });
+    loadCache.current.set(key, promise);
+    return promise;
+  }, []);
 
-    try {
-      const { data, error } = await supabase
-        .from("user_recommendations")
-        .select(`
-          score,
-          courses (
-            id, title, description, price, discounted_price,
-            duration, rating, features, bestseller, image_url,
-            created_at, updated_at, subject, start_date, course_type,
-            branch, level, enroll_now_link, students_enrolled,
-            end_date, language, is_live, expiry_date, tags, exam_category
+  const loadCourses = useCallback(
+    () =>
+      runOnce("courses:public", async () => {
+        const { data, error: e } = await supabase
+          .from("courses")
+          .select("*")
+          .eq("is_live", true);
+        if (e) {
+          console.error("loadCourses error:", e);
+          return;
+        }
+        if (data) setCourses((prev) => mergeById(prev, data as unknown as Course[]));
+      }),
+    [runOnce]
+  );
+
+  const loadAllCourses = useCallback(
+    () =>
+      runOnce("courses:all", async () => {
+        const { data, error: e } = await supabase.from("courses").select("*");
+        if (e) {
+          console.error("loadAllCourses error:", e);
+          return;
+        }
+        if (data) setCourses(data as unknown as Course[]);
+      }),
+    [runOnce]
+  );
+
+  const loadNotes = useCallback(
+    (examType?: string) => {
+      const key = examType ? `notes:${examType}` : "notes:public";
+      return runOnce(key, async () => {
+        let q = supabase.from("notes").select("*").eq("is_active", true);
+        if (examType) q = q.eq("exam_type", examType);
+        const { data, error: e } = await q;
+        if (e) {
+          console.error("loadNotes error:", e);
+          return;
+        }
+        if (data) setNotes((prev) => mergeById(prev, data));
+      });
+    },
+    [runOnce]
+  );
+
+  const loadAllNotes = useCallback(
+    () =>
+      runOnce("notes:all", async () => {
+        const { data, error: e } = await supabase.from("notes").select("*");
+        if (e) {
+          console.error("loadAllNotes error:", e);
+          return;
+        }
+        if (data) setNotes(data);
+      }),
+    [runOnce]
+  );
+
+  const loadPyqs = useCallback(
+    (examType?: string) => {
+      const key = examType ? `pyqs:${examType}` : "pyqs:public";
+      return runOnce(key, async () => {
+        let q = supabase.from("pyqs").select("*").eq("is_active", true);
+        if (examType) q = q.eq("exam_type", examType);
+        const { data, error: e } = await q;
+        if (e) {
+          console.error("loadPyqs error:", e);
+          return;
+        }
+        if (data) setPyqs((prev) => mergeById(prev, data));
+      });
+    },
+    [runOnce]
+  );
+
+  const loadAllPyqs = useCallback(
+    () =>
+      runOnce("pyqs:all", async () => {
+        const { data, error: e } = await supabase.from("pyqs").select("*");
+        if (e) {
+          console.error("loadAllPyqs error:", e);
+          return;
+        }
+        if (data) setPyqs(data);
+      }),
+    [runOnce]
+  );
+
+  const loadImportantDates = useCallback(
+    (examType?: string) => {
+      const key = examType ? `important_dates:${examType}` : "important_dates:public";
+      return runOnce(key, async () => {
+        let q = supabase.from("important_dates").select("*");
+        if (examType) q = q.eq("exam_type", examType);
+        const { data, error: e } = await q;
+        if (e) {
+          console.error("loadImportantDates error:", e);
+          return;
+        }
+        if (data) setImportantDates((prev) => mergeById(prev, data));
+      });
+    },
+    [runOnce]
+  );
+
+  const loadNewsUpdates = useCallback(
+    (examType?: string) => {
+      const key = examType ? `news_updates:${examType}` : "news_updates:public";
+      return runOnce(key, async () => {
+        let q = supabase.from("news_updates").select("*");
+        if (examType) q = q.eq("exam_type", examType);
+        const { data, error: e } = await q;
+        if (e) {
+          console.error("loadNewsUpdates error:", e);
+          return;
+        }
+        if (data) setNewsUpdates((prev) => mergeById(prev, data));
+      });
+    },
+    [runOnce]
+  );
+
+  const loadCommunities = useCallback(
+    (examType?: string) => {
+      const key = examType ? `communities:${examType}` : "communities:public";
+      return runOnce(key, async () => {
+        let q = supabase.from("communities").select("*");
+        if (examType) q = q.eq("exam_type", examType);
+        const { data, error: e } = await q;
+        if (e) {
+          console.error("loadCommunities error:", e);
+          return;
+        }
+        if (data) setCommunities((prev) => mergeById(prev, data));
+      });
+    },
+    [runOnce]
+  );
+
+  const loadIitmBranchNotes = useCallback(
+    () =>
+      runOnce("iitm_branch_notes:public", async () => {
+        const { data, error: e } = await supabase
+          .from("iitm_branch_notes")
+          .select("*")
+          .eq("is_active", true);
+        if (e) {
+          console.error("loadIitmBranchNotes error:", e);
+          return;
+        }
+        if (data) setIitmBranchNotes(data);
+      }),
+    [runOnce]
+  );
+
+  const loadIitmBranchPyqs = useCallback(
+    () =>
+      runOnce("iitm_branch_pyqs", async () => {
+        const { data, error: e } = await supabase
+          .from("pyqs")
+          .select("*")
+          .eq("is_active", true)
+          .or("exam_type.eq.IITM_BS,exam_type.eq.IITM BS");
+        if (e) {
+          console.error("loadIitmBranchPyqs error:", e);
+          return;
+        }
+        if (data) {
+          setIitmBranchPyqs(data);
+          setPyqs((prev) => mergeById(prev, data));
+        }
+      }),
+    [runOnce]
+  );
+
+  const loadJobs = useCallback(
+    () =>
+      runOnce("jobs:public", async () => {
+        const { data, error: e } = await supabase
+          .from("jobs")
+          .select("*")
+          .eq("is_active", true);
+        if (e) {
+          console.error("loadJobs error:", e);
+          return;
+        }
+        if (data) setJobs(data);
+      }),
+    [runOnce]
+  );
+
+  const loadRecommendedCourses = useCallback(
+    () =>
+      runOnce(`recommended_courses:${user?.id ?? "anon"}`, async () => {
+        if (!user) return;
+        const { data, error: e } = await supabase
+          .from("user_recommendations")
+          .select(
+            `score, courses ( id, title, description, price, discounted_price,
+             duration, rating, features, bestseller, image_url,
+             created_at, updated_at, subject, start_date, course_type,
+             branch, level, enroll_now_link, students_enrolled,
+             end_date, language, is_live, expiry_date, tags, exam_category )`
           )
-        `)
-        .order("score", { ascending: false })
-        .limit(3);
+          .order("score", { ascending: false })
+          .limit(3);
 
-      if (error) {
-        console.error("Error fetching recommended courses:", error);
-        setRecommendedCourses([]);
-        return;
+        if (e) {
+          console.error("loadRecommendedCourses error:", e);
+          return;
+        }
+        if (data) {
+          const formatted = data
+            .filter((rec: any) => rec.courses && rec.courses.is_live === true)
+            .map((rec: any) => rec.courses);
+          setRecommendedCourses(formatted);
+        }
+      }),
+    [runOnce, user]
+  );
+
+  // Dashboard helper — loads everything the StudyPortal needs for the user's profile,
+  // scoped to the profile so we don't fetch every exam_type.
+  const loadDashboardData = useCallback(
+    async (profile: Database["public"]["Tables"]["profiles"]["Row"] | null) => {
+      if (!profile) return;
+      setLoading(true);
+      try {
+        const exam = profile.exam_type || undefined;
+        const isIITM = profile.program_type === "IITM_BS";
+        const examTypesForIITM = ["IITM_BS", "IITM BS"];
+
+        const tasks: Promise<void>[] = [loadCourses()];
+        if (isIITM) {
+          examTypesForIITM.forEach((et) => {
+            tasks.push(loadNotes(et));
+            tasks.push(loadPyqs(et));
+            tasks.push(loadImportantDates(et));
+            tasks.push(loadNewsUpdates(et));
+            tasks.push(loadCommunities(et));
+          });
+        } else if (exam) {
+          tasks.push(loadNotes(exam));
+          tasks.push(loadPyqs(exam));
+          tasks.push(loadImportantDates(exam));
+          tasks.push(loadNewsUpdates(exam));
+          tasks.push(loadCommunities(exam));
+        }
+        await Promise.allSettled(tasks);
+        await loadRecommendedCourses();
+      } catch (err: any) {
+        setError(err);
+      } finally {
+        setLoading(false);
       }
+    },
+    [
+      loadCourses,
+      loadNotes,
+      loadPyqs,
+      loadImportantDates,
+      loadNewsUpdates,
+      loadCommunities,
+      loadRecommendedCourses,
+    ]
+  );
 
-      if (data) {
-        const formattedData = data
-          .filter((rec) => rec.courses && rec.courses.is_live === true) // Filter for Live courses
-          .map((rec) => rec.courses);
-        setRecommendedCourses(formattedData);
-      }
-    } catch (err) {
-      console.error("Failed to fetch recommendations:", err);
-      setRecommendedCourses([]);
-    }
-  }, [user]);
-
+  // refreshNotes/refreshPyqs: used by admin after add/update/delete. Invalidate cache
+  // for the broad keys and re-fetch in full.
   const refreshNotes = useCallback(async () => {
     setContentLoading(true);
     try {
-      const { data, error } = await supabase.from("notes").select("*");
-      if (error) throw error;
+      // Drop all notes:* cache entries so any page calling loadNotes(scope) re-fetches
+      for (const k of Array.from(loadCache.current.keys())) {
+        if (k.startsWith("notes:")) loadCache.current.delete(k);
+      }
+      const { data, error: e } = await supabase.from("notes").select("*");
+      if (e) throw e;
       if (data) setNotes(data);
     } catch (err) {
       console.error("Error refreshing notes:", err);
@@ -172,8 +450,11 @@ export const BackendIntegratedWrapper: React.FC<{
   const refreshPyqs = useCallback(async () => {
     setContentLoading(true);
     try {
-      const { data, error } = await supabase.from("pyqs").select("*");
-      if (error) throw error;
+      for (const k of Array.from(loadCache.current.keys())) {
+        if (k.startsWith("pyqs:") || k === "iitm_branch_pyqs") loadCache.current.delete(k);
+      }
+      const { data, error: e } = await supabase.from("pyqs").select("*");
+      if (e) throw e;
       if (data) setPyqs(data);
     } catch (err) {
       console.error("Error refreshing pyqs:", err);
@@ -182,81 +463,9 @@ export const BackendIntegratedWrapper: React.FC<{
     }
   }, []);
 
-  const fetchInitialData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [
-        coursesRes,
-        notesRes,
-        pyqsRes,
-        datesRes,
-        newsRes,
-        commRes,
-        iitmNotesRes,
-        iitmPyqsRes,
-        jobsRes,
-      ] = await Promise.allSettled([
-        supabase.from("courses").select("*"),
-        supabase.from("notes").select("*"),
-        supabase.from("pyqs").select("*"),
-        supabase.from("important_dates").select("*"),
-        supabase.from("news_updates").select("*"),
-        supabase.from("communities").select("*"),
-        supabase.from("iitm_branch_notes").select("*"),
-        supabase
-          .from("pyqs")
-          .select("*")
-          .or("exam_type.eq.IITM_BS,exam_type.eq.IITM BS"),
-        supabase.from("jobs").select("*"),
-      ]);
-
-      if (coursesRes.status === "fulfilled" && coursesRes.value.data)
-        setCourses(coursesRes.value.data as unknown as Course[]);
-      if (notesRes.status === "fulfilled" && notesRes.value.data)
-        setNotes(notesRes.value.data);
-      if (pyqsRes.status === "fulfilled" && pyqsRes.value.data)
-        setPyqs(pyqsRes.value.data);
-      if (datesRes.status === "fulfilled" && datesRes.value.data)
-        setImportantDates(datesRes.value.data);
-      if (newsRes.status === "fulfilled" && newsRes.value.data)
-        setNewsUpdates(newsRes.value.data);
-      if (commRes.status === "fulfilled" && commRes.value.data)
-        setCommunities(commRes.value.data);
-      if (iitmNotesRes.status === "fulfilled" && iitmNotesRes.value.data)
-        setIitmBranchNotes(iitmNotesRes.value.data);
-      if (iitmPyqsRes.status === "fulfilled" && iitmPyqsRes.value.data)
-        setIitmBranchPyqs(iitmPyqsRes.value.data);
-      if (jobsRes.status === "fulfilled" && jobsRes.value.data)
-        setJobs(jobsRes.value.data);
-
-      await fetchRecommendedCourses();
-
-      const firstError = [
-        coursesRes, notesRes, pyqsRes, datesRes,
-        newsRes, commRes, iitmNotesRes, iitmPyqsRes, jobsRes,
-      ].find((res) => res.status === "rejected");
-      
-      if (firstError && firstError.status === "rejected") {
-        throw firstError.reason;
-      }
-    } catch (err: any) {
-      setError(err);
-      console.error("Error fetching initial data:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchRecommendedCourses]);
-
-  useEffect(() => {
-    fetchInitialData();
-  }, [fetchInitialData]);
-
   const getFilteredContent = useCallback(
     (profile: Database["public"]["Tables"]["profiles"]["Row"] | null) => {
-      if (!profile) {
-        return emptyFilteredContent;
-      }
+      if (!profile) return emptyFilteredContent;
 
       const programType = profile.program_type;
       const examType = profile.exam_type;
@@ -264,10 +473,8 @@ export const BackendIntegratedWrapper: React.FC<{
       const branch = profile.branch;
       const level = profile.level;
 
-      // Filter courses to only show 'is_live'
       const filteredCourses = courses.filter((course) => {
         if (course.is_live !== true) return false;
-
         if (programType === "IITM_BS") {
           return (
             course.exam_category === "IITM BS" &&
@@ -281,10 +488,9 @@ export const BackendIntegratedWrapper: React.FC<{
         return true;
       });
 
-      // Notes don't have branch/level, only exam_type and class_level
       const filteredNotes = notes.filter((note) => {
         if (programType === "IITM_BS") {
-          return (note.exam_type === "IITM_BS" || note.exam_type === "IITM BS");
+          return note.exam_type === "IITM_BS" || note.exam_type === "IITM BS";
         }
         if (programType === "COMPETITIVE_EXAM") {
           return (
@@ -295,7 +501,6 @@ export const BackendIntegratedWrapper: React.FC<{
         return false;
       });
 
-      // PYQs do have branch/level
       const filteredPyqs = pyqs.filter((pyq) => {
         if (programType === "IITM_BS") {
           return (
@@ -370,127 +575,162 @@ export const BackendIntegratedWrapper: React.FC<{
     [courses, notes, pyqs, importantDates, newsUpdates, communities]
   );
 
-  const addNote = useCallback(async (note: any): Promise<boolean> => {
-    try {
-      const { error } = await supabase.from("notes").insert([note]);
-      if (error) throw error;
-      toast({ title: "Note added successfully" });
-      await refreshNotes();
-      return true;
-    } catch (error) {
-      console.error("Error adding note:", error);
-      toast({ title: "Error adding note", variant: "destructive" });
-      return false;
-    }
-  }, [toast, refreshNotes]);
+  const addNote = useCallback(
+    async (note: any): Promise<boolean> => {
+      try {
+        const { error: e } = await supabase.from("notes").insert([note]);
+        if (e) throw e;
+        toast({ title: "Note added successfully" });
+        await refreshNotes();
+        return true;
+      } catch (err) {
+        console.error("Error adding note:", err);
+        toast({ title: "Error adding note", variant: "destructive" });
+        return false;
+      }
+    },
+    [toast, refreshNotes]
+  );
 
-  const addPyq = useCallback(async (pyq: any): Promise<boolean> => {
-    try {
-      const { error } = await supabase.from("pyqs").insert([pyq]);
-      if (error) throw error;
-      toast({ title: "PYQ added successfully" });
-      await refreshPyqs();
-      return true;
-    } catch (error) {
-      console.error("Error adding PYQ:", error);
-      toast({ title: "Error adding PYQ", variant: "destructive" });
-      return false;
-    }
-  }, [toast, refreshPyqs]);
+  const addPyq = useCallback(
+    async (pyq: any): Promise<boolean> => {
+      try {
+        const { error: e } = await supabase.from("pyqs").insert([pyq]);
+        if (e) throw e;
+        toast({ title: "PYQ added successfully" });
+        await refreshPyqs();
+        return true;
+      } catch (err) {
+        console.error("Error adding PYQ:", err);
+        toast({ title: "Error adding PYQ", variant: "destructive" });
+        return false;
+      }
+    },
+    [toast, refreshPyqs]
+  );
 
-  const updateNote = useCallback(async (id: string, note: any): Promise<boolean> => {
-    try {
-      const { error } = await supabase.from("notes").update(note).eq("id", id);
-      if (error) throw error;
-      toast({ title: "Note updated successfully" });
-      await refreshNotes();
-      return true;
-    } catch (error) {
-      console.error("Error updating note:", error);
-      toast({ title: "Error updating note", variant: "destructive" });
-      return false;
-    }
-  }, [toast, refreshNotes]);
+  const updateNote = useCallback(
+    async (id: string, note: any): Promise<boolean> => {
+      try {
+        const { error: e } = await supabase.from("notes").update(note).eq("id", id);
+        if (e) throw e;
+        toast({ title: "Note updated successfully" });
+        await refreshNotes();
+        return true;
+      } catch (err) {
+        console.error("Error updating note:", err);
+        toast({ title: "Error updating note", variant: "destructive" });
+        return false;
+      }
+    },
+    [toast, refreshNotes]
+  );
 
-  const updatePyq = useCallback(async (id: string, pyq: any): Promise<boolean> => {
-    try {
-      const { error } = await supabase.from("pyqs").update(pyq).eq("id", id);
-      if (error) throw error;
-      toast({ title: "PYQ updated successfully" });
-      await refreshPyqs();
-      return true;
-    } catch (error) {
-      console.error("Error updating PYQ:", error);
-      toast({ title: "Error updating PYQ", variant: "destructive" });
-      return false;
-    }
-  }, [toast, refreshPyqs]);
+  const updatePyq = useCallback(
+    async (id: string, pyq: any): Promise<boolean> => {
+      try {
+        const { error: e } = await supabase.from("pyqs").update(pyq).eq("id", id);
+        if (e) throw e;
+        toast({ title: "PYQ updated successfully" });
+        await refreshPyqs();
+        return true;
+      } catch (err) {
+        console.error("Error updating PYQ:", err);
+        toast({ title: "Error updating PYQ", variant: "destructive" });
+        return false;
+      }
+    },
+    [toast, refreshPyqs]
+  );
 
-  const deleteNote = useCallback(async (id: string): Promise<void> => {
-    try {
-      const { error } = await supabase.from("notes").delete().eq("id", id);
-      if (error) throw error;
-      toast({ title: "Note deleted successfully" });
-      await refreshNotes();
-    } catch (error) {
-      console.error("Error deleting note:", error);
-      toast({ title: "Error deleting note", variant: "destructive" });
-    }
-  }, [toast, refreshNotes]);
+  const deleteNote = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        const { error: e } = await supabase.from("notes").delete().eq("id", id);
+        if (e) throw e;
+        toast({ title: "Note deleted successfully" });
+        await refreshNotes();
+      } catch (err) {
+        console.error("Error deleting note:", err);
+        toast({ title: "Error deleting note", variant: "destructive" });
+      }
+    },
+    [toast, refreshNotes]
+  );
 
-  const deletePyq = useCallback(async (id: string): Promise<void> => {
-    try {
-      const { error } = await supabase.from("pyqs").delete().eq("id", id);
-      if (error) throw error;
-      toast({ title: "PYQ deleted successfully" });
-      await refreshPyqs();
-    } catch (error) {
-      console.error("Error deleting PYQ:", error);
-      toast({ title: "Error deleting PYQ", variant: "destructive" });
-    }
-  }, [toast, refreshPyqs]);
+  const deletePyq = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        const { error: e } = await supabase.from("pyqs").delete().eq("id", id);
+        if (e) throw e;
+        toast({ title: "PYQ deleted successfully" });
+        await refreshPyqs();
+      } catch (err) {
+        console.error("Error deleting PYQ:", err);
+        toast({ title: "Error deleting PYQ", variant: "destructive" });
+      }
+    },
+    [toast, refreshPyqs]
+  );
 
-  const createCourse = useCallback(async (course: any): Promise<boolean> => {
-    try {
-      const { error } = await supabase.from("courses").insert([course]);
-      if (error) throw error;
-      toast({ title: "Course created successfully" });
-      await fetchInitialData();
-      return true;
-    } catch (error) {
-      console.error("Error creating course:", error);
-      toast({ title: "Error creating course", variant: "destructive" });
-      return false;
+  const refreshCoursesFull = useCallback(async () => {
+    for (const k of Array.from(loadCache.current.keys())) {
+      if (k.startsWith("courses:")) loadCache.current.delete(k);
     }
-  }, [toast, fetchInitialData]);
+    const { data } = await supabase.from("courses").select("*");
+    if (data) setCourses(data as unknown as Course[]);
+  }, []);
 
-  const updateCourse = useCallback(async (id: string, course: any): Promise<boolean> => {
-    try {
-      const { error } = await supabase.from("courses").update(course).eq("id", id);
-      if (error) throw error;
-      toast({ title: "Course updated successfully" });
-      await fetchInitialData();
-      return true;
-    } catch (error) {
-      console.error("Error updating course:", error);
-      toast({ title: "Error updating course", variant: "destructive" });
-      return false;
-    }
-  }, [toast, fetchInitialData]);
+  const createCourse = useCallback(
+    async (course: any): Promise<boolean> => {
+      try {
+        const { error: e } = await supabase.from("courses").insert([course]);
+        if (e) throw e;
+        toast({ title: "Course created successfully" });
+        await refreshCoursesFull();
+        return true;
+      } catch (err) {
+        console.error("Error creating course:", err);
+        toast({ title: "Error creating course", variant: "destructive" });
+        return false;
+      }
+    },
+    [toast, refreshCoursesFull]
+  );
 
-  const deleteCourse = useCallback(async (id: string): Promise<void> => {
-    try {
-      const { error } = await supabase.from("courses").delete().eq("id", id);
-      if (error) throw error;
-      toast({ title: "Course deleted successfully" });
-      await fetchInitialData();
-    } catch (error) {
-      console.error("Error deleting course:", error);
-      toast({ title: "Error deleting course", variant: "destructive" });
-    }
-  }, [toast, fetchInitialData]);
+  const updateCourse = useCallback(
+    async (id: string, course: any): Promise<boolean> => {
+      try {
+        const { error: e } = await supabase.from("courses").update(course).eq("id", id);
+        if (e) throw e;
+        toast({ title: "Course updated successfully" });
+        await refreshCoursesFull();
+        return true;
+      } catch (err) {
+        console.error("Error updating course:", err);
+        toast({ title: "Error updating course", variant: "destructive" });
+        return false;
+      }
+    },
+    [toast, refreshCoursesFull]
+  );
 
-  const value = {
+  const deleteCourse = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        const { error: e } = await supabase.from("courses").delete().eq("id", id);
+        if (e) throw e;
+        toast({ title: "Course deleted successfully" });
+        await refreshCoursesFull();
+      } catch (err) {
+        console.error("Error deleting course:", err);
+        toast({ title: "Error deleting course", variant: "destructive" });
+      }
+    },
+    [toast, refreshCoursesFull]
+  );
+
+  const value: BackendContextType = {
     courses: courses as Course[],
     notes,
     pyqs,
@@ -521,19 +761,29 @@ export const BackendIntegratedWrapper: React.FC<{
     createCourse,
     updateCourse,
     deleteCourse,
+    loadCourses,
+    loadAllCourses,
+    loadNotes,
+    loadAllNotes,
+    loadPyqs,
+    loadAllPyqs,
+    loadImportantDates,
+    loadNewsUpdates,
+    loadCommunities,
+    loadIitmBranchNotes,
+    loadIitmBranchPyqs,
+    loadJobs,
+    loadDashboardData,
+    loadRecommendedCourses,
   };
 
-  return (
-    <BackendContext.Provider value={value}>{children}</BackendContext.Provider>
-  );
+  return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;
 };
 
 export const useBackend = () => {
   const context = useContext(BackendContext);
   if (context === undefined) {
-    throw new Error(
-      "useBackend must be used within a BackendIntegratedWrapper"
-    );
+    throw new Error("useBackend must be used within a BackendIntegratedWrapper");
   }
   return context;
 };

@@ -14,7 +14,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
 const ContentManagementTab = () => {
-  const { notes, pyqs, courses, contentLoading, updateNote, updatePyq, refreshNotes, refreshPyqs } = useBackend();
+  const { notes, pyqs, courses, contentLoading, updateNote, updatePyq, refreshNotes, refreshPyqs, loadAllNotes, loadAllPyqs, loadAllCourses } = useBackend();
+  useEffect(() => {
+    loadAllNotes();
+    loadAllPyqs();
+    loadAllCourses();
+  }, [loadAllNotes, loadAllPyqs, loadAllCourses]);
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [examTypeFilter, setExamTypeFilter] = useState('');

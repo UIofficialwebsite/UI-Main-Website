@@ -15,7 +15,8 @@ import { usePageSEO, getJobTitleSEO } from "@/utils/seoManager";
 const JobDetails = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const { jobs, contentLoading } = useBackend();
+  const { jobs, contentLoading, loadJobs } = useBackend();
+  useEffect(() => { loadJobs(); }, [loadJobs]);
   const { toast } = useToast();
   const [currentUrl, setCurrentUrl] = useState("");
 

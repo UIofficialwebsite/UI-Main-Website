@@ -976,7 +976,8 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
 const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getFilteredContent, contentLoading } = useBackend(); 
+  const { getFilteredContent, contentLoading, loadDashboardData } = useBackend();
+  useEffect(() => { loadDashboardData(profile); }, [loadDashboardData, profile]);
   
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);

@@ -97,7 +97,8 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: an
 
 const NavBar = () => {
   const { user, signOut } = useAuth();
-  const { courses } = useBackend();
+  const { courses, loadCourses } = useBackend();
+  useEffect(() => { loadCourses(); }, [loadCourses]);
   const { openLogin } = useLoginModal();
   const navigate = useNavigate();
   const location = useLocation();

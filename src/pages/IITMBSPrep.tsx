@@ -48,7 +48,17 @@ const IITMBSPrep = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { courses, pyqs } = useBackend();
+  const { courses, pyqs, loadCourses, loadIitmBranchPyqs, loadImportantDates, loadNewsUpdates, loadCommunities } = useBackend();
+  useEffect(() => {
+    loadCourses();
+    loadIitmBranchPyqs();
+    loadImportantDates("IITM_BS");
+    loadImportantDates("IITM BS");
+    loadNewsUpdates("IITM_BS");
+    loadNewsUpdates("IITM BS");
+    loadCommunities("IITM_BS");
+    loadCommunities("IITM BS");
+  }, [loadCourses, loadIitmBranchPyqs, loadImportantDates, loadNewsUpdates, loadCommunities]);
   
   const filterRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);

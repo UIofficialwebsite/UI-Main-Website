@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
@@ -8,7 +8,8 @@ import CourseForm from "./courses/CourseForm";
 import CourseList from "./courses/CourseList";
 
 const CoursesManagerTab = () => {
-  const { courses, contentLoading: isLoading, createCourse, updateCourse, deleteCourse } = useBackend();
+  const { courses, contentLoading: isLoading, createCourse, updateCourse, deleteCourse, loadAllCourses } = useBackend();
+  useEffect(() => { loadAllCourses(); }, [loadAllCourses]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [isSaving, setIsSaving] = useState(false);

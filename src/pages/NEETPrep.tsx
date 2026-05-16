@@ -16,7 +16,14 @@ import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const NEETPrep = () => {
   usePageSEO(SEO_TITLES.NEET_PREP, "/exam-preparation/neet");
-  const { notes, pyqs, contentLoading } = useBackend();
+  const { notes, pyqs, contentLoading, loadNotes, loadPyqs, loadImportantDates, loadNewsUpdates, loadCommunities } = useBackend();
+  useEffect(() => {
+    loadNotes("NEET");
+    loadPyqs("NEET");
+    loadImportantDates("NEET");
+    loadNewsUpdates("NEET");
+    loadCommunities("NEET");
+  }, [loadNotes, loadPyqs, loadImportantDates, loadNewsUpdates, loadCommunities]);
   const navigate = useNavigate();
   const location = useLocation();
   

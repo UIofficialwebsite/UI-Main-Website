@@ -18,7 +18,8 @@ const CourseListing = () => {
   usePageSEO(getCourseListingTitleSEO(examCategory || 'all'), `/courses/listing/${examCategory || 'all'}`);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const { courses, contentLoading } = useBackend();
+  const { courses, contentLoading, loadCourses } = useBackend();
+  useEffect(() => { loadCourses(); }, [loadCourses]);
   
   
   // Applied Filter States

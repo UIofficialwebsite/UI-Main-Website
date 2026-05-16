@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import NavBar from "@/components/NavBar";
@@ -9,7 +9,8 @@ import { usePageSEO, getNewsTitleSEO } from "@/utils/seoManager";
 const NewsDetail = () => {
   const { newsId } = useParams<{ newsId: string }>();
   const navigate = useNavigate();
-  const { newsUpdates, contentLoading } = useBackend();
+  const { newsUpdates, contentLoading, loadNewsUpdates } = useBackend();
+  useEffect(() => { loadNewsUpdates(); }, [loadNewsUpdates]);
 
   const newsItem = useMemo(() => 
     newsUpdates.find(item => item.id === newsId),
