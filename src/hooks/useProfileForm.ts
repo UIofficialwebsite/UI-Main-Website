@@ -97,18 +97,6 @@ export const useProfileForm = () => {
     setIsLoading(true);
     
     try {
-      // Save to updated_profiles for history
-      const historyData = {
-        user_id: user.id,
-        full_name: fullName,
-        phone,
-        class: studentClass,
-        exam,
-        email: user.email
-      };
-
-      await supabase.from('updated_profiles').insert(historyData);
-
       // Update main profiles table
       const { error } = await supabase
         .from('profiles')

@@ -75,23 +75,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     setIsLoading(true);
 
     try {
-      // First, save to updated_profiles for history
-      const historyData = {
-        user_id: user.id,
-        student_name: studentName,
-        program_type: programType,
-        branch: programType === 'IITM_BS' ? branch : null,
-        level: programType === 'IITM_BS' ? level : null,
-        exam_type: programType === 'COMPETITIVE_EXAM' ? examType : null,
-        student_status: programType === 'COMPETITIVE_EXAM' ? studentStatus : null,
-        full_name: studentName,
-        email: user.email,
-        role: 'student'
-      };
-
-      await supabase.from('updated_profiles').insert(historyData);
-
-      // Then update the main profiles table
+      // Update the main profiles table
       const profileData: any = {
         id: user.id,
         student_name: studentName,
