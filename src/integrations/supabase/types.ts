@@ -531,36 +531,6 @@ export type Database = {
           },
         ]
       }
-      google_group_sync_queue: {
-        Row: {
-          created_at: string | null
-          email: string
-          email_normalized: string
-          error_message: string | null
-          id: string
-          processed_at: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          email_normalized: string
-          error_message?: string | null
-          id?: string
-          processed_at?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          email_normalized?: string
-          error_message?: string | null
-          id?: string
-          processed_at?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
       iitm_branch_notes: {
         Row: {
           branch: string
@@ -1049,6 +1019,98 @@ export type Database = {
         }
         Relationships: []
       }
+      promotional_group_members: {
+        Row: {
+          attempts: number
+          created_at: string
+          email: string
+          email_normalized: string
+          error_message: string | null
+          group_email: string
+          group_id: string
+          id: string
+          processed_at: string | null
+          source: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          email: string
+          email_normalized: string
+          error_message?: string | null
+          group_email: string
+          group_id: string
+          id?: string
+          processed_at?: string | null
+          source?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          email?: string
+          email_normalized?: string
+          error_message?: string | null
+          group_email?: string
+          group_id?: string
+          id?: string
+          processed_at?: string | null
+          source?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotional_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "promotional_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotional_groups: {
+        Row: {
+          created_at: string
+          google_group_id: string | null
+          group_email: string
+          group_name: string
+          group_number: number
+          id: string
+          is_current: boolean
+          is_full: boolean
+          max_members: number
+          member_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          google_group_id?: string | null
+          group_email: string
+          group_name: string
+          group_number: number
+          id?: string
+          is_current?: boolean
+          is_full?: boolean
+          max_members?: number
+          member_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          google_group_id?: string | null
+          group_email?: string
+          group_name?: string
+          group_number?: number
+          id?: string
+          is_current?: boolean
+          is_full?: boolean
+          max_members?: number
+          member_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pyqs: {
         Row: {
           branch: string | null
@@ -1109,51 +1171,6 @@ export type Database = {
           title?: string
           updated_at?: string
           year?: number | null
-        }
-        Relationships: []
-      }
-      recommendations: {
-        Row: {
-          category: string | null
-          company: string
-          created_at: string | null
-          created_by: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean | null
-          name: string
-          position: string
-          rating: number | null
-          recommendation_text: string
-          updated_at: string | null
-        }
-        Insert: {
-          category?: string | null
-          company: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          name: string
-          position: string
-          rating?: number | null
-          recommendation_text: string
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string | null
-          company?: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          name?: string
-          position?: string
-          rating?: number | null
-          recommendation_text?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1361,69 +1378,6 @@ export type Database = {
         }
         Relationships: []
       }
-      updated_profiles: {
-        Row: {
-          branch: string | null
-          class: string | null
-          created_at: string
-          email: string | null
-          exam: string | null
-          exam_type: string | null
-          full_name: string | null
-          gender: string | null
-          id: string
-          level: string | null
-          phone: string | null
-          program_type: string | null
-          role: string | null
-          selected_subjects: string[] | null
-          student_name: string | null
-          student_status: string | null
-          subjects: string[] | null
-          user_id: string
-        }
-        Insert: {
-          branch?: string | null
-          class?: string | null
-          created_at?: string
-          email?: string | null
-          exam?: string | null
-          exam_type?: string | null
-          full_name?: string | null
-          gender?: string | null
-          id?: string
-          level?: string | null
-          phone?: string | null
-          program_type?: string | null
-          role?: string | null
-          selected_subjects?: string[] | null
-          student_name?: string | null
-          student_status?: string | null
-          subjects?: string[] | null
-          user_id: string
-        }
-        Update: {
-          branch?: string | null
-          class?: string | null
-          created_at?: string
-          email?: string | null
-          exam?: string | null
-          exam_type?: string | null
-          full_name?: string | null
-          gender?: string | null
-          id?: string
-          level?: string | null
-          phone?: string | null
-          program_type?: string | null
-          role?: string | null
-          selected_subjects?: string[] | null
-          student_name?: string | null
-          student_status?: string | null
-          subjects?: string[] | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_recommendations: {
         Row: {
           course_id: string
@@ -1492,6 +1446,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bulk_assign_promotional_group_slots: {
+        Args: { p_emails: string[]; p_group_id: string }
+        Returns: number
+      }
+      claim_promotional_group_slot: {
+        Args: { p_email: string; p_source?: string }
+        Returns: {
+          becomes_full: boolean
+          group_email: string
+          group_id: string
+          group_number: number
+          member_id: string
+          was_already_assigned: boolean
+        }[]
+      }
       enroll_student_with_addons:
         | {
             Args: {
@@ -1547,6 +1516,16 @@ export type Database = {
       is_admin_user: { Args: { user_email: string }; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: { user_email: string }; Returns: boolean }
+      register_promotional_group: {
+        Args: {
+          p_google_group_id: string
+          p_group_email: string
+          p_group_name: string
+          p_group_number: number
+          p_make_current?: boolean
+        }
+        Returns: string
+      }
       verify_employee: {
         Args: { p_employee_code: string }
         Returns: {
