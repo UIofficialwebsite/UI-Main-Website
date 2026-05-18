@@ -52,6 +52,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   
   // Jobs Data Integration
   const { jobs, isLoading: jobsLoading } = useJobsManager();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
   
   const reportRef = useRef<HTMLDivElement>(null);
   
@@ -132,6 +134,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   };
 
   const handleCalculate = () => {
+    if (!user) { openLogin(); return; }
     // Log tool usage silently
     try {
       const courseDetails = courses.map(c => ({
@@ -284,7 +287,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {!jobsLoading && jobs && jobs.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
           <Carousel
-            plugins={[plugin.current]}
+            plugins={[plugin.current as any]}
             className="w-full"
             onMouseEnter={plugin.current.stop}
             onMouseLeave={plugin.current.reset}
