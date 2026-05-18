@@ -76,6 +76,8 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [requiredFs, setRequiredFs] = useState<{ grade: string; mark: number | null; already: boolean }[] | null>(null);
   const [eligibility, setEligibility] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
 
   const subjectObj = subjects.find(s => s.key === subjectKey);
 
@@ -96,6 +98,7 @@ export default function FoundationMarksPredictor({ branch, level }: FoundationMa
   };
 
   const handleCalculate = () => {
+    if (!user) { openLogin(); return; }
     if (!subjectObj) return;
 
     const numericInputs: Record<string, number> = {};

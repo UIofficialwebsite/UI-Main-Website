@@ -19,7 +19,10 @@ export default function ScoreInputForm({
   onInputChange, 
   onCalculate
 }: ScoreInputFormProps) {
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
   const handleCalculateClick = () => {
+    if (!user) { openLogin(); return; }
     onCalculate();
   };
   

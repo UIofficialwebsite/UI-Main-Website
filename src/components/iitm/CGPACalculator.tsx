@@ -52,6 +52,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   
   // Jobs Data Integration
   const { jobs, isLoading: jobsLoading } = useJobsManager();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
   
   const reportRef = useRef<HTMLDivElement>(null);
   
@@ -132,6 +134,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   };
 
   const handleCalculate = () => {
+    if (!user) { openLogin(); return; }
     // Log tool usage silently
     try {
       const courseDetails = courses.map(c => ({
