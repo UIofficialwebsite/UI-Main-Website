@@ -24,7 +24,7 @@ const HeroCarousel = ({ pagePath = "/" }: HeroCarouselProps) => {
         delay: 2000,
         stopOnInteraction: false,
         stopOnMouseEnter: false,
-      }),
+      }) as any,
     ]
   );
 

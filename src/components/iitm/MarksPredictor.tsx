@@ -131,7 +131,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       {results && !coursesLoading && matchingCourses.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only animate-in fade-in slide-in-from-top-4 duration-500">
           <Carousel
-            plugins={[plugin.current]}
+            plugins={[plugin.current as any]}
             className="w-full"
             onMouseEnter={plugin.current.stop}
             onMouseLeave={plugin.current.reset}

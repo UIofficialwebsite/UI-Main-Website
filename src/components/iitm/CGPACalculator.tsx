@@ -287,7 +287,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {!jobsLoading && jobs && jobs.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
           <Carousel
-            plugins={[plugin.current]}
+            plugins={[plugin.current as any]}
             className="w-full"
             onMouseEnter={plugin.current.stop}
             onMouseLeave={plugin.current.reset}
