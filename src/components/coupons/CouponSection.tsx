@@ -6,12 +6,46 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+// Soft chime that plays alongside the confetti. Synthesised live via Web
+// Audio (no asset to ship). A C5–E5–G5 major triad in quick succession with
+// exponential decay reads as a soothing notification ding rather than a
+// jarring horn. Silently no-ops if AudioContext is blocked (browsers may
+// refuse autoplay before a user gesture — fine for auto-apply on page load).
+const playCelebrationChime = () => {
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    if (ctx.state === "suspended") ctx.resume().catch(() => { /* ignore */ });
+
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.09;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.3);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 1.35);
+    });
+
+    setTimeout(() => { ctx.close().catch(() => { /* ignore */ }); }, 1800);
+  } catch (_) {
+    // Audio API unavailable / blocked — silent fail.
+  }
+};
+
 // Party-popper celebration. canvas-confetti's default appends a canvas at a
 // modest z-index that can get hidden behind the Sheet overlay or other
 // stacking contexts. We bypass that by creating our own full-screen canvas
 // pinned at the max safe z-index (2,147,483,647 — 2^31-1) and scoping a
 // confetti instance to it. The canvas is removed when the effect finishes.
 const celebrateCoupon = () => {
+  playCelebrationChime();
   const colors = [
     "#22c55e", "#16a34a", "#10b981", "#84cc16", "#4ade80", // greens
     "#facc15", "#f97316", "#ec4899", "#6957f1", "#3b82f6", // accent
