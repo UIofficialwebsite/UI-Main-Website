@@ -70,6 +70,7 @@ const FAQ = lazyWithRetry(() => import("./pages/FAQ"));
 const IITMCalculators = lazyWithRetry(() => import("./pages/IITMCalculators"));
 const NewsDetail = lazyWithRetry(() => import("./pages/NewsDetail"));
 const RedirectToPortal = lazyWithRetry(() => import("./pages/RedirectToPortal"));
+const PaymentProcessing = lazyWithRetry(() => import("./pages/PaymentProcessing"));
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const ONE_DAY = 1000 * 60 * 60 * 24;
@@ -173,7 +174,8 @@ const App = () => (
                   <Route path="/terms-of-service" element={<TermsOfService />} />
                   <Route path="/faq" element={<FAQ />} />
                   
-                  {/* Redirect to Portal */}
+                  {/* Payment flow */}
+                  <Route path="/payment-processing" element={<PaymentProcessing />} />
                   <Route path="/redirect-to-portal" element={<RedirectToPortal />} />
                   
                   {/* 404 */}

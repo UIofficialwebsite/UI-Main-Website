@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.bulk-sync-google-group]
 verify_jwt = false
+
+[functions.cashfree-webhook]
+verify_jwt = false
+
+[functions.reconcile-payments]
+verify_jwt = false
+
+[functions.verify-cashfree-payment]
+verify_jwt = false

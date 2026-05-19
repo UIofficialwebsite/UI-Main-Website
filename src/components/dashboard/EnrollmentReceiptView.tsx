@@ -153,7 +153,7 @@ const EnrollmentReceiptView = () => {
         
         if (payments.length > 0) {
             // Filter for successful/captured payments to avoid failed retries counting
-            const validPayments = payments.filter(p => p.status === 'Success' || p.status === 'captured' || p.status === 'PAID');
+            const validPayments = payments.filter(p => p.status === 'success' || p.status === 'Success' || p.status === 'captured' || p.status === 'PAID');
             const paymentsToSum = validPayments.length > 0 ? validPayments : payments;
 
             finalTotalPaid = paymentsToSum.reduce((sum, p) => {
