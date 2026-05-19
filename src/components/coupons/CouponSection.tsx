@@ -168,9 +168,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
         className="w-full text-left bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors"
       >
         <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-9 h-9 rounded-md bg-[#6957f1] flex items-center justify-center shrink-0">
-            <BadgePercent className="w-5 h-5 text-white" strokeWidth={2.5} />
-          </div>
+          <BadgePercent className="w-7 h-7 text-[#6957f1] shrink-0" strokeWidth={2} />
           <div className="flex-1 min-w-0">
             <div className="text-[15px] font-semibold text-gray-900 leading-tight">
               {appliedCoupon ? `${appliedCoupon.code} applied` : "Apply Code/Coupon"}
