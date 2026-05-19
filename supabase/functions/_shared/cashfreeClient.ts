@@ -27,14 +27,27 @@ export function getCashfreeHeaders(): Record<string, string> {
 }
 
 export function getCashfreeWebhookSecret(): string {
+  // Cashfree PG webhooks (API version 2023-08-01) are signed with the
+  // merchant's API secret_key (the same x-secret-key shown on the API Keys
+  // page). There is no separate webhook signing key for this version.
+  //
+  // Resolution order:
+  //   1. CASHFREE_WEBHOOK_SECRET_{ENV}   — explicit override per env
+  //   2. CASHFREE_WEBHOOK_SECRET         — single override for any env
+  //   3. CASHFREE_SECRET                 — fallback (the API secret, Cashfree's default)
   const env = getCashfreeEnv();
-  const key =
+  const envKey =
     env === "production"
       ? "CASHFREE_WEBHOOK_SECRET_PRODUCTION"
       : "CASHFREE_WEBHOOK_SECRET_SANDBOX";
-  const value = Deno.env.get(key) ?? Deno.env.get("CASHFREE_WEBHOOK_SECRET");
+  const value =
+    Deno.env.get(envKey) ??
+    Deno.env.get("CASHFREE_WEBHOOK_SECRET") ??
+    Deno.env.get("CASHFREE_SECRET");
   if (!value) {
-    throw new Error(`Missing webhook secret (${key} or CASHFREE_WEBHOOK_SECRET)`);
+    throw new Error(
+      `Missing webhook secret (${envKey}, CASHFREE_WEBHOOK_SECRET, or CASHFREE_SECRET)`,
+    );
   }
   return value;
 }
