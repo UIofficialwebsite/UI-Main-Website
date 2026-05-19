@@ -28,7 +28,9 @@ const celebrateCoupon = () => {
   });
   document.body.appendChild(canvas);
 
-  const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+  // useWorker: false → render on the main thread. Some browsers/CSP setups
+  // silently fail to spawn the worker, leaving the effect invisible.
+  const myConfetti = confetti.create(canvas, { resize: true, useWorker: false });
 
   // Phase 1 — central explosion
   myConfetti({
