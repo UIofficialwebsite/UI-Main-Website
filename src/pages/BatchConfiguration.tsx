@@ -788,34 +788,6 @@ const BatchConfiguration = () => {
                 </div>
             )}
 
-            {/* Mobile coupon input */}
-            <div className="mt-2">
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2">
-                  <span className="text-xs text-green-800"><span className="font-semibold">{appliedCoupon.code}</span> applied</span>
-                  <button onClick={removeCoupon} className="text-xs text-green-700 underline">Remove</button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponInput}
-                    onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
-                    placeholder="Coupon code"
-                    className="flex-1 border border-[#e3e8ee] rounded-md px-3 py-2 text-sm outline-none uppercase tracking-wide"
-                  />
-                  <button
-                    onClick={() => applyCoupon()}
-                    disabled={couponLoading || !couponInput.trim()}
-                    className="px-4 py-2 bg-[#1a1f36] text-white rounded-md text-sm font-semibold disabled:opacity-50"
-                  >
-                    {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
-                  </button>
-                </div>
-              )}
-              {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
-            </div>
-
             <div className="border-t border-dashed border-gray-300 my-2"></div>
 
             <div className="flex justify-between items-center">
@@ -962,6 +934,90 @@ const BatchConfiguration = () => {
                   </label>
                 );
               })}
+            </div>
+
+            {/* --- MOBILE COUPON SECTION (after subjects) --- */}
+            <div className="md:hidden mt-6 space-y-4">
+              {/* Coupon input */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2 text-[11px] font-bold text-[#697386] uppercase tracking-wider">
+                  <BadgePercent className="w-3 h-3" /> Have a coupon?
+                </div>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2.5">
+                    <div className="flex items-center gap-2 text-sm text-green-800 min-w-0">
+                      <Check className="w-4 h-4 shrink-0" />
+                      <span className="font-semibold truncate">{appliedCoupon.code}</span>
+                      <span className="text-green-700">· save ₹{couponDiscount}</span>
+                    </div>
+                    <button onClick={removeCoupon} className="text-xs text-green-700 hover:text-green-900 underline shrink-0 ml-2">
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') applyCoupon(); }}
+                        placeholder="Enter code"
+                        className="flex-1 border border-[#e3e8ee] rounded-md px-3 py-2.5 text-sm outline-none focus:border-[#1a1f36] uppercase tracking-wide min-w-0"
+                      />
+                      <button
+                        onClick={() => applyCoupon()}
+                        disabled={couponLoading || !couponInput.trim()}
+                        className="px-4 py-2.5 bg-white border border-[#1a1f36] text-[#1a1f36] rounded-md text-sm font-semibold disabled:opacity-50 shrink-0"
+                      >
+                        {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && <p className="text-xs text-red-600 mt-1.5">{couponError}</p>}
+                  </div>
+                )}
+              </div>
+
+              {/* Available offers on mobile */}
+              {availableOffers.length > 0 && (
+                <div>
+                  <div className="text-[11px] font-bold text-[#697386] uppercase tracking-wider mb-2">Available Offers</div>
+                  <div className="flex flex-col gap-2">
+                    {availableOffers.map((offer) => (
+                      <div
+                        key={`m-offer-${offer.code}`}
+                        className={`flex items-start justify-between gap-2 border rounded-md px-3 py-2 text-xs ${
+                          offer.eligible
+                            ? 'border-[#e3e8ee] bg-[#f8fafc]'
+                            : 'border-[#eef0f3] bg-[#f6f8fa] opacity-60'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 text-[#1a1f36] font-semibold">
+                            <Tag className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{offer.code}</span>
+                            {offer.eligible && offer.discountAmount !== undefined && (
+                              <span className="text-[#137333] font-bold ml-1">−₹{offer.discountAmount}</span>
+                            )}
+                          </div>
+                          {offer.label && <div className="text-[11px] text-[#4f566b] mt-0.5 truncate">{offer.label}</div>}
+                          {!offer.eligible && offer.ineligibilityReason && (
+                            <div className="text-[11px] text-[#697386] mt-0.5">{offer.ineligibilityReason}</div>
+                          )}
+                        </div>
+                        {offer.eligible && (!appliedCoupon || appliedCoupon.code !== offer.code) && (
+                          <button
+                            onClick={() => { setCouponInput(offer.code); applyCoupon(offer.code); }}
+                            className="text-[11px] font-bold text-[#1a1f36] hover:underline shrink-0"
+                          >
+                            APPLY
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
