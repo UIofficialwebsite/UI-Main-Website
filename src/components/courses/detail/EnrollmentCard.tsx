@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Loader2, Check, BadgePercent } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Loader2 } from 'lucide-react';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +11,7 @@ import { ShareButton } from '@/components/ShareButton';
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
-import { toast } from 'sonner';
+import CouponSection, { type AppliedCoupon } from '@/components/coupons/CouponSection';
 
 export interface EnrollmentCardProps {
     course: Course;
@@ -45,15 +45,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const [hasAddons, setHasAddons] = useState(false);
     const [totalAddonsCount, setTotalAddonsCount] = useState(0);
 
-    // --- Coupon state for the no-addons direct enrollment path ---
-    const [couponInput, setCouponInput] = useState("");
-    const [appliedCoupon, setAppliedCoupon] = useState<{
-        code: string;
-        discountAmount: number;
-        finalAmount: number;
-    } | null>(null);
-    const [couponError, setCouponError] = useState<string | null>(null);
-    const [couponLoading, setCouponLoading] = useState(false);
+    // Coupon state for the no-addons direct enrollment path.
+    // CouponSection handles input/offers fetching/sheet; parent owns applied state.
+    const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
     const cardRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -129,47 +123,11 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         return new Date(dateString).toLocaleDateString('en-GB', options);
     };
 
-    // Coupon input is only meaningful for the direct (no-addons) paid enrollment
+    // Coupon teaser is only meaningful for the direct (no-addons) paid enrollment
     // path. With addons the user goes to /configure where a fuller coupon UI lives.
     const basePrice = course.discounted_price || course.price || 0;
-    const showCouponInput = !hasAddons && !isMainCourseOwned && !isFullyEnrolled
+    const showCouponSection = !hasAddons && !isMainCourseOwned && !isFullyEnrolled
         && !isExpired && basePrice > 0 && !customEnrollHandler;
-
-    const applyCoupon = async () => {
-        const code = couponInput.trim();
-        if (!code) { setCouponError("Please enter a coupon code."); return; }
-        if (!user) { openLogin(); return; }
-        setCouponLoading(true);
-        setCouponError(null);
-        try {
-            const { data, error } = await supabase.functions.invoke('validate-coupon', {
-                body: { code, courseId: course.id, selectedAddonIds: [] },
-            });
-            if (error) throw error;
-            if (!data?.valid) {
-                setAppliedCoupon(null);
-                setCouponError(data?.reason ?? "Couldn't apply this code.");
-                return;
-            }
-            setAppliedCoupon({
-                code: data.code,
-                discountAmount: data.discountAmount,
-                finalAmount: data.finalAmount,
-            });
-            setCouponInput(data.code);
-            toast.success(`Coupon applied — you save ₹${data.discountAmount}`);
-        } catch (e: any) {
-            setCouponError(e?.message ?? "Couldn't apply this code.");
-        } finally {
-            setCouponLoading(false);
-        }
-    };
-
-    const removeCoupon = () => {
-        setAppliedCoupon(null);
-        setCouponInput("");
-        setCouponError(null);
-    };
 
     const renderMainButton = () => {
         const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
@@ -361,52 +319,17 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
                         <Separator className="my-4" />
 
-                        {showCouponInput && (
-                            <div className="mb-4">
-                                {appliedCoupon ? (
-                                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2">
-                                        <div className="flex items-center gap-2 text-sm text-green-800 min-w-0">
-                                            <Check className="w-4 h-4 shrink-0" />
-                                            <span className="font-semibold truncate">{appliedCoupon.code}</span>
-                                            <span className="text-green-700 hidden sm:inline">applied · save ₹{appliedCoupon.discountAmount}</span>
-                                        </div>
-                                        <button
-                                            onClick={removeCoupon}
-                                            className="text-xs text-green-700 hover:text-green-900 underline shrink-0 ml-2"
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <div className="flex items-center gap-1.5 mb-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                                            <BadgePercent className="w-3 h-3" />
-                                            Have a coupon?
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={couponInput}
-                                                onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') applyCoupon(); }}
-                                                placeholder="Enter code"
-                                                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:border-black uppercase tracking-wide min-w-0"
-                                            />
-                                            <Button
-                                                onClick={applyCoupon}
-                                                disabled={couponLoading || !couponInput.trim()}
-                                                variant="outline"
-                                                className="px-4 h-[38px] shrink-0"
-                                            >
-                                                {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
-                                            </Button>
-                                        </div>
-                                        {couponError && (
-                                            <p className="text-xs text-red-600 mt-1.5">{couponError}</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                        {showCouponSection && (
+                            <CouponSection
+                                courseId={course.id}
+                                courseTitle={course.title}
+                                selectedAddonIds={[]}
+                                cartTotal={basePrice}
+                                appliedCoupon={appliedCoupon}
+                                onApply={setAppliedCoupon}
+                                onRemove={() => setAppliedCoupon(null)}
+                                className="mb-4"
+                            />
                         )}
 
                         <div className="flex w-full gap-3 items-center">
