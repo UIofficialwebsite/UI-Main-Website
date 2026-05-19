@@ -303,7 +303,7 @@ export type Database = {
       coupons: {
         Row: {
           applicable_course_ids: string[] | null
-          applicable_user_ids: string[] | null
+          applicable_user_emails: string[] | null
           code: string
           created_at: string
           created_by: string | null
@@ -331,7 +331,7 @@ export type Database = {
         }
         Insert: {
           applicable_course_ids?: string[] | null
-          applicable_user_ids?: string[] | null
+          applicable_user_emails?: string[] | null
           code: string
           created_at?: string
           created_by?: string | null
@@ -359,7 +359,7 @@ export type Database = {
         }
         Update: {
           applicable_course_ids?: string[] | null
-          applicable_user_ids?: string[] | null
+          applicable_user_emails?: string[] | null
           code?: string
           created_at?: string
           created_by?: string | null

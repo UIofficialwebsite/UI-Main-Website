@@ -23,7 +23,7 @@ export type Coupon = {
   max_uses_per_user: number;
   current_uses: number;
   applicable_course_ids: string[] | null;
-  applicable_user_ids: string[] | null;
+  applicable_user_emails: string[] | null;
   user_segment: "new" | "returning" | "prev_enrolled" | null;
   min_prev_enrollments: number | null;
   prev_enrolled_within_days: number | null;
@@ -115,7 +115,7 @@ export async function fetchCouponByCode(
 export async function evaluateCoupon(
   supabase: SupabaseClient,
   coupon: Coupon | null,
-  ctx: { userId: string | null; courseId: string; cartAmount: number },
+  ctx: { userId: string | null; userEmail?: string | null; courseId: string; cartAmount: number },
 ): Promise<ValidationResult> {
   if (!coupon) {
     return { valid: false, reason: "This code isn't valid." };
@@ -148,12 +148,19 @@ export async function evaluateCoupon(
     return { valid: false, reason: "This offer doesn't apply to this course." };
   }
 
-  // User-targeted rules require an authenticated user.
+  // Email-targeted rules: admins paste emails (no UUID lookup needed) and we
+  // match against the logged-in user's email case-insensitively. This lets an
+  // admin pre-issue a code to someone who hasn't even signed up yet — it just
+  // starts working the moment they create their account with that email.
   if (
-    coupon.applicable_user_ids &&
-    coupon.applicable_user_ids.length > 0
+    coupon.applicable_user_emails &&
+    coupon.applicable_user_emails.length > 0
   ) {
-    if (!ctx.userId || !coupon.applicable_user_ids.includes(ctx.userId)) {
+    const userEmail = ctx.userEmail?.toLowerCase().trim();
+    const allowed = coupon.applicable_user_emails
+      .map((e) => e.toLowerCase().trim())
+      .filter(Boolean);
+    if (!userEmail || !allowed.includes(userEmail)) {
       return { valid: false, reason: "This code isn't valid for this account." };
     }
   }
@@ -249,4 +256,34 @@ export async function getAuthedUserId(
   if (!token) return null;
   const { data } = await supabase.auth.getUser(token);
   return data.user?.id ?? null;
+}
+
+// Resolve a JWT to both id and email in one trip. Preferred over
+// getAuthedUserId when the engine needs to evaluate email-targeted rules.
+export async function getAuthedUser(
+  supabase: SupabaseClient,
+  authHeader: string | null,
+): Promise<{ id: string; email: string | null } | null> {
+  if (!authHeader) return null;
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return null;
+  const { data } = await supabase.auth.getUser(token);
+  if (!data.user) return null;
+  return { id: data.user.id, email: data.user.email ?? null };
+}
+
+// Look up the email for an arbitrary user_id using the service role admin API.
+// Used by create-cashfree-order where the userId arrives in the request body.
+export async function getUserEmailById(
+  supabase: SupabaseClient,
+  userId: string | null,
+): Promise<string | null> {
+  if (!userId) return null;
+  try {
+    // deno-lint-ignore no-explicit-any
+    const { data } = await (supabase as any).auth.admin.getUserById(userId);
+    return data?.user?.email ?? null;
+  } catch (_e) {
+    return null;
+  }
 }

@@ -8,7 +8,7 @@ import {
   corsHeaders,
   evaluateCoupon,
   fetchCouponByCode,
-  getAuthedUserId,
+  getAuthedUser,
   jsonResponse,
   makeSupabaseClient,
 } from "../_shared/coupon-engine.ts";
@@ -18,7 +18,9 @@ serve(async (req: Request) => {
 
   try {
     const supabase = makeSupabaseClient();
-    const userId = await getAuthedUserId(supabase, req.headers.get("authorization"));
+    const authed = await getAuthedUser(supabase, req.headers.get("authorization"));
+    const userId = authed?.id ?? null;
+    const userEmail = authed?.email ?? null;
 
     const { code, courseId, selectedAddonIds } = await req.json();
 
@@ -38,6 +40,7 @@ serve(async (req: Request) => {
     const coupon = await fetchCouponByCode(supabase, code);
     const result = await evaluateCoupon(supabase, coupon, {
       userId,
+      userEmail,
       courseId,
       cartAmount: total,
     });

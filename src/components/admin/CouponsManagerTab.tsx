@@ -25,7 +25,7 @@ interface Coupon {
   max_uses_per_user: number;
   current_uses: number;
   applicable_course_ids: string[] | null;
-  applicable_user_ids: string[] | null;
+  applicable_user_emails: string[] | null;
   user_segment: string | null;
   min_prev_enrollments: number | null;
   prev_enrolled_within_days: number | null;
@@ -58,7 +58,7 @@ type FormState = {
   min_prev_enrollments: string;
   prev_enrolled_within_days: string;
   applicable_course_ids: string;
-  applicable_user_ids_csv: string;
+  applicable_user_emails_csv: string;
 };
 
 const emptyForm: FormState = {
@@ -80,7 +80,7 @@ const emptyForm: FormState = {
   min_prev_enrollments: "",
   prev_enrolled_within_days: "",
   applicable_course_ids: "",
-  applicable_user_ids_csv: "",
+  applicable_user_emails_csv: "",
 };
 
 // Templates: pre-fill the form for common coupon shapes so an admin doesn't
@@ -237,7 +237,7 @@ const CouponsManagerTab: React.FC = () => {
       min_prev_enrollments: c.min_prev_enrollments?.toString() ?? "",
       prev_enrolled_within_days: c.prev_enrolled_within_days?.toString() ?? "",
       applicable_course_ids: (c.applicable_course_ids ?? []).join(", "),
-      applicable_user_ids_csv: (c.applicable_user_ids ?? []).join("\n"),
+      applicable_user_emails_csv: (c.applicable_user_emails ?? []).join("\n"),
     });
     setOpen(true);
   };
@@ -249,18 +249,26 @@ const CouponsManagerTab: React.FC = () => {
       .filter((s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s));
   };
 
+  // Email validator: simple but covers normal personal/business addresses.
+  const parseCsvEmails = (text: string): string[] => {
+    return text
+      .split(/[\s,;]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+  };
+
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       const text = String(reader.result ?? "");
-      const ids = parseCsvUuids(text);
+      const emails = parseCsvEmails(text);
       setForm((prev) => ({
         ...prev,
-        applicable_user_ids_csv: ids.join("\n"),
+        applicable_user_emails_csv: emails.join("\n"),
       }));
-      toast({ title: "CSV loaded", description: `${ids.length} user UUIDs parsed.` });
+      toast({ title: "CSV loaded", description: `${emails.length} email addresses parsed.` });
     };
     reader.readAsText(file);
   };
@@ -301,8 +309,8 @@ const CouponsManagerTab: React.FC = () => {
       applicable_course_ids: parseCsvUuids(form.applicable_course_ids).length
         ? parseCsvUuids(form.applicable_course_ids)
         : null,
-      applicable_user_ids: parseCsvUuids(form.applicable_user_ids_csv).length
-        ? parseCsvUuids(form.applicable_user_ids_csv)
+      applicable_user_emails: parseCsvEmails(form.applicable_user_emails_csv).length
+        ? parseCsvEmails(form.applicable_user_emails_csv)
         : null,
     };
 
@@ -622,19 +630,19 @@ const CouponsManagerTab: React.FC = () => {
             </div>
             <div className="md:col-span-2">
               <div className="flex items-center justify-between mb-1">
-                <Label>Specific user list (cohort)</Label>
+                <Label>Specific user emails (cohort)</Label>
                 <label className="inline-flex items-center gap-1 text-xs cursor-pointer text-blue-600">
                   <Upload className="w-3 h-3" /> Upload CSV
                   <input type="file" accept=".csv,.txt" onChange={handleCsvUpload} className="hidden" />
                 </label>
               </div>
               <Textarea
-                value={form.applicable_user_ids_csv}
-                onChange={(e) => setForm({ ...form, applicable_user_ids_csv: e.target.value })}
+                value={form.applicable_user_emails_csv}
+                onChange={(e) => setForm({ ...form, applicable_user_emails_csv: e.target.value })}
                 rows={4}
-                placeholder="(blank = anyone can use it)&#10;One user UUID per line. Or upload a CSV."
+                placeholder="(blank = anyone can use it)&#10;One email per line, e.g.&#10;aayush@example.com&#10;riya@example.com"
               />
-              <p className="text-[11px] text-gray-500 mt-1">Used for personalised codes (e.g., AAYUSH500) and influencer/cohort codes. Get UUIDs from Supabase Auth → Users.</p>
+              <p className="text-[11px] text-gray-500 mt-1">Personalised codes (e.g., AAYUSH500), influencer codes, or CSV cohorts. The user can be anyone with that email — they don't need to have signed up yet. Matching is case-insensitive.</p>
             </div>
           </div>
 

@@ -10,6 +10,7 @@ import {
   corsHeaders,
   evaluateCoupon,
   fetchCouponByCode,
+  getUserEmailById,
   makeSupabaseClient,
 } from "../_shared/coupon-engine.ts";
 
@@ -62,8 +63,14 @@ serve(async (req: Request) => {
 
     if (couponCode && typeof couponCode === "string" && couponCode.trim().length > 0) {
       const coupon = await fetchCouponByCode(supabase, couponCode);
+      // Email-targeted coupons (private/cohort codes) need the user's email.
+      // Prefer customerEmail from the request, fall back to the auth lookup.
+      const userEmail = (typeof customerEmail === "string" && customerEmail.includes("@"))
+        ? customerEmail
+        : await getUserEmailById(supabase, userId);
       const result = await evaluateCoupon(supabase, coupon, {
         userId,
+        userEmail,
         courseId,
         cartAmount,
       });
