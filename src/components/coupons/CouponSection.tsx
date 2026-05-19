@@ -6,87 +6,102 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// Party-popper celebration. Green-leaning palette, three coordinated phases
-// over ~1.6s: a huge center explosion, twin side-cannon bursts, then a
-// streamer rain from the bottom corners. zIndex is set above the Sheet
-// overlay (10050) so the confetti renders on top.
+// Party-popper celebration. canvas-confetti's default appends a canvas at a
+// modest z-index that can get hidden behind the Sheet overlay or other
+// stacking contexts. We bypass that by creating our own full-screen canvas
+// pinned at the max safe z-index (2,147,483,647 — 2^31-1) and scoping a
+// confetti instance to it. The canvas is removed when the effect finishes.
 const celebrateCoupon = () => {
   const colors = [
     "#22c55e", "#16a34a", "#10b981", "#84cc16", "#4ade80", // greens
     "#facc15", "#f97316", "#ec4899", "#6957f1", "#3b82f6", // accent
   ];
-  const Z = 100000;
 
-  // Phase 1 — central explosion (~250 particles)
-  confetti({
-    particleCount: 150,
+  const canvas = document.createElement("canvas");
+  Object.assign(canvas.style, {
+    position: "fixed",
+    inset: "0",
+    width: "100vw",
+    height: "100vh",
+    pointerEvents: "none",
+    zIndex: "2147483647",
+  });
+  document.body.appendChild(canvas);
+
+  const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+
+  // Phase 1 — central explosion
+  myConfetti({
+    particleCount: 160,
     spread: 130,
     startVelocity: 55,
     origin: { x: 0.5, y: 0.5 },
     colors,
     scalar: 1.1,
-    zIndex: Z,
+    disableForReducedMotion: false,
   });
-  confetti({
+  myConfetti({
     particleCount: 100,
     spread: 160,
     startVelocity: 35,
-    origin: { x: 0.5, y: 0.5 },
+    origin: { x: 0.5, y: 0.55 },
     colors,
-    scalar: 0.8,
-    zIndex: Z,
+    scalar: 0.85,
+    disableForReducedMotion: false,
   });
 
-  // Phase 2 — twin side cannons, slight delay so they read as a second pop
+  // Phase 2 — twin side cannons
   setTimeout(() => {
-    confetti({
-      particleCount: 140,
+    myConfetti({
+      particleCount: 150,
       angle: 60,
-      spread: 80,
+      spread: 85,
       startVelocity: 70,
       origin: { x: 0, y: 0.75 },
       colors,
       scalar: 1,
-      zIndex: Z,
     });
-    confetti({
-      particleCount: 140,
+    myConfetti({
+      particleCount: 150,
       angle: 120,
-      spread: 80,
+      spread: 85,
       startVelocity: 70,
       origin: { x: 1, y: 0.75 },
       colors,
       scalar: 1,
-      zIndex: Z,
     });
   }, 200);
 
-  // Phase 3 — sustained streamer rain from both bottom corners (~1s)
+  // Phase 3 — sustained streamer rain
   const end = Date.now() + 1100;
   const rain = () => {
-    confetti({
-      particleCount: 10,
+    myConfetti({
+      particleCount: 12,
       angle: 60,
       spread: 95,
       startVelocity: 55,
       origin: { x: 0, y: 0.9 },
       colors,
       scalar: 0.95,
-      zIndex: Z,
     });
-    confetti({
-      particleCount: 10,
+    myConfetti({
+      particleCount: 12,
       angle: 120,
       spread: 95,
       startVelocity: 55,
       origin: { x: 1, y: 0.9 },
       colors,
       scalar: 0.95,
-      zIndex: Z,
     });
     if (Date.now() < end) requestAnimationFrame(rain);
   };
   setTimeout(rain, 350);
+
+  // Clean up the canvas after particles have finished falling.
+  setTimeout(() => {
+    try { myConfetti.reset(); } catch (_) { /* noop */ }
+    canvas.remove();
+  }, 4500);
 };
 
 export type AppliedCoupon = {
