@@ -32,68 +32,58 @@ const celebrateCoupon = () => {
   // silently fail to spawn the worker, leaving the effect invisible.
   const myConfetti = confetti.create(canvas, { resize: true, useWorker: false });
 
-  // Phase 1 — central explosion
+  // Phase 1 — central pop
   myConfetti({
-    particleCount: 160,
-    spread: 130,
-    startVelocity: 55,
-    origin: { x: 0.5, y: 0.5 },
-    colors,
-    scalar: 1.1,
-    disableForReducedMotion: false,
-  });
-  myConfetti({
-    particleCount: 100,
-    spread: 160,
-    startVelocity: 35,
+    particleCount: 55,
+    spread: 110,
+    startVelocity: 50,
     origin: { x: 0.5, y: 0.55 },
     colors,
-    scalar: 0.85,
-    disableForReducedMotion: false,
+    scalar: 1,
   });
 
-  // Phase 2 — twin side cannons
+  // Phase 2 — twin side cannons (lighter)
   setTimeout(() => {
     myConfetti({
-      particleCount: 150,
+      particleCount: 45,
       angle: 60,
-      spread: 85,
-      startVelocity: 70,
-      origin: { x: 0, y: 0.75 },
+      spread: 80,
+      startVelocity: 60,
+      origin: { x: 0, y: 0.8 },
       colors,
-      scalar: 1,
+      scalar: 0.95,
     });
     myConfetti({
-      particleCount: 150,
+      particleCount: 45,
       angle: 120,
-      spread: 85,
-      startVelocity: 70,
-      origin: { x: 1, y: 0.75 },
+      spread: 80,
+      startVelocity: 60,
+      origin: { x: 1, y: 0.8 },
       colors,
-      scalar: 1,
+      scalar: 0.95,
     });
   }, 200);
 
-  // Phase 3 — sustained streamer rain
-  const end = Date.now() + 1100;
+  // Phase 3 — brief streamer rain (~600ms)
+  const end = Date.now() + 600;
   const rain = () => {
     myConfetti({
-      particleCount: 12,
+      particleCount: 4,
       angle: 60,
-      spread: 95,
-      startVelocity: 55,
+      spread: 90,
+      startVelocity: 50,
       origin: { x: 0, y: 0.9 },
       colors,
-      scalar: 0.95,
+      scalar: 0.9,
     });
     myConfetti({
-      particleCount: 12,
+      particleCount: 4,
       angle: 120,
-      spread: 95,
-      startVelocity: 55,
+      spread: 90,
+      startVelocity: 50,
       origin: { x: 1, y: 0.9 },
       colors,
-      scalar: 0.95,
+      scalar: 0.9,
     });
     if (Date.now() < end) requestAnimationFrame(rain);
   };
