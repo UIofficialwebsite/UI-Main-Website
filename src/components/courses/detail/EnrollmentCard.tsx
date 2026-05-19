@@ -328,6 +328,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                                 appliedCoupon={appliedCoupon}
                                 onApply={setAppliedCoupon}
                                 onRemove={() => setAppliedCoupon(null)}
+                                celebrateOnAutoApply={false}
                                 className="mb-4"
                             />
                         )}

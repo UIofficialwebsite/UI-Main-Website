@@ -157,6 +157,10 @@ interface CouponSectionProps {
   onRemove: () => void;
   // Auto-apply the first is_auto_applied eligible coupon when no user choice yet.
   enableAutoApply?: boolean;
+  // Fire confetti + chime when the auto-apply kicks in. Default true.
+  // Disable for surfaces (e.g., course detail card) where the page is just
+  // being browsed and a celebration on every visit is noise.
+  celebrateOnAutoApply?: boolean;
   className?: string;
 }
 
@@ -184,6 +188,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
   onApply,
   onRemove,
   enableAutoApply = true,
+  celebrateOnAutoApply = true,
   className,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -255,8 +260,10 @@ const CouponSection: React.FC<CouponSectionProps> = ({
             });
             setAutoAppliedOnce(true);
             // Confetti only — no toast. The teaser card subtitle already
-            // shows "You save ₹X" so a popup would be noise.
-            celebrateCoupon();
+            // shows "You save ₹X" so a popup would be noise. Surfaces that
+            // opt out (e.g., the course detail card) skip the celebration
+            // so it doesn't fire for every page visitor.
+            if (celebrateOnAutoApply) celebrateCoupon();
           }
         }
       } catch {
