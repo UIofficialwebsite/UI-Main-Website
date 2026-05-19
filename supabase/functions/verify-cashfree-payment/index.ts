@@ -45,8 +45,12 @@ serve(async (req: Request) => {
     }
 
     if (result.result === "still_pending") {
+      // TEMPORARY: routing to /dashboard until /payment-processing page ships
+      // (PR #5 frontend). Once that page is live, swap to:
+      //   `${frontend}/payment-processing?order_id=${encodeURIComponent(orderId)}`
+      // The cron + webhook will reconcile the payment in the background either way.
       return redirect(
-        `${frontend}/payment-processing?order_id=${encodeURIComponent(orderId)}`,
+        `${frontend}/dashboard?payment=processing&order_id=${encodeURIComponent(orderId)}`,
       );
     }
 
@@ -54,10 +58,9 @@ serve(async (req: Request) => {
     return redirect(`${frontend}/dashboard`);
   } catch (err: any) {
     console.error(`[verify-cashfree-payment] error for ${orderId}:`, err.message);
-    // On Cashfree fetch failure, still send user to the processing page —
-    // the webhook/cron will eventually update DB and that page polls for state.
+    // TEMPORARY: same routing fallback as still_pending above; cron will reconcile.
     return redirect(
-      `${frontend}/payment-processing?order_id=${encodeURIComponent(orderId)}`,
+      `${frontend}/dashboard?payment=processing&order_id=${encodeURIComponent(orderId)}`,
     );
   }
 });
