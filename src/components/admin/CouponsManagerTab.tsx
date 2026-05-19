@@ -83,6 +83,109 @@ const emptyForm: FormState = {
   applicable_user_ids_csv: "",
 };
 
+// Templates: pre-fill the form for common coupon shapes so an admin doesn't
+// need to remember every field. They can tweak and save.
+type Template = { key: string; label: string; description: string; apply: (f: FormState) => FormState };
+const TEMPLATES: Template[] = [
+  {
+    key: "blank",
+    label: "Start from blank",
+    description: "Empty form — fill everything yourself.",
+    apply: () => ({ ...emptyForm }),
+  },
+  {
+    key: "public-percent",
+    label: "Public % off (everyone sees)",
+    description: "WELCOME10 style. 10% off capped at ₹1000, visible to all.",
+    apply: (f) => ({
+      ...emptyForm,
+      ...f,
+      code: f.code || "WELCOME10",
+      discount_type: "percent",
+      discount_value: "10",
+      max_discount: "1000",
+      visibility: "public",
+      display_label: "10% off your order (max ₹1000)",
+      display_priority: "100",
+    }),
+  },
+  {
+    key: "first-purchase-flat",
+    label: "Flat ₹ off — first purchase only",
+    description: "SAVE500 style. Flat ₹500 off, only for users with no prior enrollments.",
+    apply: (f) => ({
+      ...emptyForm,
+      ...f,
+      code: f.code || "SAVE500",
+      discount_type: "flat",
+      discount_value: "500",
+      min_order_amount: "3000",
+      visibility: "public",
+      is_first_purchase_only: true,
+      display_label: "Flat ₹500 off your first batch",
+      display_priority: "80",
+    }),
+  },
+  {
+    key: "auto-apply",
+    label: "Auto-applied to eligible users",
+    description: "Quietly auto-fills on page load for users who qualify.",
+    apply: (f) => ({
+      ...emptyForm,
+      ...f,
+      code: f.code || "AUTO20",
+      discount_type: "percent",
+      discount_value: "20",
+      max_discount: "2000",
+      visibility: "auto_suggest",
+      is_auto_applied: true,
+      display_label: "Auto-applied 20% off",
+      display_priority: "120",
+    }),
+  },
+  {
+    key: "personalised",
+    label: "Personalised / private (must be typed)",
+    description: "Influencer or 1:1 codes. Never shown in offers list.",
+    apply: (f) => ({
+      ...emptyForm,
+      ...f,
+      code: f.code || "INFLUENCER_",
+      discount_type: "flat",
+      discount_value: "500",
+      visibility: "private",
+      display_label: "Personal discount",
+    }),
+  },
+  {
+    key: "returning",
+    label: "Returning students only",
+    description: "LOYAL15 style. Visible only to users with ≥1 paid enrollment.",
+    apply: (f) => ({
+      ...emptyForm,
+      ...f,
+      code: f.code || "LOYAL15",
+      discount_type: "percent",
+      discount_value: "15",
+      max_discount: "1500",
+      visibility: "auto_suggest",
+      user_segment: "prev_enrolled",
+      min_prev_enrollments: "1",
+      display_label: "Thanks for coming back — 15% off",
+      display_priority: "90",
+    }),
+  },
+];
+
+// Tiny header used to break the long form into sections so an admin can
+// scan it like a checklist rather than a wall of inputs.
+const SectionHeader: React.FC<{ title: string; hint: string }> = ({ title, hint }) => (
+  <div className="mt-6 mb-2 pb-1.5 border-b border-gray-200">
+    <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-900">{title}</h3>
+    <p className="text-xs text-gray-500 mt-0.5">{hint}</p>
+  </div>
+);
+
 const CouponsManagerTab: React.FC = () => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [search, setSearch] = useState("");
@@ -335,11 +438,37 @@ const CouponsManagerTab: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{editing ? "Edit coupon" : "New coupon"}</DialogTitle>
             <DialogDescription>
-              Every field except code + discount is optional. Leave targeting empty for a
-              universal coupon.
+              Only <strong>Code</strong> and <strong>Discount value</strong> are required.
+              Everything else has a sensible default. Pick a template below to pre-fill
+              common shapes — you can tweak any field after.
             </DialogDescription>
           </DialogHeader>
 
+          {/* Template picker (only on Create, not Edit) */}
+          {!editing && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-1">
+              <Label className="text-xs font-bold uppercase tracking-wider text-blue-900">Use a template</Label>
+              <Select onValueChange={(v) => {
+                const tpl = TEMPLATES.find(t => t.key === v);
+                if (tpl) setForm(prev => tpl.apply(prev));
+              }}>
+                <SelectTrigger className="mt-1.5 bg-white"><SelectValue placeholder="Choose a template (or skip)" /></SelectTrigger>
+                <SelectContent>
+                  {TEMPLATES.map(t => (
+                    <SelectItem key={t.key} value={t.key}>
+                      <div>
+                        <div className="font-medium">{t.label}</div>
+                        <div className="text-xs text-gray-500">{t.description}</div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* ----- SECTION 1: Identity ----- */}
+          <SectionHeader title="1. Identity" hint="What students type and what shows in the offer list." />
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Code *</Label>
@@ -349,6 +478,7 @@ const CouponsManagerTab: React.FC = () => {
                 placeholder="WELCOME10"
                 className="uppercase"
               />
+              <p className="text-[11px] text-gray-500 mt-1">Case doesn't matter — `welcome10` and `WELCOME10` both work.</p>
             </div>
             <div>
               <Label>Display label</Label>
@@ -357,14 +487,19 @@ const CouponsManagerTab: React.FC = () => {
                 onChange={(e) => setForm({ ...form, display_label: e.target.value })}
                 placeholder="10% off for new students"
               />
+              <p className="text-[11px] text-gray-500 mt-1">Shown under the code in the offer list. Optional.</p>
             </div>
+          </div>
 
+          {/* ----- SECTION 2: Discount ----- */}
+          <SectionHeader title="2. Discount" hint="How much to take off and whether it's a % or a flat ₹." />
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Discount type</Label>
               <Select value={form.discount_type} onValueChange={(v: any) => setForm({ ...form, discount_type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="percent">Percent off</SelectItem>
+                  <SelectItem value="percent">Percent off (%)</SelectItem>
                   <SelectItem value="flat">Flat ₹ off</SelectItem>
                 </SelectContent>
               </Select>
@@ -375,112 +510,119 @@ const CouponsManagerTab: React.FC = () => {
                 type="number"
                 value={form.discount_value}
                 onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
-                placeholder={form.discount_type === "percent" ? "10 (= 10%)" : "500 (= ₹500)"}
+                placeholder={form.discount_type === "percent" ? "10  (= 10%)" : "500  (= ₹500)"}
               />
+              <p className="text-[11px] text-gray-500 mt-1">
+                {form.discount_type === "percent"
+                  ? "A number from 1 to 100. Example: 10 means 10% off."
+                  : "Rupees to subtract from the order. Example: 500 means ₹500 off."}
+              </p>
             </div>
             {form.discount_type === "percent" && (
-              <div>
-                <Label>Max discount (₹) *</Label>
+              <div className="md:col-span-2">
+                <Label>Max discount (₹) <span className="text-red-600">*</span></Label>
                 <Input
                   type="number"
                   value={form.max_discount}
                   onChange={(e) => setForm({ ...form, max_discount: e.target.value })}
                   placeholder="1000"
                 />
+                <p className="text-[11px] text-gray-500 mt-1">Required for % coupons. Caps the rupee discount — e.g., 20% off ₹50,000 capped at ₹2000.</p>
               </div>
             )}
-            <div>
-              <Label>Min order amount (₹)</Label>
+            <div className="md:col-span-2">
+              <Label>Minimum order amount (₹)</Label>
               <Input
                 type="number"
                 value={form.min_order_amount}
                 onChange={(e) => setForm({ ...form, min_order_amount: e.target.value })}
               />
+              <p className="text-[11px] text-gray-500 mt-1">Cart must total at least this before coupon applies. Leave 0 for no minimum.</p>
             </div>
+          </div>
 
+          {/* ----- SECTION 3: Time window ----- */}
+          <SectionHeader title="3. Time window" hint="When the coupon is valid. Leave both blank for always-valid." />
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Valid from</Label>
               <Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm({ ...form, valid_from: e.target.value })} />
+              <p className="text-[11px] text-gray-500 mt-1">Coupon won't work before this. Blank = no start limit.</p>
             </div>
             <div>
               <Label>Valid until</Label>
               <Input type="datetime-local" value={form.valid_until} onChange={(e) => setForm({ ...form, valid_until: e.target.value })} />
+              <p className="text-[11px] text-gray-500 mt-1">Coupon won't work after this. Blank = no end limit.</p>
             </div>
+          </div>
 
+          {/* ----- SECTION 4: Usage limits ----- */}
+          <SectionHeader title="4. Usage limits" hint="How many times this coupon can be redeemed." />
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label>Max total uses (blank = unlimited)</Label>
-              <Input type="number" value={form.max_total_uses} onChange={(e) => setForm({ ...form, max_total_uses: e.target.value })} />
+              <Label>Max total uses</Label>
+              <Input type="number" value={form.max_total_uses} onChange={(e) => setForm({ ...form, max_total_uses: e.target.value })} placeholder="(blank = unlimited)" />
+              <p className="text-[11px] text-gray-500 mt-1">Global cap across all users. Blank = unlimited.</p>
             </div>
             <div>
               <Label>Max uses per user</Label>
               <Input type="number" value={form.max_uses_per_user} onChange={(e) => setForm({ ...form, max_uses_per_user: e.target.value })} />
+              <p className="text-[11px] text-gray-500 mt-1">Usually 1 — one redemption per student. Don't edit `current_uses` — system updates it automatically.</p>
             </div>
+          </div>
 
-            <div>
-              <Label>Visibility</Label>
-              <Select value={form.visibility} onValueChange={(v: any) => setForm({ ...form, visibility: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="private">Private (must be typed)</SelectItem>
-                  <SelectItem value="public">Public (everyone sees it)</SelectItem>
-                  <SelectItem value="auto_suggest">Auto-suggest (eligible users only)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Display priority (sort order in offer list)</Label>
-              <Input type="number" value={form.display_priority} onChange={(e) => setForm({ ...form, display_priority: e.target.value })} />
-            </div>
-
-            <div className="flex items-center gap-3 pt-6">
-              <Checkbox
-                checked={form.is_auto_applied}
-                onCheckedChange={(v) => setForm({ ...form, is_auto_applied: Boolean(v) })}
-                id="cpn-auto-apply"
-              />
-              <Label htmlFor="cpn-auto-apply">Auto-apply on page load</Label>
-            </div>
-            <div className="flex items-center gap-3 pt-6">
+          {/* ----- SECTION 5: Who can use it ----- */}
+          <SectionHeader title="5. Who can use it" hint="Restrict by user segment or specific user list. Leave blank for everyone." />
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 pt-2">
               <Checkbox
                 checked={form.is_first_purchase_only}
                 onCheckedChange={(v) => setForm({ ...form, is_first_purchase_only: Boolean(v) })}
                 id="cpn-first-purchase"
               />
-              <Label htmlFor="cpn-first-purchase">First purchase only</Label>
+              <div>
+                <Label htmlFor="cpn-first-purchase">First purchase only</Label>
+                <p className="text-[11px] text-gray-500">Only users with zero prior paid enrollments.</p>
+              </div>
             </div>
-
             <div>
               <Label>User segment</Label>
               <Select value={form.user_segment} onValueChange={(v: any) => setForm({ ...form, user_segment: v })}>
-                <SelectTrigger><SelectValue placeholder="No segment restriction" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Anyone (no segment rule)" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No segment restriction</SelectItem>
-                  <SelectItem value="new">New (no prior enrollments)</SelectItem>
-                  <SelectItem value="prev_enrolled">Previously enrolled</SelectItem>
+                  <SelectItem value="">Anyone (no segment rule)</SelectItem>
+                  <SelectItem value="new">New students (no prior enrollments)</SelectItem>
+                  <SelectItem value="prev_enrolled">Returning students (already enrolled before)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Prev enrollments needed (segment=prev_enrolled)</Label>
-              <Input type="number" value={form.min_prev_enrollments} onChange={(e) => setForm({ ...form, min_prev_enrollments: e.target.value })} placeholder="1" />
-            </div>
+            {form.user_segment === "prev_enrolled" && (
+              <>
+                <div>
+                  <Label>Need at least N prior enrollments</Label>
+                  <Input type="number" value={form.min_prev_enrollments} onChange={(e) => setForm({ ...form, min_prev_enrollments: e.target.value })} placeholder="1" />
+                  <p className="text-[11px] text-gray-500 mt-1">Default 1.</p>
+                </div>
+                <div>
+                  <Label>Enrolled within last N days</Label>
+                  <Input type="number" value={form.prev_enrolled_within_days} onChange={(e) => setForm({ ...form, prev_enrolled_within_days: e.target.value })} placeholder="(blank = any time)" />
+                  <p className="text-[11px] text-gray-500 mt-1">Example: 180 = "within last 6 months". Blank = any time.</p>
+                </div>
+              </>
+            )}
             <div className="md:col-span-2">
-              <Label>Prev enrolled within (days)</Label>
-              <Input type="number" value={form.prev_enrolled_within_days} onChange={(e) => setForm({ ...form, prev_enrolled_within_days: e.target.value })} placeholder="180" />
-            </div>
-
-            <div className="md:col-span-2">
-              <Label>Applicable course IDs (comma-separated UUIDs; blank = all courses)</Label>
+              <Label>Applicable courses (specific courses only)</Label>
               <Textarea
                 value={form.applicable_course_ids}
                 onChange={(e) => setForm({ ...form, applicable_course_ids: e.target.value })}
                 rows={2}
+                placeholder="(blank = applies to all courses)"
               />
+              <p className="text-[11px] text-gray-500 mt-1">Paste course UUIDs separated by commas. Get them from the Courses tab. Blank = all courses.</p>
             </div>
-
             <div className="md:col-span-2">
-              <div className="flex items-center justify-between">
-                <Label>Applicable user IDs (cohort) — one UUID per line</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label>Specific user list (cohort)</Label>
                 <label className="inline-flex items-center gap-1 text-xs cursor-pointer text-blue-600">
                   <Upload className="w-3 h-3" /> Upload CSV
                   <input type="file" accept=".csv,.txt" onChange={handleCsvUpload} className="hidden" />
@@ -490,12 +632,55 @@ const CouponsManagerTab: React.FC = () => {
                 value={form.applicable_user_ids_csv}
                 onChange={(e) => setForm({ ...form, applicable_user_ids_csv: e.target.value })}
                 rows={4}
-                placeholder="Leave empty for everyone. Paste UUIDs or upload a CSV."
+                placeholder="(blank = anyone can use it)&#10;One user UUID per line. Or upload a CSV."
               />
+              <p className="text-[11px] text-gray-500 mt-1">Used for personalised codes (e.g., AAYUSH500) and influencer/cohort codes. Get UUIDs from Supabase Auth → Users.</p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 mt-4">
+          {/* ----- SECTION 6: Visibility ----- */}
+          <SectionHeader title="6. Where it shows up" hint="Controls whether students see the coupon in the offers list." />
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <Label>Visibility</Label>
+              <Select value={form.visibility} onValueChange={(v: any) => setForm({ ...form, visibility: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public — shown to everyone (greyed if ineligible)</SelectItem>
+                  <SelectItem value="auto_suggest">Auto-suggest — shown only to users who qualify</SelectItem>
+                  <SelectItem value="private">Private — never shown; must be typed</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-gray-500 mt-1">
+                <strong>Public:</strong> WELCOME10 style. Everyone sees it. &nbsp;|&nbsp;
+                <strong>Auto-suggest:</strong> shown quietly to the right segment. &nbsp;|&nbsp;
+                <strong>Private:</strong> influencer/SMS codes; invisible until typed.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <Checkbox
+                checked={form.is_auto_applied}
+                onCheckedChange={(v) => setForm({ ...form, is_auto_applied: Boolean(v) })}
+                id="cpn-auto-apply"
+                disabled={form.visibility === "private"}
+              />
+              <div>
+                <Label htmlFor="cpn-auto-apply" className={form.visibility === "private" ? "text-gray-400" : ""}>Auto-apply on page load</Label>
+                <p className="text-[11px] text-gray-500">
+                  {form.visibility === "private"
+                    ? "Doesn't apply to private codes — they must be typed."
+                    : "Fills in for eligible users without them doing anything."}
+                </p>
+              </div>
+            </div>
+            <div>
+              <Label>Display priority</Label>
+              <Input type="number" value={form.display_priority} onChange={(e) => setForm({ ...form, display_priority: e.target.value })} />
+              <p className="text-[11px] text-gray-500 mt-1">Higher number = shown first in the offer list. Default 0.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <Button onClick={save} disabled={saving}>{saving ? "Saving..." : editing ? "Save changes" : "Create coupon"}</Button>
           </div>
