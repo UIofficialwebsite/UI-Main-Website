@@ -140,9 +140,10 @@ export async function processPaymentEvent(
   const userId = orderData?.customer_details?.customer_id ?? null;
 
   // Load enrollment + course info for batch/courses denormalization.
+  // Also pulls coupon fields so we can redeem on success.
   const { data: enrollments } = await supabase
     .from("enrollments")
-    .select("subject_name, course_id, courses ( title, subject )")
+    .select("id, subject_name, course_id, coupon_id, coupon_code, discount_amount, courses ( title, subject )")
     .eq("order_id", orderId);
 
   let mainBatchName = "Unknown Batch";
@@ -208,7 +209,24 @@ export async function processPaymentEvent(
   let couponCode: string | null = null;
   let netAmount: number = orderData.order_amount;
 
-  const offers = paymentDetails?.payment_offers || paymentDetails?.offers || [];
+  // Coupon-engine fields are authoritative: create-cashfree-order already
+  // computed and charged the discounted amount. Detect them before any
+  // gateway-side fallback so we never double-count.
+  const couponEngineId: string | null = (enrollments?.[0] as any)?.coupon_id ?? null;
+  const couponEngineCode: string | null = (enrollments?.[0] as any)?.coupon_code ?? null;
+  const couponEngineDiscount: number = (enrollments ?? []).reduce(
+    (sum, e: any) => sum + Number(e.discount_amount ?? 0),
+    0,
+  );
+  if (couponEngineId) {
+    discountApplied = true;
+    discountType = "coupon";
+    discountValue = couponEngineDiscount > 0 ? couponEngineDiscount : null;
+    couponCode = couponEngineCode;
+    netAmount = orderData.order_amount; // already net of discount
+  }
+
+  const offers = !discountApplied ? (paymentDetails?.payment_offers || paymentDetails?.offers || []) : [];
   if (Array.isArray(offers) && offers.length > 0) {
     const o = offers[0];
     discountApplied = true;
@@ -323,6 +341,30 @@ export async function processPaymentEvent(
     console.error(`[processPaymentEvent:${source}] enrollments update error:`, enrollUpdateErr.message);
     // Do not throw — payment row is already correct. Cron will catch any drift.
     logFields.error_message = `enrollments_update: ${enrollUpdateErr.message}`;
+  }
+
+  // 7. Redeem coupon atomically (only on first success). The RPC handles the
+  //    counter increment + unique redemption-row guard in one statement, so
+  //    re-entry from webhook+return+cron is safe — second attempts no-op.
+  if (finalStatus === "success" && couponEngineId && userId) {
+    const enrollmentRowId = (enrollments?.[0] as any)?.id ?? null;
+    const { data: redeemed, error: redeemErr } = await supabase.rpc("redeem_coupon", {
+      p_coupon_id: couponEngineId,
+      p_user_id: userId,
+      p_enrollment_id: enrollmentRowId,
+      p_order_id: orderId,
+      p_discount: couponEngineDiscount,
+      p_final: orderData.order_amount,
+    });
+    if (redeemErr) {
+      console.error(`[processPaymentEvent:${source}] redeem_coupon error:`, redeemErr.message);
+      logFields.error_message = `redeem_coupon: ${redeemErr.message}`;
+    } else if (redeemed === false) {
+      // Either already redeemed (idempotent re-entry) or genuine oversell.
+      // Both are tolerable at this point — payment is already captured;
+      // ops can reconcile via the redemptions table.
+      console.warn(`[processPaymentEvent:${source}] coupon not redeemed for order ${orderId} (already redeemed or exhausted)`);
+    }
   }
 
     return await finish({ result: "processed", finalStatus, emailSent });

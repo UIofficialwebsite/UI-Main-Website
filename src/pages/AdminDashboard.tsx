@@ -8,6 +8,7 @@ import ContentManagementTab from "@/components/admin/ContentManagementTab";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import CoursesManagerTab from "@/components/admin/CoursesManagerTab";
+import CouponsManagerTab from "@/components/admin/CouponsManagerTab";
 import NotesManagerTab from "@/components/admin/NotesManagerTab";
 import PYQsManagerTab from "@/components/admin/PYQsManagerTab";
 import StudyGroupsManagerTab from "@/components/admin/StudyGroupsManagerTab";
@@ -54,6 +55,7 @@ const AdminDashboard = () => {
             <div className="w-full">
               {activeTab === 'content-management' && <ContentManagementTab />}
               {activeTab === 'courses' && <CoursesManagerTab />}
+              {activeTab === 'coupons' && <CouponsManagerTab />}
               {activeTab === 'notes' && <NotesManagerTab />}
               {activeTab === 'pyqs' && <PYQsManagerTab />}
               {activeTab === 'study-groups' && <StudyGroupsManagerTab />}

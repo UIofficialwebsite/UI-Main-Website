@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, X, Tag, BadgePercent } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useLoginModal } from '@/context/LoginModalContext';
@@ -177,6 +177,30 @@ const BatchConfiguration = () => {
   const [selectedDialCode, setSelectedDialCode] = useState("+91");
   const [expectedPhoneLength, setExpectedPhoneLength] = useState(10);
 
+  // --- Coupon state ---
+  type CouponOffer = {
+    code: string;
+    label: string | null;
+    eligible: boolean;
+    discountAmount?: number;
+    finalAmount?: number;
+    isAutoApplied?: boolean;
+    ineligibilityReason?: string;
+    priority?: number;
+  };
+  type AppliedCoupon = {
+    code: string;
+    label: string | null;
+    discountAmount: number;
+    finalAmount: number;
+  };
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [availableOffers, setAvailableOffers] = useState<CouponOffer[]>([]);
+  const [autoAppliedOnce, setAutoAppliedOnce] = useState(false);
+
   // --- 1. Fetch Data & Check Enrollment ---
   useEffect(() => {
     const fetchData = async () => {
@@ -267,7 +291,9 @@ const BatchConfiguration = () => {
   }, [addons, selectedAddonIds, ownedAddonIds]);
 
   const addonsTotal = selectedAddonsList.reduce((sum, addon) => sum + addon.price, 0);
-  const finalTotal = effectiveBasePrice + addonsTotal;
+  const subtotal = effectiveBasePrice + addonsTotal;
+  const couponDiscount = appliedCoupon ? Math.min(appliedCoupon.discountAmount, subtotal) : 0;
+  const finalTotal = Math.max(0, subtotal - couponDiscount);
 
   // --- Determine if Base Plan should be enrolled ---
   // CORRECTION POINT 4: If base plan has no subject AND pricing is 0, then DO NOT enroll base.
@@ -280,11 +306,98 @@ const BatchConfiguration = () => {
   const toggleAddon = (addonId: string) => {
     if (ownedAddonIds.includes(addonId)) return;
 
-    setSelectedAddonIds(prev => 
-      prev.includes(addonId) 
-        ? prev.filter(id => id !== addonId) 
+    setSelectedAddonIds(prev =>
+      prev.includes(addonId)
+        ? prev.filter(id => id !== addonId)
         : [...prev, addonId]
     );
+    // Cart changed — invalidate any applied coupon. Re-fetched on next effect.
+    if (appliedCoupon) {
+      setAppliedCoupon(null);
+      setCouponInput("");
+    }
+  };
+
+  // --- Coupon: fetch eligible offers whenever the cart changes ---
+  useEffect(() => {
+    if (!courseId || loading) return;
+
+    const newAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
+
+    const fetchOffers = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('list-eligible-coupons', {
+          body: { courseId, selectedAddonIds: newAddonIds },
+        });
+        if (error) return;
+        const offers = (data?.offers ?? []) as CouponOffer[];
+        setAvailableOffers(offers);
+
+        // Auto-apply: the best eligible coupon flagged is_auto_applied.
+        // We only auto-apply once per session so the user can remove it.
+        if (!autoAppliedOnce && !appliedCoupon) {
+          const best = offers.find(o => o.eligible && o.isAutoApplied);
+          if (best && best.discountAmount !== undefined && best.finalAmount !== undefined) {
+            setAppliedCoupon({
+              code: best.code,
+              label: best.label ?? null,
+              discountAmount: best.discountAmount,
+              finalAmount: best.finalAmount,
+            });
+            setCouponInput(best.code);
+            setAutoAppliedOnce(true);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch offers:', e);
+      }
+    };
+    fetchOffers();
+    // intentionally depend on the cart shape only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId, selectedAddonIds.join(','), ownedAddonIds.join(','), user?.id, loading]);
+
+  const applyCoupon = async (codeArg?: string) => {
+    const code = (codeArg ?? couponInput).trim();
+    if (!code) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+    if (!user) { openLogin(); return; }
+
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const newAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
+      const { data, error } = await supabase.functions.invoke('validate-coupon', {
+        body: { code, courseId, selectedAddonIds: newAddonIds },
+      });
+      if (error) throw error;
+      if (!data?.valid) {
+        setAppliedCoupon(null);
+        setCouponError(data?.reason ?? "Couldn't apply this code.");
+        return;
+      }
+      setAppliedCoupon({
+        code: data.code,
+        label: data.label ?? null,
+        discountAmount: data.discountAmount,
+        finalAmount: data.finalAmount,
+      });
+      setCouponInput(data.code);
+      setCouponError(null);
+      toast.success(`Coupon applied — you save ₹${data.discountAmount}`);
+    } catch (e: any) {
+      setCouponError(e?.message ?? "Couldn't apply this code.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
   };
 
   // --- Helper: Free Enrollment with Phone Number ---
@@ -510,11 +623,11 @@ const BatchConfiguration = () => {
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           courseId,
-          amount: finalTotal, 
           userId: user.id,
-          customerEmail: user.email, 
+          customerEmail: user.email,
           customerPhone: phoneNumber,
-          selectedSubjects: newAddonIds 
+          selectedSubjects: newAddonIds,
+          couponCode: appliedCoupon?.code ?? null,
         },
       });
 
@@ -665,9 +778,46 @@ const BatchConfiguration = () => {
                     <span className="text-[14px] font-medium text-[#1a1f36]">₹{addon.price}</span>
                 </div>
             ))}
-            
+
+            {appliedCoupon && (
+                <div className="flex justify-between items-baseline py-1">
+                    <span className="text-[14px] text-[#137333] font-medium flex items-center gap-1">
+                        <BadgePercent className="w-3.5 h-3.5" /> {appliedCoupon.code}
+                    </span>
+                    <span className="text-[14px] font-semibold text-[#137333]">−₹{couponDiscount}</span>
+                </div>
+            )}
+
+            {/* Mobile coupon input */}
+            <div className="mt-2">
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2">
+                  <span className="text-xs text-green-800"><span className="font-semibold">{appliedCoupon.code}</span> applied</span>
+                  <button onClick={removeCoupon} className="text-xs text-green-700 underline">Remove</button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
+                    placeholder="Coupon code"
+                    className="flex-1 border border-[#e3e8ee] rounded-md px-3 py-2 text-sm outline-none uppercase tracking-wide"
+                  />
+                  <button
+                    onClick={() => applyCoupon()}
+                    disabled={couponLoading || !couponInput.trim()}
+                    className="px-4 py-2 bg-[#1a1f36] text-white rounded-md text-sm font-semibold disabled:opacity-50"
+                  >
+                    {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                  </button>
+                </div>
+              )}
+              {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
+            </div>
+
             <div className="border-t border-dashed border-gray-300 my-2"></div>
-            
+
             <div className="flex justify-between items-center">
                 <span className="text-[16px] font-bold text-[#1a1f36]">Total Due</span>
                 <span className="text-[18px] font-bold text-[#1a1f36]">₹{finalTotal}</span>
@@ -838,7 +988,100 @@ const BatchConfiguration = () => {
                 </div>
               ))}
 
+              {appliedCoupon && (
+                <div className="flex justify-between mb-3 text-sm">
+                  <span className="text-[#137333] font-medium flex items-center gap-1">
+                    <BadgePercent className="w-4 h-4" /> {appliedCoupon.code}
+                  </span>
+                  <span className="text-[#137333] font-medium">−₹{couponDiscount}</span>
+                </div>
+              )}
+
               <div className="h-px bg-[#e3e8ee] my-5"></div>
+
+              {/* Coupon input */}
+              <div className="mb-5">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2">
+                    <div className="flex items-center gap-2 text-sm text-green-800">
+                      <Check className="w-4 h-4" />
+                      <span className="font-semibold">{appliedCoupon.code}</span>
+                      <span className="text-green-700">applied · save ₹{couponDiscount}</span>
+                    </div>
+                    <button
+                      onClick={removeCoupon}
+                      className="text-xs text-green-700 hover:text-green-900 underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Have a coupon?</label>
+                    <div className="flex gap-2 mt-1.5">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') applyCoupon(); }}
+                        placeholder="Enter code"
+                        className="flex-1 border border-[#e3e8ee] rounded-md px-3 py-2 text-sm outline-none focus:border-[#1a1f36] uppercase tracking-wide"
+                      />
+                      <button
+                        onClick={() => applyCoupon()}
+                        disabled={couponLoading || !couponInput.trim()}
+                        className="px-4 py-2 bg-white border border-[#1a1f36] text-[#1a1f36] rounded-md text-sm font-semibold hover:bg-[#1a1f36] hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-xs text-red-600 mt-1.5">{couponError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Available offers */}
+              {availableOffers.length > 0 && (
+                <div className="mb-5">
+                  <div className="text-[11px] font-bold text-[#697386] uppercase tracking-wider mb-2">Available Offers</div>
+                  <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
+                    {availableOffers.map((offer) => (
+                      <div
+                        key={`offer-${offer.code}`}
+                        className={`flex items-start justify-between gap-2 border rounded-md px-3 py-2 text-xs ${
+                          offer.eligible
+                            ? 'border-[#e3e8ee] bg-[#f8fafc]'
+                            : 'border-[#eef0f3] bg-[#f6f8fa] opacity-60'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 text-[#1a1f36] font-semibold">
+                            <Tag className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{offer.code}</span>
+                            {offer.eligible && offer.discountAmount !== undefined && (
+                              <span className="text-[#137333] font-bold ml-1">−₹{offer.discountAmount}</span>
+                            )}
+                          </div>
+                          {offer.label && <div className="text-[11px] text-[#4f566b] mt-0.5 truncate">{offer.label}</div>}
+                          {!offer.eligible && offer.ineligibilityReason && (
+                            <div className="text-[11px] text-[#697386] mt-0.5">{offer.ineligibilityReason}</div>
+                          )}
+                        </div>
+                        {offer.eligible && (!appliedCoupon || appliedCoupon.code !== offer.code) && (
+                          <button
+                            onClick={() => { setCouponInput(offer.code); applyCoupon(offer.code); }}
+                            className="text-[11px] font-bold text-[#1a1f36] hover:underline shrink-0"
+                          >
+                            APPLY
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-between items-baseline mb-6">
                 <span className="text-[15px] font-semibold text-[#1a1f36]">Total Due Today</span>

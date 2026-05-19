@@ -1,18 +1,19 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { 
-  BookOpen, 
-  FileText, 
-  Newspaper, 
-  Calendar, 
-  Briefcase, 
-  Users, 
+import {
+  BookOpen,
+  FileText,
+  Newspaper,
+  Calendar,
+  Briefcase,
+  Users,
   Settings,
   GraduationCap,
   MessageSquare,
   UserCog,
-  LayoutDashboard
+  LayoutDashboard,
+  Tag
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -24,6 +25,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab }) 
   const menuItems = [
     { id: "content-management", label: "Content Management", icon: LayoutDashboard },
     { id: "courses", label: "Courses", icon: GraduationCap },
+    { id: "coupons", label: "Coupons", icon: Tag },
     { id: "notes", label: "Notes", icon: BookOpen },
     { id: "pyqs", label: "Previous Year Questions", icon: FileText },
     { id: "study-groups", label: "Study Groups", icon: MessageSquare },

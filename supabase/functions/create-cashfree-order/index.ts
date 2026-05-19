@@ -1,10 +1,17 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// create-cashfree-order
+// Security: amount is computed server-side from courses + course_addons.
+// The client only sends courseId, selectedSubjects (addon ids), and an optional
+// couponCode. The coupon is re-validated here — minutes can pass between
+// "Apply" and "Pay", and the coupon may have hit its limit or expired.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import {
+  computeServerCartTotal,
+  corsHeaders,
+  evaluateCoupon,
+  fetchCouponByCode,
+  makeSupabaseClient,
+} from "../_shared/coupon-engine.ts";
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -14,70 +21,98 @@ serve(async (req: Request) => {
     const envSecret = Deno.env.get("CASHFREE_SECRET");
     const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
     if (!envSecret || !envKey) throw new Error("Cashfree keys missing in Supabase Secrets");
 
     const origin = req.headers.get("origin") || "https://preview.lovable.app";
 
-    const { 
-      courseId, 
-      selectedSubjects, 
-      amount, 
-      userId, 
-      customerPhone, 
-      customerEmail 
+    const {
+      courseId,
+      selectedSubjects,
+      userId,
+      customerPhone,
+      customerEmail,
+      couponCode,
     } = await req.json();
+
+    if (!courseId || !userId) {
+      throw new Error("courseId and userId are required");
+    }
 
     const orderId = `order_${Date.now()}_${userId}`;
     const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}`;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = makeSupabaseClient();
 
-    // Fetch user's name
+    // ---- Authoritative pricing (never trust the client) ----
+    const addonIds: string[] = Array.isArray(selectedSubjects)
+      ? Array.from(new Set(selectedSubjects))
+      : [];
+    const { basePrice, addons, total: cartAmount } = await computeServerCartTotal(
+      supabase,
+      courseId,
+      addonIds,
+    );
+
+    // ---- Coupon re-validation ----
+    let appliedCouponId: string | null = null;
+    let appliedCouponCode: string | null = null;
+    let discountAmount = 0;
+    let finalAmount = cartAmount;
+
+    if (couponCode && typeof couponCode === "string" && couponCode.trim().length > 0) {
+      const coupon = await fetchCouponByCode(supabase, couponCode);
+      const result = await evaluateCoupon(supabase, coupon, {
+        userId,
+        courseId,
+        cartAmount,
+      });
+      if (!result.valid) {
+        return new Response(JSON.stringify({ error: `Coupon error: ${result.reason}` }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      appliedCouponId = result.coupon.id;
+      appliedCouponCode = result.coupon.code;
+      discountAmount = result.discountAmount;
+      finalAmount = result.finalAmount;
+    }
+
+    if (finalAmount <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Order total is zero. Use the free-enrollment path instead." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ---- Customer + course names (display only) ----
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, student_name')
-      .eq('id', userId)
+      .from("profiles")
+      .select("full_name, student_name")
+      .eq("id", userId)
       .single();
-
     const customerName = profile?.full_name || profile?.student_name || "Customer";
 
-    // Fetch course details
     const { data: course } = await supabase
-      .from('courses')
-      .select('title, subject')
-      .eq('id', courseId)
+      .from("courses")
+      .select("title, subject")
+      .eq("id", courseId)
       .single();
-
     const batchName = course?.title || "Unknown Batch";
 
     const mandatorySubjects: string[] = course?.subject
-      ? course.subject.split(',').map((s: string) => s.trim()).filter(Boolean)
+      ? course.subject.split(",").map((s: string) => s.trim()).filter(Boolean)
       : [];
-
-    let addonNames: string[] = [];
-    let addonsData: any[] = [];
-    
-    if (selectedSubjects && selectedSubjects.length > 0) {
-      // FIX: Use a Set to ensure the IDs we query for are unique
-      const uniqueSelectedIds = [...new Set(selectedSubjects)];
-      const { data: addons, error: addonsError } = await supabase
-        .from('course_addons')
-        .select('id, subject_name, price')
-        .in('id', uniqueSelectedIds);
-      
-      if (addonsError) throw new Error(`Failed to fetch addons: ${addonsError.message}`);
-      addonsData = addons || [];
-      addonNames = addonsData.map(a => a.subject_name).filter(Boolean);
-    }
-
+    const addonNames = addons.map((a) => a.subject_name).filter(Boolean);
     const allSubjects = [...new Set([...mandatorySubjects, ...addonNames])];
     const coursesString = allSubjects.length > 0 ? allSubjects.join(", ") : "No subjects";
 
-    // 1. Create Order with Cashfree
+    // ---- Cashfree order ----
     const cashfreeResponse = await fetch(
-      cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders", 
+      cashfreeEnv === "production"
+        ? "https://api.cashfree.com/pg/orders"
+        : "https://sandbox.cashfree.com/pg/orders",
       {
         method: "POST",
         headers: {
@@ -88,96 +123,93 @@ serve(async (req: Request) => {
         },
         body: JSON.stringify({
           order_id: orderId,
-          order_amount: amount,
+          order_amount: finalAmount,
           order_currency: "INR",
           customer_details: {
             customer_id: userId,
             customer_name: customerName,
             customer_phone: (() => {
               if (!customerPhone) return "";
-              
-              // Remove spaces, dashes, parentheses - but keep + and digits
-              const cleaned = customerPhone.replace(/[\s\-\(\)]/g, '');
-              
-              // For Indian numbers (+91), Cashfree accepts just 10 digits
-              if (cleaned.startsWith('+91') && cleaned.length === 13) {
-                return cleaned.slice(3); // Return just the 10 digits
-              }
-              
-              // For all other international numbers, keep the + prefix
-              return cleaned.replace(/[^0-9+]/g, '');
+              const cleaned = customerPhone.replace(/[\s\-\(\)]/g, "");
+              if (cleaned.startsWith("+91") && cleaned.length === 13) return cleaned.slice(3);
+              return cleaned.replace(/[^0-9+]/g, "");
             })(),
             customer_email: customerEmail || "",
           },
-          order_meta: {
-            return_url: verifyUrl,
-          },
+          order_meta: { return_url: verifyUrl },
           order_note: batchName,
           order_tags: {
             batch: batchName,
             courses: coursesString,
-            user_id: userId
+            user_id: userId,
+            coupon_code: appliedCouponCode ?? "",
           },
         }),
-      }
+      },
     );
 
     if (!cashfreeResponse.ok) {
       const errText = await cashfreeResponse.text();
       throw new Error(`Cashfree API Error: ${errText}`);
     }
-
     const orderData = await cashfreeResponse.json();
 
-    // 2. Database Logic - UPSERT STRATEGY
-    const upsertRows = [];
+    // ---- Enrollment rows (upsert) ----
+    // Split the coupon discount proportionally across base + addons so each
+    // row's `amount` sums to finalAmount. Falls back to assigning everything
+    // to the base row if cartAmount is zero (defensive).
+    const discountRatio = cartAmount > 0 ? discountAmount / cartAmount : 0;
+    const round2 = (n: number) => Math.round(n * 100) / 100;
 
-    // A. Handle Main Course Logic
-    // If the amount > 0 and the main course isn't already owned, we prep the main row
-    // Note: We use .upsert with 'onConflict' to prevent duplicate key errors
+    const upsertRows: any[] = [];
+
     upsertRows.push({
       user_id: userId,
       course_id: courseId,
       order_id: orderId,
-      status: 'pending',
-      amount: amount, 
-      subject_name: null, // null represents the main batch
+      status: "pending",
+      amount: round2(basePrice - basePrice * discountRatio),
+      subject_name: null,
+      coupon_id: appliedCouponId,
+      coupon_code: appliedCouponCode,
+      discount_amount: round2(basePrice * discountRatio),
     });
 
-    // B. Handle Add-ons
-    addonsData.forEach((addon) => {
+    addons.forEach((addon) => {
       upsertRows.push({
         user_id: userId,
         course_id: courseId,
         order_id: orderId,
-        status: 'pending',
-        amount: addon.price,
+        status: "pending",
+        amount: round2(addon.price - addon.price * discountRatio),
         subject_name: addon.subject_name,
+        coupon_id: appliedCouponId,
+        coupon_code: appliedCouponCode,
+        discount_amount: round2(addon.price * discountRatio),
       });
     });
 
-    // C. Perform Bulk Upsert
-    // This will update the order_id and status if the user_id/course_id/subject_name combo exists
     if (upsertRows.length > 0) {
       const { error: dbError } = await supabase
-        .from('enrollments')
-        .upsert(upsertRows, { 
-          onConflict: 'user_id,course_id,subject_name',
-          ignoreDuplicates: false 
+        .from("enrollments")
+        .upsert(upsertRows, {
+          onConflict: "user_id,course_id,subject_name",
+          ignoreDuplicates: false,
         });
-
       if (dbError) throw new Error(`DB Error: ${dbError.message}`);
     }
 
-    return new Response(JSON.stringify({ 
-      ...orderData, 
-      environment: cashfreeEnv,
-      verifyUrl: verifyUrl 
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-
+    return new Response(
+      JSON.stringify({
+        ...orderData,
+        environment: cashfreeEnv,
+        verifyUrl,
+        serverComputedAmount: finalAmount,
+        discountAmount,
+        couponCode: appliedCouponCode,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error: any) {
     console.error("FULL ERROR DETAILS:", error);
     return new Response(JSON.stringify({
