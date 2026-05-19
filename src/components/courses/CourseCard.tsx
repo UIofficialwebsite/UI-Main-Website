@@ -143,22 +143,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       );
     }
 
-    // Logic 1: Has Add-ons (Free or Paid) -> Go to Config
-    if (hasAddons) {
-      // If base is free, label it "ENROLL NOW", otherwise "BUY NOW"
-      const label = isBaseFree ? "ENROLL NOW" : "BUY NOW";
-      return (
-        <button
-          onClick={() => navigate(`/courses/${course.id}/configure`)}
-          className={btnClass}
-        >
-          {label}
-        </button>
-      );
-    }
-
-    // Logic 2: Free Batch (No Add-ons) -> Use EnrollButton for phone collection
-    if (isBaseFree) {
+    // Logic 1: Free Batch (No Add-ons) -> Use EnrollButton for phone collection
+    if (isBaseFree && !hasAddons) {
         return (
             <EnrollButton
                 courseId={course.id}
@@ -170,16 +156,15 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         );
     }
 
-    // Logic 3: Paid Batch (No Add-ons) -> Payment Popup
+    // Logic 2: Everything else (paid, or has add-ons) -> Configure batch page
+    const label = isBaseFree ? "ENROLL NOW" : "BUY NOW";
     return (
-      <EnrollButton
-        courseId={course.id}
-        enrollmentLink={course.enroll_now_link || undefined}
-        coursePrice={course.discounted_price || course.price}
-        className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
+      <button
+        onClick={() => navigate(`/courses/${course.id}/configure`)}
+        className={btnClass}
       >
-        BUY NOW
-      </EnrollButton>
+        {label}
+      </button>
     );
   };
 

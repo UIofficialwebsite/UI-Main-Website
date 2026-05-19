@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Star, CalendarDays, Languages, Check } from "lucide-react";
 import { ShareButton } from "../ShareButton";
-import EnrollButton from "@/components/EnrollButton";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/components/admin/courses/types";
 import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
@@ -48,16 +47,16 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
       );
     }
 
-    // Normal enrollment flow
+    // Normal enrollment flow -> Configure batch page
     return (
-      <EnrollButton
-        courseId={course.id}
-        enrollmentLink={course.enroll_now_link || undefined}
-        coursePrice={course.discounted_price || course.price}
+      <Button
+        onClick={() => navigate(`/courses/${course.id}/configure`)}
         className={isPremium ?
           "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" :
           "bg-royal hover:bg-royal-dark text-white"}
-      />
+      >
+        Enroll Now
+      </Button>
     );
   };
 

@@ -174,26 +174,28 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
       );
     }
 
-    if (hasAddons) {
+    // Free with no add-ons -> phone collection via EnrollButton
+    if (isBaseFree && !hasAddons) {
       return (
-        <button
-          onClick={() => navigate(`/courses/${id}/configure`)}
+        <EnrollButton
+          courseId={id}
+          coursePrice={0}
           className={btnClass}
         >
-          BUY NOW
-        </button>
+          ENROLL NOW
+        </EnrollButton>
       );
     }
 
+    // Everything else (paid, or has add-ons) -> Configure batch page
+    const label = isBaseFree ? "ENROLL NOW" : "BUY NOW";
     return (
-      <EnrollButton
-        courseId={id}
-        enrollmentLink={enroll_now_link || undefined}
-        coursePrice={discounted_price || price}
-        className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
+      <button
+        onClick={() => navigate(`/courses/${id}/configure`)}
+        className={btnClass}
       >
-        BUY NOW
-      </EnrollButton>
+        {label}
+      </button>
     );
   };
 
