@@ -37,48 +37,104 @@ export async function processPaymentEvent(
   orderId: string,
   source: Source,
 ): Promise<ProcessResult> {
-  if (!orderId) return { result: "skipped", reason: "missing_order_id" };
+  const startedAt = Date.now();
+  const logFields: Record<string, unknown> = {
+    order_id: orderId || null,
+    source,
+    result: null,
+    final_status: null,
+    cashfree_order_status: null,
+    cf_payment_id: null,
+    amount: null,
+    payment_mode: null,
+    email_sent: null,
+    error_message: null,
+    duration_ms: null,
+  };
 
-  // Free enrollments use a synthetic order_id like 'free_<ts>_<uid>' — never query Cashfree.
-  if (orderId.startsWith("free_")) {
-    return { result: "skipped", reason: "free_enrollment" };
+  // Defer supabase client creation to inside the try (so we can log no-supabase errors).
+  let supabase: ReturnType<typeof getSupabase> | null = null;
+
+  let logged = false;
+  async function writeLog() {
+    if (logged) return;
+    logged = true;
+    logFields.duration_ms = Date.now() - startedAt;
+    try {
+      const client = supabase ?? getSupabase();
+      await client.from("payment_processor_log").insert(logFields);
+    } catch (e: any) {
+      console.error("[processPaymentEvent] log write failed:", e?.message ?? e);
+    }
   }
 
-  const supabase = getSupabase();
-
-  // 1. Short-circuit if already terminally processed.
-  const { data: existing } = await supabase
-    .from("payments")
-    .select("status")
-    .eq("order_id", orderId)
-    .maybeSingle();
-
-  if (existing && existing.status === "success") {
-    return { result: "already_processed", finalStatus: "success" };
+  async function finish(result: ProcessResult): Promise<ProcessResult> {
+    logFields.result = result.result;
+    if ("finalStatus" in result) logFields.final_status = result.finalStatus;
+    if ("cashfreeStatus" in result) logFields.cashfree_order_status = result.cashfreeStatus;
+    if ("emailSent" in result) logFields.email_sent = result.emailSent;
+    if ("reason" in result && !logFields.error_message) logFields.error_message = result.reason;
+    await writeLog();
+    return result;
   }
 
-  // 2. Fetch authoritative state from Cashfree.
-  let orderData: any;
-  let paymentDetails: any = null;
   try {
-    orderData = await fetchCashfreeOrder(orderId);
-    paymentDetails = await fetchCashfreePayments(orderId);
-  } catch (err: any) {
-    console.error(`[processPaymentEvent:${source}] cashfree fetch failed for ${orderId}:`, err.message);
-    throw err;
-  }
+    if (!orderId) {
+      return await finish({ result: "skipped", reason: "missing_order_id" });
+    }
 
-  // 3. Map Cashfree status. Only act on terminal states.
-  const cashfreeStatus: string = orderData?.order_status ?? "UNKNOWN";
-  let finalStatus: "success" | "failed";
-  if (cashfreeStatus === "PAID") {
-    finalStatus = "success";
-  } else if (cashfreeStatus === "EXPIRED") {
-    finalStatus = "failed";
-  } else {
-    // ACTIVE or anything else — payment in flight. Do not modify DB.
-    return { result: "still_pending", cashfreeStatus };
-  }
+    // Free enrollments use a synthetic order_id like 'free_<ts>_<uid>' — never query Cashfree.
+    if (orderId.startsWith("free_")) {
+      return await finish({ result: "skipped", reason: "free_enrollment" });
+    }
+
+    supabase = getSupabase();
+
+    // 1. Short-circuit if already terminally processed.
+    const { data: existing } = await supabase
+      .from("payments")
+      .select("status, payment_id, amount, payment_mode")
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    if (existing && existing.status === "success") {
+      logFields.cf_payment_id = existing.payment_id ?? null;
+      logFields.amount = existing.amount ?? null;
+      logFields.payment_mode = existing.payment_mode ?? null;
+      return await finish({ result: "already_processed", finalStatus: "success" });
+    }
+
+    // 2. Fetch authoritative state from Cashfree.
+    let orderData: any;
+    let paymentDetails: any = null;
+    try {
+      orderData = await fetchCashfreeOrder(orderId);
+      paymentDetails = await fetchCashfreePayments(orderId);
+    } catch (err: any) {
+      console.error(`[processPaymentEvent:${source}] cashfree fetch failed for ${orderId}:`, err.message);
+      logFields.error_message = `cashfree_fetch: ${err.message}`;
+      await writeLog();
+      throw err;
+    }
+
+    // 3. Map Cashfree status. Only act on terminal states.
+    const cashfreeStatus: string = orderData?.order_status ?? "UNKNOWN";
+    logFields.cashfree_order_status = cashfreeStatus;
+    logFields.amount = orderData?.order_amount ?? null;
+    logFields.cf_payment_id =
+      paymentDetails?.cf_payment_id?.toString() ?? orderData?.cf_order_id ?? null;
+    logFields.payment_mode =
+      paymentDetails?.payment_group ?? paymentDetails?.payment_method?.type ?? null;
+
+    let finalStatus: "success" | "failed";
+    if (cashfreeStatus === "PAID") {
+      finalStatus = "success";
+    } else if (cashfreeStatus === "EXPIRED") {
+      finalStatus = "failed";
+    } else {
+      // ACTIVE or anything else — payment in flight. Do not modify DB.
+      return await finish({ result: "still_pending", cashfreeStatus });
+    }
 
   // 4. Build payment row (mirrors current verify-cashfree-payment output exactly).
   const userId = orderData?.customer_details?.customer_id ?? null;
@@ -233,6 +289,8 @@ export async function processPaymentEvent(
 
     if (upsertErr) {
       console.error(`[processPaymentEvent:${source}] payment upsert error:`, upsertErr.message);
+      logFields.error_message = `payment_upsert: ${upsertErr.message}`;
+      await writeLog();
       throw upsertErr;
     }
 
@@ -264,9 +322,18 @@ export async function processPaymentEvent(
   if (enrollUpdateErr) {
     console.error(`[processPaymentEvent:${source}] enrollments update error:`, enrollUpdateErr.message);
     // Do not throw — payment row is already correct. Cron will catch any drift.
+    logFields.error_message = `enrollments_update: ${enrollUpdateErr.message}`;
   }
 
-  return { result: "processed", finalStatus, emailSent };
+    return await finish({ result: "processed", finalStatus, emailSent });
+  } catch (err: any) {
+    if (!logged) {
+      logFields.error_message = logFields.error_message ?? `unexpected: ${err?.message ?? String(err)}`;
+      logFields.result = logFields.result ?? "error";
+      await writeLog();
+    }
+    throw err;
+  }
 }
 
 async function sendConfirmationEmail(args: {
