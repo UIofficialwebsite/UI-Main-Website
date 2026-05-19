@@ -681,12 +681,19 @@ const BatchConfiguration = () => {
             ))}
 
             {appliedCoupon && (
-                <div className="flex justify-between items-baseline py-1">
-                    <span className="text-[14px] text-[#137333] font-medium flex items-center gap-1">
-                        <BadgePercent className="w-3.5 h-3.5" /> {appliedCoupon.code}
-                    </span>
-                    <span className="text-[14px] font-semibold text-[#137333]">−₹{couponDiscount}</span>
-                </div>
+                <>
+                    <div className="h-px bg-gray-100 my-1"></div>
+                    <div className="flex justify-between items-baseline py-1">
+                        <span className="text-[14px] text-[#4f566b]">Subtotal</span>
+                        <span className="text-[14px] text-[#4f566b]">₹{subtotal}</span>
+                    </div>
+                    <div className="flex justify-between items-baseline py-1">
+                        <span className="text-[14px] text-[#137333] font-medium flex items-center gap-1">
+                            <BadgePercent className="w-3.5 h-3.5" /> {appliedCoupon.code}
+                        </span>
+                        <span className="text-[14px] font-semibold text-[#137333]">−₹{couponDiscount}</span>
+                    </div>
+                </>
             )}
 
             <div className="border-t border-dashed border-gray-300 my-2"></div>
@@ -875,12 +882,19 @@ const BatchConfiguration = () => {
               ))}
 
               {appliedCoupon && (
-                <div className="flex justify-between mb-3 text-sm">
-                  <span className="text-[#137333] font-medium flex items-center gap-1">
-                    <BadgePercent className="w-4 h-4" /> {appliedCoupon.code}
-                  </span>
-                  <span className="text-[#137333] font-medium">−₹{couponDiscount}</span>
-                </div>
+                <>
+                  <div className="h-px bg-[#e3e8ee] my-3"></div>
+                  <div className="flex justify-between mb-2 text-sm">
+                    <span className="text-[#4f566b]">Subtotal</span>
+                    <span className="text-[#4f566b]">₹{subtotal}</span>
+                  </div>
+                  <div className="flex justify-between mb-3 text-sm">
+                    <span className="text-[#137333] font-medium flex items-center gap-1">
+                      <BadgePercent className="w-4 h-4" /> {appliedCoupon.code}
+                    </span>
+                    <span className="text-[#137333] font-medium">−₹{couponDiscount}</span>
+                  </div>
+                </>
               )}
 
               <div className="h-px bg-[#e3e8ee] my-5"></div>
