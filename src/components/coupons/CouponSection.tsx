@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BadgePercent, Check, ChevronRight, FileSearch, Loader2, Tag, X } from "lucide-react";
+import { Check, ChevronRight, FileSearch, Loader2, Tag, X } from "lucide-react";
 import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -168,21 +168,27 @@ const CouponSection: React.FC<CouponSectionProps> = ({
         className="w-full text-left bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors"
       >
         <div className="flex items-center gap-3 px-4 py-3">
-          {/* Filled badge: purple fill underneath, white stroke on top traces
-              the badge outline and the % symbol so the icon reads as mostly
-              colored with thin white cut-outs. */}
-          <div className="relative w-7 h-7 shrink-0">
-            <BadgePercent
-              className="absolute inset-0 w-7 h-7 text-[#6957f1]"
+          {/* Solid-purple BadgePercent: the badge shape fills the full silhouette
+              (no outline ring), only the % slash + dots are white. */}
+          <svg
+            viewBox="0 0 24 24"
+            className="w-7 h-7 shrink-0"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"
               fill="#6957f1"
-              strokeWidth={2}
             />
-            <BadgePercent
-              className="absolute inset-0 w-7 h-7 text-white"
-              fill="none"
-              strokeWidth={2}
+            <line
+              x1="15" y1="9" x2="9" y2="15"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
             />
-          </div>
+            <circle cx="9.5" cy="9.5" r="1" fill="white" />
+            <circle cx="14.5" cy="14.5" r="1" fill="white" />
+          </svg>
           <div className="flex-1 min-w-0">
             <div className="text-[15px] font-semibold text-gray-900 leading-tight">
               {appliedCoupon ? `${appliedCoupon.code} applied` : "Apply Code/Coupon"}
