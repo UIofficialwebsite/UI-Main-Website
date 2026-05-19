@@ -23,7 +23,6 @@ export type Coupon = {
   max_uses_per_user: number;
   current_uses: number;
   applicable_course_ids: string[] | null;
-  applicable_batch_ids: string[] | null;
   applicable_user_ids: string[] | null;
   user_segment: "new" | "returning" | "prev_enrolled" | null;
   min_prev_enrollments: number | null;

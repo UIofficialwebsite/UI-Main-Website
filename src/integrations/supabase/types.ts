@@ -302,7 +302,6 @@ export type Database = {
       }
       coupons: {
         Row: {
-          applicable_batch_ids: string[] | null
           applicable_course_ids: string[] | null
           applicable_user_ids: string[] | null
           code: string
@@ -331,7 +330,6 @@ export type Database = {
           visibility: string
         }
         Insert: {
-          applicable_batch_ids?: string[] | null
           applicable_course_ids?: string[] | null
           applicable_user_ids?: string[] | null
           code: string
@@ -360,7 +358,6 @@ export type Database = {
           visibility?: string
         }
         Update: {
-          applicable_batch_ids?: string[] | null
           applicable_course_ids?: string[] | null
           applicable_user_ids?: string[] | null
           code?: string
