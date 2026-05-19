@@ -1,9 +1,54 @@
 import React, { useEffect, useState } from "react";
 import { Check, ChevronRight, FileSearch, Loader2, Tag, X } from "lucide-react";
+import confetti from "canvas-confetti";
 import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+// Party-popper style celebration. Fires shots from both bottom corners for
+// ~0.7s plus one big center burst. Designed to be unmistakable but quick.
+const celebrateCoupon = () => {
+  const colors = ["#6957f1", "#22c55e", "#facc15", "#ec4899", "#3b82f6", "#f97316"];
+
+  // Center burst — the "pop".
+  confetti({
+    particleCount: 90,
+    spread: 95,
+    startVelocity: 45,
+    origin: { x: 0.5, y: 0.55 },
+    colors,
+    scalar: 1,
+    zIndex: 11000,
+  });
+
+  // Streamers from both bottom corners — the "popper ribbons".
+  const end = Date.now() + 700;
+  const frame = () => {
+    confetti({
+      particleCount: 5,
+      angle: 60,
+      spread: 70,
+      startVelocity: 55,
+      origin: { x: 0, y: 0.85 },
+      colors,
+      scalar: 0.9,
+      zIndex: 11000,
+    });
+    confetti({
+      particleCount: 5,
+      angle: 120,
+      spread: 70,
+      startVelocity: 55,
+      origin: { x: 1, y: 0.85 },
+      colors,
+      scalar: 0.9,
+      zIndex: 11000,
+    });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  };
+  frame();
+};
 
 export type AppliedCoupon = {
   code: string;
@@ -129,6 +174,9 @@ const CouponSection: React.FC<CouponSectionProps> = ({
               finalAmount: best.finalAmount,
             });
             setAutoAppliedOnce(true);
+            // Auto-apply is silent by default — celebrate so the user notices.
+            celebrateCoupon();
+            toast.success(`🎉 ${best.code} auto-applied — you save ₹${best.discountAmount}`);
           }
         }
       } catch {
@@ -167,7 +215,8 @@ const CouponSection: React.FC<CouponSectionProps> = ({
         finalAmount: data.finalAmount,
       });
       setCouponInput(data.code);
-      toast.success(`Coupon applied — you save ₹${data.discountAmount}`);
+      celebrateCoupon();
+      toast.success(`🎉 Coupon applied — you save ₹${data.discountAmount}`);
       setSheetOpen(false);
     } catch (e: any) {
       setCouponError(e?.message ?? "Couldn't apply this code.");
