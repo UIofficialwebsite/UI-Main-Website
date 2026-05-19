@@ -320,16 +320,18 @@ interface EnrollButtonProps {
   children?: React.ReactNode;
   selectedSubjects?: string[];
   disabled?: boolean;
+  couponCode?: string | null;
 }
 
-const EnrollButton: React.FC<EnrollButtonProps> = ({ 
-  courseId, 
-  enrollmentLink, 
+const EnrollButton: React.FC<EnrollButtonProps> = ({
+  courseId,
+  enrollmentLink,
   coursePrice = 0,
-  className = "", 
+  className = "",
   children = "Enroll Now",
   selectedSubjects = [],
-  disabled = false
+  disabled = false,
+  couponCode = null,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -601,11 +603,11 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           courseId,
-          amount: coursePrice,
           userId: user.id,
-          customerEmail: user.email, 
+          customerEmail: user.email,
           customerPhone: phoneNumber,
-          selectedSubjects: selectedSubjects 
+          selectedSubjects: selectedSubjects,
+          couponCode: couponCode ?? null,
         },
       });
 
