@@ -9,10 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-// The generated DB types don't know about the `coupons` table yet (migration
-// added in this branch). Until types are regenerated, route coupon CRUD
-// through this untyped alias.
-const sb = supabase as unknown as { from: (t: string) => any };
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Search, Upload, Tag as TagIcon, Eye, EyeOff } from "lucide-react";
 
@@ -98,7 +94,7 @@ const CouponsManagerTab: React.FC = () => {
   const { toast } = useToast();
 
   const fetchCoupons = async () => {
-    const { data, error } = await sb
+    const { data, error } = await supabase
       .from("coupons")
       .select("*")
       .order("created_at", { ascending: false });
@@ -208,8 +204,8 @@ const CouponsManagerTab: React.FC = () => {
     };
 
     const { error } = editing
-      ? await sb.from("coupons").update(payload).eq("id", editing.id)
-      : await sb.from("coupons").insert(payload);
+      ? await supabase.from("coupons").update(payload).eq("id", editing.id)
+      : await supabase.from("coupons").insert(payload);
 
     setSaving(false);
     if (error) {
@@ -222,7 +218,7 @@ const CouponsManagerTab: React.FC = () => {
   };
 
   const toggleActive = async (c: Coupon) => {
-    const { error } = await sb
+    const { error } = await supabase
       .from("coupons")
       .update({ is_active: !c.is_active })
       .eq("id", c.id);
@@ -235,7 +231,7 @@ const CouponsManagerTab: React.FC = () => {
 
   const remove = async (c: Coupon) => {
     if (!confirm(`Delete coupon "${c.code}"? This cannot be undone.`)) return;
-    const { error } = await sb.from("coupons").delete().eq("id", c.id);
+    const { error } = await supabase.from("coupons").delete().eq("id", c.id);
     if (error) {
       toast({ title: "Cannot delete", description: error.message, variant: "destructive" });
       return;

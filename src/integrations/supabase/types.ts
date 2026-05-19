@@ -142,6 +142,42 @@ export type Database = {
           },
         ]
       }
+      cashfree_webhook_events: {
+        Row: {
+          cf_payment_id: string | null
+          event_type: string | null
+          id: string
+          order_id: string | null
+          processed_at: string | null
+          processing_error: string | null
+          raw_payload: Json
+          received_at: string | null
+          signature_valid: boolean
+        }
+        Insert: {
+          cf_payment_id?: string | null
+          event_type?: string | null
+          id?: string
+          order_id?: string | null
+          processed_at?: string | null
+          processing_error?: string | null
+          raw_payload: Json
+          received_at?: string | null
+          signature_valid: boolean
+        }
+        Update: {
+          cf_payment_id?: string | null
+          event_type?: string | null
+          id?: string
+          order_id?: string | null
+          processed_at?: string | null
+          processing_error?: string | null
+          raw_payload?: Json
+          received_at?: string | null
+          signature_valid?: boolean
+        }
+        Relationships: []
+      }
       communities: {
         Row: {
           branch: string | null
@@ -220,6 +256,137 @@ export type Database = {
           id?: string
           name?: string
           phone_length?: number
+        }
+        Relationships: []
+      }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          discount_amount: number
+          enrollment_id: string | null
+          final_amount: number
+          id: string
+          order_id: string | null
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          discount_amount: number
+          enrollment_id?: string | null
+          final_amount: number
+          id?: string
+          order_id?: string | null
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          discount_amount?: number
+          enrollment_id?: string | null
+          final_amount?: number
+          id?: string
+          order_id?: string | null
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          applicable_batch_ids: string[] | null
+          applicable_course_ids: string[] | null
+          applicable_user_ids: string[] | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number
+          discount_type: string
+          discount_value: number
+          display_label: string | null
+          display_priority: number
+          id: string
+          is_active: boolean
+          is_auto_applied: boolean
+          is_first_purchase_only: boolean
+          max_discount: number | null
+          max_total_uses: number | null
+          max_uses_per_user: number
+          min_order_amount: number
+          min_prev_enrollments: number | null
+          prev_enrolled_within_days: number | null
+          stackable: boolean
+          updated_at: string
+          user_segment: string | null
+          valid_from: string | null
+          valid_until: string | null
+          visibility: string
+        }
+        Insert: {
+          applicable_batch_ids?: string[] | null
+          applicable_course_ids?: string[] | null
+          applicable_user_ids?: string[] | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          discount_type: string
+          discount_value: number
+          display_label?: string | null
+          display_priority?: number
+          id?: string
+          is_active?: boolean
+          is_auto_applied?: boolean
+          is_first_purchase_only?: boolean
+          max_discount?: number | null
+          max_total_uses?: number | null
+          max_uses_per_user?: number
+          min_order_amount?: number
+          min_prev_enrollments?: number | null
+          prev_enrolled_within_days?: number | null
+          stackable?: boolean
+          updated_at?: string
+          user_segment?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+          visibility?: string
+        }
+        Update: {
+          applicable_batch_ids?: string[] | null
+          applicable_course_ids?: string[] | null
+          applicable_user_ids?: string[] | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          discount_type?: string
+          discount_value?: number
+          display_label?: string | null
+          display_priority?: number
+          id?: string
+          is_active?: boolean
+          is_auto_applied?: boolean
+          is_first_purchase_only?: boolean
+          max_discount?: number | null
+          max_total_uses?: number | null
+          max_uses_per_user?: number
+          min_order_amount?: number
+          min_prev_enrollments?: number | null
+          prev_enrolled_within_days?: number | null
+          stackable?: boolean
+          updated_at?: string
+          user_segment?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+          visibility?: string
         }
         Relationships: []
       }
@@ -442,8 +609,11 @@ export type Database = {
       enrollments: {
         Row: {
           amount: number | null
+          coupon_code: string | null
+          coupon_id: string | null
           course_id: string
           created_at: string | null
+          discount_amount: number | null
           id: string
           order_id: string | null
           payment_id: string | null
@@ -453,8 +623,11 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           course_id: string
           created_at?: string | null
+          discount_amount?: number | null
           id?: string
           order_id?: string | null
           payment_id?: string | null
@@ -464,8 +637,11 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           course_id?: string
           created_at?: string | null
+          discount_amount?: number | null
           id?: string
           order_id?: string | null
           payment_id?: string | null
@@ -474,6 +650,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "enrollments_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "enrollments_course_id_fkey"
             columns: ["course_id"]
@@ -872,6 +1055,54 @@ export type Database = {
           id?: string
           image_url?: string
           page_path?: string
+        }
+        Relationships: []
+      }
+      payment_processor_log: {
+        Row: {
+          amount: number | null
+          cashfree_order_status: string | null
+          cf_payment_id: string | null
+          created_at: string | null
+          duration_ms: number | null
+          email_sent: boolean | null
+          error_message: string | null
+          final_status: string | null
+          id: string
+          order_id: string | null
+          payment_mode: string | null
+          result: string | null
+          source: string
+        }
+        Insert: {
+          amount?: number | null
+          cashfree_order_status?: string | null
+          cf_payment_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          email_sent?: boolean | null
+          error_message?: string | null
+          final_status?: string | null
+          id?: string
+          order_id?: string | null
+          payment_mode?: string | null
+          result?: string | null
+          source: string
+        }
+        Update: {
+          amount?: number | null
+          cashfree_order_status?: string | null
+          cf_payment_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          email_sent?: boolean | null
+          error_message?: string | null
+          final_status?: string | null
+          id?: string
+          order_id?: string | null
+          payment_mode?: string | null
+          result?: string | null
+          source?: string
         }
         Relationships: []
       }
@@ -1516,6 +1747,17 @@ export type Database = {
       is_admin_user: { Args: { user_email: string }; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: { user_email: string }; Returns: boolean }
+      redeem_coupon: {
+        Args: {
+          p_coupon_id: string
+          p_discount: number
+          p_enrollment_id: string
+          p_final: number
+          p_order_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       register_promotional_group: {
         Args: {
           p_google_group_id: string
