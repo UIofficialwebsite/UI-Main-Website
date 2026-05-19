@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Check, ChevronRight, FileSearch, Loader2, Tag, X } from "lucide-react";
+import { Check, ChevronRight, Loader2, Tag, X } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,18 +164,21 @@ interface CouponSectionProps {
   className?: string;
 }
 
-// One-off keyframes for the empty-state magnifying-glass wobble.
-// Scoped via a unique class so it doesn't collide with anything global.
+// Empty-state animation: magnifying glass scans across a stack of documents.
+// transform-box: fill-box anchors the SVG transform to the group's own bbox
+// so rotation/translation feel natural rather than relative to the viewBox.
 const searchWobbleCss = `
-@keyframes coupon-search-wobble {
-  0%, 100% { transform: translate(0, 0) rotate(-12deg); }
-  35%      { transform: translate(6px, -2px) rotate(10deg); }
-  60%      { transform: translate(-4px, 2px) rotate(-6deg); }
-  85%      { transform: translate(3px, 0) rotate(8deg); }
+@keyframes coupon-mag-scan {
+  0%,100% { transform: translate(0px, 0px) rotate(-6deg); }
+  20%     { transform: translate(-16px, 4px) rotate(2deg); }
+  40%     { transform: translate(-22px, 18px) rotate(-4deg); }
+  60%     { transform: translate(-6px, 24px) rotate(6deg); }
+  80%     { transform: translate(10px, 10px) rotate(-2deg); }
 }
-.coupon-search-wobble {
-  animation: coupon-search-wobble 1.8s ease-in-out infinite;
-  transform-origin: center;
+.coupon-mag-scan {
+  animation: coupon-mag-scan 4.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
 }
 `;
 
@@ -517,12 +520,81 @@ const OfferRow: React.FC<{
 
 const EmptyOffersState: React.FC = () => (
   <div className="flex flex-col items-center justify-center text-center pt-10 pb-6">
-    <div className="relative w-24 h-24 mb-6">
-      <FileSearch
-        className="w-24 h-24 text-gray-300 coupon-search-wobble"
-        strokeWidth={1.5}
+    <svg
+      viewBox="0 0 140 140"
+      className="w-32 h-32 mb-6"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      {/* back document, tilted */}
+      <g transform="rotate(-9 52 72)">
+        <rect
+          x="20"
+          y="30"
+          width="60"
+          height="80"
+          rx="7"
+          fill="#F4F5FA"
+          stroke="#E3E6F0"
+          strokeWidth="1.2"
+        />
+      </g>
+      {/* front document */}
+      <rect
+        x="38"
+        y="30"
+        width="68"
+        height="84"
+        rx="7"
+        fill="#FBFCFD"
+        stroke="#DEE2EC"
+        strokeWidth="1.4"
       />
-    </div>
+      {/* text-row placeholders */}
+      <rect x="48" y="46" width="36" height="7" rx="3.5" fill="#D6DCEA" />
+      <rect x="48" y="62" width="48" height="6" rx="3" fill="#DEE3EF" />
+      <rect x="48" y="76" width="30" height="6" rx="3" fill="#DEE3EF" />
+      <rect x="48" y="90" width="42" height="6" rx="3" fill="#DEE3EF" />
+
+      {/* magnifying glass — animated scan over the documents */}
+      <g className="coupon-mag-scan">
+        <circle
+          cx="104"
+          cy="46"
+          r="15"
+          fill="#EEF1F9"
+          stroke="#A6AFC8"
+          strokeWidth="2.5"
+        />
+        <circle
+          cx="104"
+          cy="46"
+          r="11"
+          fill="none"
+          stroke="#C6CCDD"
+          strokeWidth="1"
+        />
+        {/* lens highlight */}
+        <path
+          d="M97 41 A 8 8 0 0 1 103 38"
+          stroke="#FFFFFF"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          fill="none"
+          opacity="0.9"
+        />
+        {/* handle */}
+        <line
+          x1="114.5"
+          y1="56.5"
+          x2="123"
+          y2="65"
+          stroke="#A6AFC8"
+          strokeWidth="3.6"
+          strokeLinecap="round"
+        />
+      </g>
+    </svg>
     <p className="text-[15px] text-gray-700 font-medium">
       No Coupons are available at this moment
     </p>
