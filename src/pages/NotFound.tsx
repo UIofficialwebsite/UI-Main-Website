@@ -47,7 +47,20 @@ const pickKind = (speed: number): ObsKind => {
   return r < 0.86 ? "bird-low" : "bird-high";
 };
 
-const DinoSprite = ({
+// Colourful cute-dog runner. Palette: tan body with cream belly, chocolate
+// ears + paw pads, red collar with a gold tag, tiny pink tongue. Hitbox
+// dimensions match the previous sprite so collision tuning carries over.
+const DOG_BODY = "#E8B17C";
+const DOG_BELLY = "#F6DEB9";
+const DOG_DARK = "#8B5A2B";
+const DOG_PAW = "#3F2A1A";
+const DOG_EYE = "#1F2937";
+const DOG_NOSE = "#1F2937";
+const DOG_COLLAR = "#DC2626";
+const DOG_TAG = "#F59E0B";
+const DOG_TONGUE = "#F472B6";
+
+const DogSprite = ({
   ducking,
   legFrame,
   dead,
@@ -58,28 +71,55 @@ const DinoSprite = ({
   dead: boolean;
   airborne: boolean;
 }) => {
-  const fill = dead ? "#9ca3af" : FG;
   const lf: 0 | 1 = airborne ? 0 : legFrame;
+  // On game-over swap eyes for cross-marks and tilt the dog so it reads
+  // as "knocked out" rather than just frozen.
   if (ducking) {
     return (
       <svg viewBox="0 0 60 28" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">
-        <rect x="0" y="14" width="6" height="3" fill={fill} />
-        <rect x="6" y="11" width="6" height="6" fill={fill} />
-        <rect x="12" y="9" width="32" height="11" fill={fill} />
-        <rect x="44" y="7" width="14" height="11" fill={fill} />
-        <rect x="58" y="10" width="2" height="3" fill={fill} />
-        <rect x="53" y="9" width="2" height="2" fill="#ffffff" />
-        {lf === 0 ? (
+        {/* tail */}
+        <rect x="0" y="13" width="6" height="4" fill={DOG_BODY} />
+        <rect x="0" y="13" width="3" height="4" fill={DOG_DARK} />
+        {/* body */}
+        <rect x="6" y="10" width="36" height="11" fill={DOG_BODY} />
+        <rect x="6" y="17" width="36" height="4" fill={DOG_BELLY} />
+        {/* head */}
+        <rect x="42" y="8" width="14" height="12" fill={DOG_BODY} />
+        {/* floppy ear flapping back */}
+        <rect x="40" y="6" width="6" height="7" fill={DOG_DARK} />
+        {/* muzzle */}
+        <rect x="52" y="14" width="8" height="5" fill={DOG_BELLY} />
+        {/* nose */}
+        <rect x="56" y="14" width="4" height="3" fill={DOG_NOSE} />
+        {/* eye */}
+        {dead ? (
           <>
-            <rect x="16" y="20" width="3" height="6" fill={fill} />
-            <rect x="22" y="20" width="3" height="4" fill={fill} />
-            <rect x="15" y="26" width="5" height="2" fill={fill} />
+            <rect x="48" y="10" width="3" height="1" fill={DOG_EYE} transform="rotate(45 49.5 10.5)" />
+            <rect x="48" y="10" width="3" height="1" fill={DOG_EYE} transform="rotate(-45 49.5 10.5)" />
           </>
         ) : (
           <>
-            <rect x="16" y="20" width="3" height="4" fill={fill} />
-            <rect x="22" y="20" width="3" height="6" fill={fill} />
-            <rect x="21" y="26" width="5" height="2" fill={fill} />
+            <rect x="48" y="10" width="2" height="2" fill={DOG_EYE} />
+            <rect x="49" y="10" width="1" height="1" fill="#ffffff" />
+          </>
+        )}
+        {/* collar + tag */}
+        <rect x="41" y="14" width="2" height="5" fill={DOG_COLLAR} />
+        <rect x="40" y="18" width="3" height="2" fill={DOG_TAG} />
+        {/* legs */}
+        {lf === 0 ? (
+          <>
+            <rect x="14" y="21" width="3" height="5" fill={DOG_BODY} />
+            <rect x="13" y="26" width="5" height="2" fill={DOG_PAW} />
+            <rect x="34" y="21" width="3" height="6" fill={DOG_BODY} />
+            <rect x="33" y="26" width="5" height="2" fill={DOG_PAW} />
+          </>
+        ) : (
+          <>
+            <rect x="14" y="21" width="3" height="6" fill={DOG_BODY} />
+            <rect x="13" y="26" width="5" height="2" fill={DOG_PAW} />
+            <rect x="34" y="21" width="3" height="4" fill={DOG_BODY} />
+            <rect x="33" y="25" width="5" height="2" fill={DOG_PAW} />
           </>
         )}
       </svg>
@@ -87,27 +127,57 @@ const DinoSprite = ({
   }
   return (
     <svg viewBox="0 0 44 47" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">
-      <rect x="22" y="0" width="20" height="14" fill={fill} />
-      <rect x="42" y="3" width="2" height="6" fill={fill} />
-      <rect x="38" y="10" width="4" height="2" fill="#ffffff" />
-      <rect x="36" y="4" width="2" height="2" fill="#ffffff" />
-      <rect x="14" y="14" width="22" height="6" fill={fill} />
-      <rect x="6" y="20" width="26" height="11" fill={fill} />
-      <rect x="0" y="22" width="6" height="4" fill={fill} />
-      <rect x="22" y="26" width="3" height="2" fill={fill} />
-      {lf === 0 ? (
+      {/* tail — curled, lighter tip */}
+      <rect x="2" y="20" width="4" height="6" fill={DOG_DARK} />
+      <rect x="4" y="16" width="4" height="6" fill={DOG_BODY} />
+      <rect x="6" y="14" width="4" height="4" fill={DOG_BODY} />
+      {/* body */}
+      <rect x="6" y="22" width="22" height="14" fill={DOG_BODY} />
+      <rect x="8" y="30" width="20" height="6" fill={DOG_BELLY} />
+      {/* head */}
+      <rect x="22" y="10" width="16" height="14" fill={DOG_BODY} />
+      {/* back ear */}
+      <rect x="22" y="6" width="6" height="8" fill={DOG_DARK} />
+      {/* front floppy ear */}
+      <rect x="30" y="6" width="6" height="10" fill={DOG_DARK} />
+      <rect x="34" y="14" width="4" height="3" fill={DOG_DARK} />
+      {/* cheek/blush — a soft warm spot, gives the cute factor */}
+      <rect x="28" y="20" width="3" height="2" fill="#F8B4B4" opacity="0.7" />
+      {/* muzzle */}
+      <rect x="32" y="18" width="10" height="6" fill={DOG_BELLY} />
+      {/* nose */}
+      <rect x="38" y="18" width="4" height="3" fill={DOG_NOSE} />
+      {/* eye / X on death */}
+      {dead ? (
         <>
-          <rect x="12" y="31" width="4" height="12" fill={fill} />
-          <rect x="11" y="43" width="6" height="3" fill={fill} />
-          <rect x="20" y="31" width="4" height="8" fill={fill} />
-          <rect x="20" y="39" width="6" height="3" fill={fill} />
+          <rect x="32" y="14" width="4" height="1" fill={DOG_EYE} transform="rotate(45 34 14.5)" />
+          <rect x="32" y="14" width="4" height="1" fill={DOG_EYE} transform="rotate(-45 34 14.5)" />
         </>
       ) : (
         <>
-          <rect x="12" y="31" width="4" height="8" fill={fill} />
-          <rect x="12" y="39" width="6" height="3" fill={fill} />
-          <rect x="20" y="31" width="4" height="12" fill={fill} />
-          <rect x="19" y="43" width="6" height="3" fill={fill} />
+          <rect x="32" y="14" width="3" height="3" fill={DOG_EYE} />
+          <rect x="33" y="14" width="1" height="1" fill="#ffffff" />
+        </>
+      )}
+      {/* tongue */}
+      <rect x="36" y="22" width="3" height="2" fill={DOG_TONGUE} />
+      {/* collar + tag */}
+      <rect x="22" y="22" width="3" height="4" fill={DOG_COLLAR} />
+      <rect x="22" y="26" width="2" height="2" fill={DOG_TAG} />
+      {/* legs — alternating run cycle */}
+      {lf === 0 ? (
+        <>
+          <rect x="22" y="36" width="4" height="8" fill={DOG_BODY} />
+          <rect x="21" y="44" width="6" height="3" fill={DOG_PAW} />
+          <rect x="8" y="36" width="4" height="6" fill={DOG_BODY} />
+          <rect x="7" y="42" width="6" height="3" fill={DOG_PAW} />
+        </>
+      ) : (
+        <>
+          <rect x="22" y="36" width="4" height="6" fill={DOG_BODY} />
+          <rect x="21" y="42" width="6" height="3" fill={DOG_PAW} />
+          <rect x="8" y="36" width="4" height="8" fill={DOG_BODY} />
+          <rect x="7" y="44" width="6" height="3" fill={DOG_PAW} />
         </>
       )}
     </svg>
@@ -423,10 +493,10 @@ const DinoGame = () => {
         if (e.target instanceof HTMLElement && e.target.closest("button")) return;
         jump();
       }}
-      className="relative w-full bg-[#fafafa] cursor-pointer select-none"
+      className="relative w-full cursor-pointer select-none"
       style={{ aspectRatio: `${GAME_W} / ${GAME_H}`, touchAction: "manipulation" }}
       role="application"
-      aria-label="Dinosaur jumping game"
+      aria-label="Running dog jumping game"
     >
       {/* score readout */}
       <div className="absolute top-2 right-3 font-mono text-[12px] sm:text-[13px] tracking-[0.18em] text-slate-500 tabular-nums z-10">
@@ -453,7 +523,7 @@ const DinoGame = () => {
           height: `${(dinoCurrentH / GAME_H) * 100}%`,
         }}
       >
-        <DinoSprite
+        <DogSprite
           ducking={ducking}
           legFrame={legFrame}
           dead={status === "over"}
@@ -508,11 +578,9 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-10">
       <div className="w-full max-w-2xl">
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-[0_8px_28px_-12px_rgba(15,23,42,0.15)] overflow-hidden">
-          <DinoGame />
-        </div>
+        <DinoGame />
 
         <div className="text-center mt-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
