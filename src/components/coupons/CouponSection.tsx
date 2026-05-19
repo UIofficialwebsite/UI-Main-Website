@@ -174,9 +174,9 @@ const CouponSection: React.FC<CouponSectionProps> = ({
               finalAmount: best.finalAmount,
             });
             setAutoAppliedOnce(true);
-            // Auto-apply is silent by default — celebrate so the user notices.
+            // Confetti only — no toast. The teaser card subtitle already
+            // shows "You save ₹X" so a popup would be noise.
             celebrateCoupon();
-            toast.success(`🎉 ${best.code} auto-applied — you save ₹${best.discountAmount}`);
           }
         }
       } catch {
@@ -216,7 +216,6 @@ const CouponSection: React.FC<CouponSectionProps> = ({
       });
       setCouponInput(data.code);
       celebrateCoupon();
-      toast.success(`🎉 Coupon applied — you save ₹${data.discountAmount}`);
       setSheetOpen(false);
     } catch (e: any) {
       setCouponError(e?.message ?? "Couldn't apply this code.");
