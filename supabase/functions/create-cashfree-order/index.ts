@@ -180,11 +180,11 @@ serve(async (req: Request) => {
 
   } catch (error: any) {
     console.error("FULL ERROR DETAILS:", error);
-    return new Response(JSON.stringify({ 
-      error: error.message, 
-      details: error.stack 
+    return new Response(JSON.stringify({
+      error: error.message,
+      details: error.stack
     }), {
-      status: 200, 
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
