@@ -168,7 +168,21 @@ const CouponSection: React.FC<CouponSectionProps> = ({
         className="w-full text-left bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors"
       >
         <div className="flex items-center gap-3 px-4 py-3">
-          <BadgePercent className="w-7 h-7 text-[#6957f1] shrink-0" strokeWidth={2} />
+          {/* Filled badge: purple fill underneath, white stroke on top traces
+              the badge outline and the % symbol so the icon reads as mostly
+              colored with thin white cut-outs. */}
+          <div className="relative w-7 h-7 shrink-0">
+            <BadgePercent
+              className="absolute inset-0 w-7 h-7 text-[#6957f1]"
+              fill="#6957f1"
+              strokeWidth={2}
+            />
+            <BadgePercent
+              className="absolute inset-0 w-7 h-7 text-white"
+              fill="none"
+              strokeWidth={2}
+            />
+          </div>
           <div className="flex-1 min-w-0">
             <div className="text-[15px] font-semibold text-gray-900 leading-tight">
               {appliedCoupon ? `${appliedCoupon.code} applied` : "Apply Code/Coupon"}
