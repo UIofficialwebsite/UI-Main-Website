@@ -6,48 +6,87 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// Party-popper style celebration. Fires shots from both bottom corners for
-// ~0.7s plus one big center burst. Designed to be unmistakable but quick.
+// Party-popper celebration. Green-leaning palette, three coordinated phases
+// over ~1.6s: a huge center explosion, twin side-cannon bursts, then a
+// streamer rain from the bottom corners. zIndex is set above the Sheet
+// overlay (10050) so the confetti renders on top.
 const celebrateCoupon = () => {
-  const colors = ["#6957f1", "#22c55e", "#facc15", "#ec4899", "#3b82f6", "#f97316"];
+  const colors = [
+    "#22c55e", "#16a34a", "#10b981", "#84cc16", "#4ade80", // greens
+    "#facc15", "#f97316", "#ec4899", "#6957f1", "#3b82f6", // accent
+  ];
+  const Z = 100000;
 
-  // Center burst — the "pop".
+  // Phase 1 — central explosion (~250 particles)
   confetti({
-    particleCount: 90,
-    spread: 95,
-    startVelocity: 45,
-    origin: { x: 0.5, y: 0.55 },
+    particleCount: 150,
+    spread: 130,
+    startVelocity: 55,
+    origin: { x: 0.5, y: 0.5 },
     colors,
-    scalar: 1,
-    zIndex: 11000,
+    scalar: 1.1,
+    zIndex: Z,
+  });
+  confetti({
+    particleCount: 100,
+    spread: 160,
+    startVelocity: 35,
+    origin: { x: 0.5, y: 0.5 },
+    colors,
+    scalar: 0.8,
+    zIndex: Z,
   });
 
-  // Streamers from both bottom corners — the "popper ribbons".
-  const end = Date.now() + 700;
-  const frame = () => {
+  // Phase 2 — twin side cannons, slight delay so they read as a second pop
+  setTimeout(() => {
     confetti({
-      particleCount: 5,
+      particleCount: 140,
       angle: 60,
-      spread: 70,
-      startVelocity: 55,
-      origin: { x: 0, y: 0.85 },
+      spread: 80,
+      startVelocity: 70,
+      origin: { x: 0, y: 0.75 },
       colors,
-      scalar: 0.9,
-      zIndex: 11000,
+      scalar: 1,
+      zIndex: Z,
     });
     confetti({
-      particleCount: 5,
+      particleCount: 140,
       angle: 120,
-      spread: 70,
-      startVelocity: 55,
-      origin: { x: 1, y: 0.85 },
+      spread: 80,
+      startVelocity: 70,
+      origin: { x: 1, y: 0.75 },
       colors,
-      scalar: 0.9,
-      zIndex: 11000,
+      scalar: 1,
+      zIndex: Z,
     });
-    if (Date.now() < end) requestAnimationFrame(frame);
+  }, 200);
+
+  // Phase 3 — sustained streamer rain from both bottom corners (~1s)
+  const end = Date.now() + 1100;
+  const rain = () => {
+    confetti({
+      particleCount: 10,
+      angle: 60,
+      spread: 95,
+      startVelocity: 55,
+      origin: { x: 0, y: 0.9 },
+      colors,
+      scalar: 0.95,
+      zIndex: Z,
+    });
+    confetti({
+      particleCount: 10,
+      angle: 120,
+      spread: 95,
+      startVelocity: 55,
+      origin: { x: 1, y: 0.9 },
+      colors,
+      scalar: 0.95,
+      zIndex: Z,
+    });
+    if (Date.now() < end) requestAnimationFrame(rain);
   };
-  frame();
+  setTimeout(rain, 350);
 };
 
 export type AppliedCoupon = {
