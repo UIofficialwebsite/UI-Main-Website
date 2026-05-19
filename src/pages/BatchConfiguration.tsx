@@ -297,9 +297,8 @@ const BatchConfiguration = () => {
         ? prev.filter(id => id !== addonId)
         : [...prev, addonId]
     );
-    // Cart changed — invalidate any applied coupon. The CouponSection will
-    // re-fetch offers (and may auto-apply again the first time only).
-    if (appliedCoupon) setAppliedCoupon(null);
+    // Don't clear the coupon — CouponSection will re-validate against the new
+    // cart and either update the discount or drop it with a toast.
   };
 
   // --- Helper: Free Enrollment with Phone Number ---

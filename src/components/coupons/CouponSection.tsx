@@ -74,20 +74,50 @@ const CouponSection: React.FC<CouponSectionProps> = ({
     if (appliedCoupon?.code) setCouponInput(appliedCoupon.code);
   }, [appliedCoupon?.code]);
 
-  // Fetch eligible offers whenever the cart shape changes.
+  // Fetch eligible offers whenever the cart shape changes. If a coupon is
+  // currently applied, re-validate it against the new cart — keep it (with
+  // updated discount/final) when still valid; drop it with a toast otherwise.
+  // Adding/removing addons must not silently strip a user's coupon.
   useEffect(() => {
     if (!courseId) return;
     let cancelled = false;
-    const fetchOffers = async () => {
+    const fetchOffersAndRevalidate = async () => {
       setOffersLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke("list-eligible-coupons", {
+        const offersPromise = supabase.functions.invoke("list-eligible-coupons", {
           body: { courseId, selectedAddonIds },
         });
+        // Re-validate currently-applied coupon in parallel.
+        const revalidatePromise = appliedCoupon
+          ? supabase.functions.invoke("validate-coupon", {
+              body: { code: appliedCoupon.code, courseId, selectedAddonIds },
+            })
+          : Promise.resolve(null);
+
+        const [offersRes, revalRes] = await Promise.all([offersPromise, revalidatePromise]);
         if (cancelled) return;
-        if (error) { setOffers([]); return; }
-        const list = (data?.offers ?? []) as CouponOffer[];
-        setOffers(list);
+
+        const list = (offersRes.data?.offers ?? []) as CouponOffer[];
+        setOffers(offersRes.error ? [] : list);
+
+        if (revalRes && revalRes.data) {
+          if (revalRes.data.valid) {
+            // Cart changed — push the new discount + final back up.
+            onApply({
+              code: revalRes.data.code,
+              label: revalRes.data.label ?? null,
+              discountAmount: revalRes.data.discountAmount,
+              finalAmount: revalRes.data.finalAmount,
+            });
+          } else if (appliedCoupon) {
+            onRemove();
+            toast.info(
+              revalRes.data.reason
+                ? `${appliedCoupon.code} removed: ${revalRes.data.reason}`
+                : `${appliedCoupon.code} no longer applies to your cart.`,
+            );
+          }
+        }
 
         if (enableAutoApply && !autoAppliedOnce && !appliedCoupon) {
           const best = list.find((o) => o.eligible && o.isAutoApplied);
@@ -107,8 +137,9 @@ const CouponSection: React.FC<CouponSectionProps> = ({
         if (!cancelled) setOffersLoading(false);
       }
     };
-    fetchOffers();
+    fetchOffersAndRevalidate();
     return () => { cancelled = true; };
+    // intentionally limited deps — we only refire when the cart shape changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, selectedAddonIds.join(","), enableAutoApply]);
 
