@@ -1,73 +1,106 @@
-# Welcome to your Lovable project
+# UI-Main-Website
 
-## Project info
+Marketing and enrollment site for Unknown IITians — JEE, NEET and IITM BS prep. Users browse courses, enrol through Cashfree, and access materials in the connected student portal.
 
-**URL**: https://lovable.dev/projects/dca5d5ef-a639-4298-9504-2bbd9c207634
+Production: https://www.unknowniitians.com
+Student portal: https://ssp.unknowniitians.com
 
-## How can I edit this code?
+## Stack
 
-There are several ways of editing your application.
+- React 18 + Vite + TypeScript
+- Tailwind CSS, shadcn/ui components
+- Supabase (Postgres + Auth + Storage + Edge Functions)
+- Cashfree (INR payments), Resend (transactional email)
+- React Router, TanStack Query
 
-**Use Lovable**
+## Local setup
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/dca5d5ef-a639-4298-9504-2bbd9c207634) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requires Node 18+ and npm (bun works too — the lockfile is just convention).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone <repo-url>
+cd UI-Main-Website
+npm install
+cp .env.example .env       # fill in the values below
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The dev server runs on http://localhost:8080.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Environment
 
-**Use GitHub Codespaces**
+Only three keys are needed in `.env`. They are read by Vite at build time, so prefix them with `VITE_`.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PROJECT_ID=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+```
 
-## What technologies are used for this project?
+Server secrets (`SUPABASE_SERVICE_ROLE_KEY`, `CASHFREE_*`, `RESEND_API_KEY`, etc.) live on the Supabase edge functions, not in this repo.
 
-This project is built with:
+## Scripts
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```sh
+npm run dev         # vite dev server with HMR
+npm run build       # production build
+npm run build:dev   # build with development mode (sourcemaps, no minify)
+npm run preview     # serve the production build locally
+npm run lint        # eslint
+```
 
-## How can I deploy this project?
+## Layout
 
-Simply open [Lovable](https://lovable.dev/projects/dca5d5ef-a639-4298-9504-2bbd9c207634) and click on Share -> Publish.
+```
+src/
+  pages/            route components
+  components/
+    courses/        course detail, listing, configure flow
+    coupons/        coupon engine UI (apply, sheet, offers list)
+    dashboard/      student dashboard (post-login)
+    admin/          /admin/dashboard tabs (CRUD + reports)
+    ui/             shadcn primitives
+  hooks/            useAuth, useEnrollmentStatus, etc.
+  integrations/
+    supabase/       generated types + client
+  utils/            seoManager, format helpers
+supabase/
+  functions/        edge functions (see below)
+  migrations/       SQL migrations
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Edge functions
 
-Yes, you can!
+Payment-critical work lives in Supabase edge functions, not the browser. The webhook is the source of truth — never trust amount/status from the client.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- `create-cashfree-order` — creates a Cashfree order, recomputes amount + coupon discount server-side
+- `cashfree-webhook` — primary payment status path; idempotent via `processPaymentEvent`
+- `verify-cashfree-payment` — polled fallback for the redirect flow
+- `validate-coupon`, `list-eligible-coupons` — coupon engine; see `_shared/coupon-engine.ts`
+- `add-to-google-group`, `bulk-sync-google-group` — post-enrolment access provisioning
+- `reconcile-payments` — sweeps stuck orders against Cashfree
+- `get-youtube-playlist` — pulls free-lecture metadata
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Admin
+
+`/admin/dashboard` is gated by the `admin_users` table. Add an email row to grant access. Super-admins (set `is_super_admin = true`) get the Employees and Admin Management tabs in addition to everything else.
+
+Admins manage: courses, page banners, course FAQs, batch schedule, coupons, notes, PYQs, study groups, communities, news, important dates, jobs. Read-only views cover users, enrollments, payments, and coupon redemptions, all CSV-exportable.
+
+All admin actions happen inside the dashboard — the public site has no inline edit UI.
+
+## Payments
+
+The site uses Cashfree for ₹ payments. The webhook (`cashfree-webhook`) is the only thing that flips an enrolment to a paid state; the redirect-page polling exists for UX, not correctness. `processPaymentEvent` in `supabase/functions/_shared/` is idempotent and the single place where enrolments, coupon redemptions, and email triggers fire.
+
+If a payment looks stuck, check `payment_processor_log` and `cashfree_webhook_events` for the order ID before re-running `reconcile-payments`.
+
+## Deployment
+
+Frontend is a static Vite build. Push to `main` triggers the host's auto-deploy.
+
+Database migrations live under `supabase/migrations/`. Apply via the Supabase CLI or the Management API. Edge functions are deployed independently from `supabase/functions/`.
+
+## Contributing
+
+Commits attributed to a personal handle (see git log for convention). Type-check (`npx tsc --noEmit`) and lint before pushing. There is no formal PR template — keep commits scoped and write descriptive messages.
