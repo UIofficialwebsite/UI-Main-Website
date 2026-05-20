@@ -110,7 +110,7 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onExplore }) => (
       </div>
       <Button
         onClick={onExplore}
-        className="mt-4 w-full bg-[#1a1f36] hover:bg-[#1a1f36]/90 text-white h-9 text-sm"
+        className="mt-4 w-full bg-royal-dark hover:bg-royal text-white h-9 text-sm rounded-lg"
       >
         Explore <ArrowRight className="w-4 h-4 ml-1" />
       </Button>
