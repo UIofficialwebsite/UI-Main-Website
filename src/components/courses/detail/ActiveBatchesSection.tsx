@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ArrowRight } from 'lucide-react';
+import { CalendarRange, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { Button } from '@/components/ui/button';
@@ -102,7 +102,10 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onExplore }) => (
         {batch.title}
       </h3>
       <div className="flex items-start gap-2 mt-3 text-xs text-slate-600">
-        <Calendar className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+        <CalendarRange
+          className="w-4 h-4 text-royal-dark mt-0.5 shrink-0"
+          strokeWidth={1.75}
+        />
         <div className="flex flex-col leading-tight">
           <span>Starts: {formatDate(batch.start_date)}</span>
           <span className="text-slate-400">Ends: {formatDate(batch.end_date)}</span>
