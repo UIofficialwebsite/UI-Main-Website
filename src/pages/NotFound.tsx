@@ -941,22 +941,7 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white px-4 py-10">
       <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-3xl shadow-[0_12px_40px_-12px_rgba(15,23,42,0.18)] border border-slate-200/80 overflow-hidden p-3 sm:p-5">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 tracking-wide">
-                Whoops — take a tap break
-              </h2>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Help our pup dodge cacti and birds while you're here
-              </p>
-            </div>
-            <span className="text-[10px] uppercase tracking-[0.22em] text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1 font-semibold">
-              404
-            </span>
-          </div>
-          <DinoGame />
-        </div>
+        <DinoGame />
 
         <div className="text-center mt-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
