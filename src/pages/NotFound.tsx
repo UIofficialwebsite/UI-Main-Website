@@ -8,8 +8,10 @@ import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 // every entity is positioned via percentages so the canvas scales fluidly
 // inside its rounded card while collision math stays in pixel units.
 const GAME_W = 620;
-const GAME_H = 160;
-const GROUND_Y = 132;
+// Sky needs room for the full jump arc (~160 units) above the dog.
+// GAME_H/GROUND_Y are sized so dinoTop stays >= 0 at the apex.
+const GAME_H = 240;
+const GROUND_Y = 210;
 const DINO_X = 36;
 const DINO_W = 44;
 const DINO_H = 47;
@@ -94,10 +96,10 @@ let hillId = 0;
 let particleId = 0;
 
 const seedClouds = (): Cloud[] =>
-  Array.from({ length: 4 }, (_, i) => ({
+  Array.from({ length: 5 }, (_, i) => ({
     id: ++cloudId,
-    x: (GAME_W / 4) * i + Math.random() * 40,
-    y: 12 + Math.random() * 36,
+    x: (GAME_W / 5) * i + Math.random() * 40,
+    y: 14 + Math.random() * 90,
     w: 26 + Math.random() * 18,
     speed: 0.05 + Math.random() * 0.04,
   }));
@@ -505,7 +507,7 @@ const DinoGame = () => {
           advancedClouds.push({
             ...c,
             x: nx,
-            y: 12 + Math.random() * 36,
+            y: 14 + Math.random() * 90,
             w: 26 + Math.random() * 18,
             speed: 0.05 + Math.random() * 0.04,
           });
