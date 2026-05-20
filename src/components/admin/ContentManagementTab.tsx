@@ -21,8 +21,8 @@ const ContentManagementTab = () => {
     loadAllCourses();
   }, [loadAllNotes, loadAllPyqs, loadAllCourses]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
-  const [examTypeFilter, setExamTypeFilter] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('all');
+  const [examTypeFilter, setExamTypeFilter] = useState('all');
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -114,8 +114,8 @@ const ContentManagementTab = () => {
     return items.filter(item => {
       const matchesSearch = (item.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
                            (item.description || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesSubject = !subjectFilter || item.subject === subjectFilter;
-      const matchesExamType = !examTypeFilter || (item.exam_type || item.exam_category) === examTypeFilter;
+      const matchesSubject = subjectFilter === 'all' || item.subject === subjectFilter;
+      const matchesExamType = examTypeFilter === 'all' || (item.exam_type || item.exam_category) === examTypeFilter;
       
       return matchesSearch && matchesSubject && matchesExamType;
     });
@@ -158,8 +158,8 @@ const ContentManagementTab = () => {
               <SelectValue placeholder="Filter by subject" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Subjects</SelectItem>
-              {allSubjects.map(subject => (
+              <SelectItem value="all">All Subjects</SelectItem>
+              {allSubjects.filter(s => !!s && String(s).trim() !== '').map(subject => (
                 <SelectItem key={subject} value={subject}>{subject}</SelectItem>
               ))}
             </SelectContent>
@@ -170,8 +170,8 @@ const ContentManagementTab = () => {
               <SelectValue placeholder="Filter by exam type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Exam Types</SelectItem>
-              {allExamTypes.map(examType => (
+              <SelectItem value="all">All Exam Types</SelectItem>
+              {allExamTypes.filter(e => !!e && String(e).trim() !== '').map(examType => (
                 <SelectItem key={examType} value={examType}>{examType}</SelectItem>
               ))}
             </SelectContent>
@@ -317,7 +317,7 @@ const ContentManagementTab = () => {
                 <Select value={formData.subject} onValueChange={(value) => setFormData({ ...formData, subject: value })}>
                   <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
                   <SelectContent>
-                    {getSubjectOptions(formData.exam_type).map(subject => (
+                    {getSubjectOptions(formData.exam_type).filter(s => !!s && String(s).trim() !== '').map(subject => (
                       <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                     ))}
                   </SelectContent>

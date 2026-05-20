@@ -54,7 +54,7 @@ type FormState = {
   display_label: string;
   display_priority: string;
   is_first_purchase_only: boolean;
-  user_segment: "" | "new" | "returning" | "prev_enrolled";
+  user_segment: "any" | "new" | "returning" | "prev_enrolled";
   min_prev_enrollments: string;
   prev_enrolled_within_days: string;
   applicable_course_ids: string;
@@ -76,7 +76,7 @@ const emptyForm: FormState = {
   display_label: "",
   display_priority: "0",
   is_first_purchase_only: false,
-  user_segment: "",
+  user_segment: "any",
   min_prev_enrollments: "",
   prev_enrolled_within_days: "",
   applicable_course_ids: "",
@@ -233,7 +233,7 @@ const CouponsManagerTab: React.FC = () => {
       display_label: c.display_label ?? "",
       display_priority: c.display_priority?.toString() ?? "0",
       is_first_purchase_only: c.is_first_purchase_only,
-      user_segment: (c.user_segment ?? "") as FormState["user_segment"],
+      user_segment: ((c.user_segment ?? "any") || "any") as FormState["user_segment"],
       min_prev_enrollments: c.min_prev_enrollments?.toString() ?? "",
       prev_enrolled_within_days: c.prev_enrolled_within_days?.toString() ?? "",
       applicable_course_ids: (c.applicable_course_ids ?? []).join(", "),
@@ -303,7 +303,7 @@ const CouponsManagerTab: React.FC = () => {
       display_label: form.display_label.trim() || null,
       display_priority: Number(form.display_priority) || 0,
       is_first_purchase_only: form.is_first_purchase_only,
-      user_segment: form.user_segment || null,
+      user_segment: form.user_segment === "any" ? null : form.user_segment,
       min_prev_enrollments: form.min_prev_enrollments ? Number(form.min_prev_enrollments) : null,
       prev_enrolled_within_days: form.prev_enrolled_within_days ? Number(form.prev_enrolled_within_days) : null,
       applicable_course_ids: parseCsvUuids(form.applicable_course_ids).length
@@ -598,7 +598,7 @@ const CouponsManagerTab: React.FC = () => {
               <Select value={form.user_segment} onValueChange={(v: any) => setForm({ ...form, user_segment: v })}>
                 <SelectTrigger><SelectValue placeholder="Anyone (no segment rule)" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Anyone (no segment rule)</SelectItem>
+                  <SelectItem value="any">Anyone (no segment rule)</SelectItem>
                   <SelectItem value="new">New students (no prior enrollments)</SelectItem>
                   <SelectItem value="prev_enrolled">Returning students (already enrolled before)</SelectItem>
                 </SelectContent>
