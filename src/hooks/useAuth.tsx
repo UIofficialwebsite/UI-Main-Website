@@ -28,23 +28,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAdmin(false); setIsSuperAdmin(false); setUserRole(null); return;
     }
 
-    try {
-      const { data: isAdminResult } = await supabase.rpc('is_current_user_admin');
-      setIsAdmin(isAdminResult || false);
+    // Source of truth: anyone whose email is in `admin_users` is an admin.
+    // We check via the SECURITY DEFINER RPC first (which bypasses RLS),
+    // then fall back to a direct query in case the RPC is missing on a
+    // dev environment but RLS still lets the user see their own row.
+    const email = currentUser.email.toLowerCase();
 
-      if (isAdminResult) {
-        const { data: isSuperAdminResult } = await supabase.rpc('is_super_admin', { user_email: currentUser.email });
-        setIsSuperAdmin(isSuperAdminResult || false);
-        setUserRole(isSuperAdminResult ? 'super_admin' : 'admin');
-      } else {
-        setIsSuperAdmin(false);
-        // We can safely query by ID now because ID is a valid UUID
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
-        setUserRole(profile?.role || 'student');
+    let admin = false;
+    let superAdmin = false;
+
+    try {
+      const { data: rpcAdmin } = await supabase.rpc('is_current_user_admin');
+      if (rpcAdmin) admin = true;
+    } catch (err) {
+      console.warn('useAuth: is_current_user_admin RPC unavailable:', err);
+    }
+
+    if (!admin) {
+      try {
+        const { data: adminRow } = await supabase
+          .from('admin_users')
+          .select('is_super_admin')
+          .ilike('email', email)
+          .maybeSingle();
+        if (adminRow) {
+          admin = true;
+          superAdmin = !!adminRow.is_super_admin;
+        }
+      } catch (err) {
+        console.warn('useAuth: admin_users direct lookup failed:', err);
       }
-    } catch (error) {
-      console.error('useAuth: Error in checkAdminStatus:', error);
-      setIsAdmin(false); setUserRole('student');
+    }
+
+    if (admin && !superAdmin) {
+      try {
+        const { data: rpcSuper } = await supabase.rpc('is_super_admin', { user_email: email });
+        if (rpcSuper) superAdmin = true;
+      } catch (err) {
+        // Fall back to direct query for super-admin flag.
+        const { data: row } = await supabase
+          .from('admin_users')
+          .select('is_super_admin')
+          .ilike('email', email)
+          .maybeSingle();
+        if (row?.is_super_admin) superAdmin = true;
+      }
+    }
+
+    setIsAdmin(admin);
+    setIsSuperAdmin(superAdmin);
+
+    if (admin) {
+      setUserRole(superAdmin ? 'super_admin' : 'admin');
+      return;
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+      setUserRole(profile?.role || 'student');
+    } catch {
+      setUserRole('student');
     }
   };
 
