@@ -1,14 +1,15 @@
 import React, { useState } from "react";
-// Import for Tabs is removed, as it's the cause of the error.
 import { useAuth } from "@/hooks/useAuth";
 import AdminCheck from "@/components/admin/AdminCheck";
 import ContentManagementTab from "@/components/admin/ContentManagementTab";
 
-// Import admin components
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import CoursesManagerTab from "@/components/admin/CoursesManagerTab";
 import CouponsManagerTab from "@/components/admin/CouponsManagerTab";
+import PageBannersManagerTab from "@/components/admin/PageBannersManagerTab";
+import CourseFAQsManagerTab from "@/components/admin/CourseFAQsManagerTab";
+import BatchScheduleManagerTab from "@/components/admin/BatchScheduleManagerTab";
 import NotesManagerTab from "@/components/admin/NotesManagerTab";
 import PYQsManagerTab from "@/components/admin/PYQsManagerTab";
 import StudyGroupsManagerTab from "@/components/admin/StudyGroupsManagerTab";
@@ -16,6 +17,10 @@ import CommunitiesManagerTab from "@/components/admin/CommunitiesManagerTab";
 import NewsManagerTab from "@/components/admin/NewsManagerTab";
 import DatesManagerTab from "@/components/admin/DatesManagerTab";
 import JobsManagerTab from "@/components/admin/JobsManagerTab";
+import UsersViewTab from "@/components/admin/UsersViewTab";
+import EnrollmentsViewTab from "@/components/admin/EnrollmentsViewTab";
+import PaymentsViewTab from "@/components/admin/PaymentsViewTab";
+import CouponRedemptionsViewTab from "@/components/admin/CouponRedemptionsViewTab";
 import EmployeeManagerTab from "@/components/admin/EmployeeManagerTab";
 import AdminManagementTab from "@/components/admin/AdminManagementTab";
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
@@ -23,9 +28,7 @@ import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 const AdminDashboard = () => {
   usePageSEO(SEO_TITLES.ADMIN_DASHBOARD, "/admin/dashboard");
   const [activeTab, setActiveTab] = useState("content-management");
-  const { isLoading, user, isAdmin } = useAuth();
-
-  console.log('AdminDashboard - Auth state:', { isLoading, user: user?.email, isAdmin });
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -37,40 +40,39 @@ const AdminDashboard = () => {
 
   return (
     <AdminCheck>
-      <div className="flex h-screen bg-gray-100">
-        {/* Sidebar */}
+      <div className="flex h-screen bg-slate-50">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        
-        {/* Main content */}
+
         <div className="flex flex-col flex-1 overflow-hidden">
           <AdminHeader />
-          
-          {/* --- THIS IS THE FIX ---
-            The <Tabs> and <TabsContent> wrappers were removed.
-            We now use simple conditional rendering based on the 'activeTab' state,
-            which is already being managed by the AdminSidebar.
-            This eliminates the 'React.Children.only' error.
-          */}
+
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="w-full">
-              {activeTab === 'content-management' && <ContentManagementTab />}
-              {activeTab === 'courses' && <CoursesManagerTab />}
-              {activeTab === 'coupons' && <CouponsManagerTab />}
-              {activeTab === 'notes' && <NotesManagerTab />}
-              {activeTab === 'pyqs' && <PYQsManagerTab />}
-              {activeTab === 'study-groups' && <StudyGroupsManagerTab />}
-              {activeTab === 'communities' && <CommunitiesManagerTab />}
-              {activeTab === 'news' && <NewsManagerTab />}
-              {activeTab === 'dates' && <DatesManagerTab />}
-              {activeTab === 'jobs' && <JobsManagerTab />}
-              
-              {activeTab === 'employees' && (
+            <div className="w-full max-w-[1400px] mx-auto">
+              {activeTab === "content-management" && <ContentManagementTab />}
+              {activeTab === "courses" && <CoursesManagerTab />}
+              {activeTab === "page-banners" && <PageBannersManagerTab />}
+              {activeTab === "course-faqs" && <CourseFAQsManagerTab />}
+              {activeTab === "batch-schedule" && <BatchScheduleManagerTab />}
+              {activeTab === "coupons" && <CouponsManagerTab />}
+              {activeTab === "notes" && <NotesManagerTab />}
+              {activeTab === "pyqs" && <PYQsManagerTab />}
+              {activeTab === "study-groups" && <StudyGroupsManagerTab />}
+              {activeTab === "communities" && <CommunitiesManagerTab />}
+              {activeTab === "news" && <NewsManagerTab />}
+              {activeTab === "dates" && <DatesManagerTab />}
+              {activeTab === "jobs" && <JobsManagerTab />}
+              {activeTab === "users" && <UsersViewTab />}
+              {activeTab === "enrollments" && <EnrollmentsViewTab />}
+              {activeTab === "payments" && <PaymentsViewTab />}
+              {activeTab === "coupon-redemptions" && <CouponRedemptionsViewTab />}
+
+              {activeTab === "employees" && (
                 <AdminCheck requireSuperAdmin>
                   <EmployeeManagerTab />
                 </AdminCheck>
               )}
-              
-              {activeTab === 'admins' && (
+
+              {activeTab === "admins" && (
                 <AdminCheck requireSuperAdmin>
                   <AdminManagementTab />
                 </AdminCheck>
