@@ -155,7 +155,7 @@ const IITMBSSubjectNotesPage = () => {
 
       <main className="pt-16">
         {/* PAGE BANNER */}
-        <HeroCarousel pagePath={location.pathname} />
+        <HeroCarousel pagePath={location.pathname} fullWidth />
 
         {/* EXAM PREP HEADER */}
         <ExamPrepHeader 

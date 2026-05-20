@@ -56,7 +56,7 @@ const Courses = () => {
       <NavBar />
       
       <main className="pt-16">
-        <HeroCarousel pagePath={location.pathname} />
+        <HeroCarousel pagePath={location.pathname} fullWidth />
 
         {/* Hero Area */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8">

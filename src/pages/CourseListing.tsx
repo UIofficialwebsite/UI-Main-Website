@@ -147,7 +147,7 @@ const CourseListing = () => {
     <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfcfc] relative">
       <NavBar />
       <main className="pt-16">
-        <HeroCarousel pagePath={location.pathname} />
+        <HeroCarousel pagePath={location.pathname} fullWidth />
 
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />

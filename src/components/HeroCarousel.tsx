@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface HeroCarouselProps {
   pagePath?: string;
+  fullWidth?: boolean;
 }
 
-const HeroCarousel = ({ pagePath = "/" }: HeroCarouselProps) => {
+const HeroCarousel = ({ pagePath = "/", fullWidth = false }: HeroCarouselProps) => {
   const [carouselImages, setCarouselImages] = useState<{ src: string; alt: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -85,11 +86,15 @@ const HeroCarousel = ({ pagePath = "/" }: HeroCarouselProps) => {
           {carouselImages.map((image, index) => (
             <div
               key={index}
-              className="flex-[0_0_100%] md:flex-[0_0_80%] lg:flex-[0_0_72%] xl:flex-[0_0_68%] min-w-0 px-2 md:px-3"
+              className={
+                fullWidth
+                  ? "flex-[0_0_100%] min-w-0"
+                  : "flex-[0_0_100%] md:flex-[0_0_80%] lg:flex-[0_0_72%] xl:flex-[0_0_68%] min-w-0 px-2 md:px-3"
+              }
             >
               <div
                 className={`overflow-hidden rounded-xl shadow-md transition-all duration-500 ease-out ${
-                  index === selectedIndex
+                  fullWidth || index === selectedIndex
                     ? "opacity-100 scale-100"
                     : "opacity-60 scale-[0.97]"
                 }`}
