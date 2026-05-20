@@ -16,6 +16,7 @@ import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar';
 import CourseHeader from '@/components/courses/detail/CourseHeader';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
+import ActiveBatchesSection from '@/components/courses/detail/ActiveBatchesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
@@ -159,6 +160,14 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
 
   const hasOptionalItems = addons.length > 0;
 
+  // Mirror EnrollmentCard's expiry check: course enrollment is closed once
+  // `valid_till` has passed. When closed, surface other active batches of the
+  // same branch/level so the visitor doesn't hit a dead end.
+  const isCourseExpired = useMemo(() => {
+    if (!course?.valid_till) return false;
+    return new Date() > new Date(course.valid_till);
+  }, [course?.valid_till]);
+
   const isFullyEnrolled = useMemo(() => {
     if (!isMainCourseOwned) return false;
     if (!hasOptionalItems) return true; 
@@ -236,6 +245,7 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             <div className="lg:col-span-7 space-y-6">
               <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
+              {isCourseExpired && <ActiveBatchesSection currentCourse={course} />}
               <div ref={sectionRefs.curriculum}>
                 <SubjectsSection course={course} addons={addons} />
               </div>
@@ -277,6 +287,7 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div className="lg:col-span-7 space-y-8">
               <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
+              {isCourseExpired && <ActiveBatchesSection currentCourse={course} />}
               <div ref={sectionRefs.curriculum}>
                 <SubjectsSection course={course} addons={addons} />
               </div>
