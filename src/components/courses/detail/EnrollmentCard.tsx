@@ -274,16 +274,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         <div ref={cardRef} className={cn("lg:scale-95 lg:origin-top", className)}>
             <div className={cn("rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl", className ? "bg-none p-0 shadow-none" : "")}>
                 <Card className={cn("overflow-hidden rounded-lg font-sans bg-white", className ? "border-none shadow-none" : "")}>
-                    {course.image_url && course.image_url !== '/placeholder.svg' && (
-                        <CardHeader className="p-0">
-                            <img
-                                src={course.image_url}
-                                alt={course.title}
-                                className="w-full h-auto object-cover aspect-video"
-                                loading="lazy"
-                            />
-                        </CardHeader>
-                    )}
+                    <CardHeader className="p-0">
+                        <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
+                    </CardHeader>
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             {renderPrice()}
