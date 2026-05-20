@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Menu, X, Atom, Stethoscope, GraduationCap, BookOpen,
   ChevronRight, ArrowLeft, LogOut, ChevronDown, CircleUser,
-  PencilLine, Monitor, Shield
+  PencilLine, Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,7 +91,6 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAd
               onClick={() => navigate("/admin/dashboard")}
               className="px-5 py-3.5 cursor-pointer text-[#1d4ed8] hover:bg-[#eff6ff]"
             >
-              <Shield className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
               <span className="text-[16px] font-medium">Admin Panel</span>
             </DropdownMenuItem>
           </>

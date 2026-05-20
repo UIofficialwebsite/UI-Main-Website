@@ -219,11 +219,13 @@ const BatchScheduleManagerTab = () => {
             <SelectValue placeholder="Select a course…" />
           </SelectTrigger>
           <SelectContent className="max-h-80">
-            {courses.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.title}
-              </SelectItem>
-            ))}
+            {courses
+              .filter((c) => !!c.id)
+              .map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.title || "(untitled)"}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
         <div className="relative flex-1">

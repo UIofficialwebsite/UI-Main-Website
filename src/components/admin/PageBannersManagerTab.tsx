@@ -144,7 +144,13 @@ const PageBannersManagerTab = () => {
   };
 
   const knownPaths = useMemo(
-    () => Array.from(new Set([...COMMON_PATHS, ...banners.map((b) => b.page_path)])).sort(),
+    () =>
+      Array.from(
+        new Set([
+          ...COMMON_PATHS,
+          ...banners.map((b) => b.page_path).filter((p) => !!p && p.trim() !== ""),
+        ])
+      ).sort(),
     [banners]
   );
 

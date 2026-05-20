@@ -269,11 +269,13 @@ const EnrollmentsViewTab = () => {
           </SelectTrigger>
           <SelectContent className="max-h-80">
             <SelectItem value="all">All courses</SelectItem>
-            {courses.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.title}
-              </SelectItem>
-            ))}
+            {courses
+              .filter((c) => !!c.id)
+              .map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.title || "(untitled)"}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

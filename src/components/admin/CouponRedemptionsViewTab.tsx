@@ -194,11 +194,13 @@ const CouponRedemptionsViewTab = () => {
           </SelectTrigger>
           <SelectContent className="max-h-80">
             <SelectItem value="all">All coupons</SelectItem>
-            {coupons.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.code}
-              </SelectItem>
-            ))}
+            {coupons
+              .filter((c) => !!c.id)
+              .map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.code || "(no code)"}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

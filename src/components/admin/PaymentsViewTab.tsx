@@ -93,7 +93,8 @@ const PaymentsViewTab = () => {
     if (data) {
       const set = new Set<string>();
       (data as { payment_mode: string | null }[]).forEach((r) => {
-        if (r.payment_mode) set.add(r.payment_mode);
+        const v = r.payment_mode?.trim();
+        if (v) set.add(v);
       });
       setModes(Array.from(set).sort());
     }
@@ -271,11 +272,13 @@ const PaymentsViewTab = () => {
           </SelectTrigger>
           <SelectContent className="max-h-80">
             <SelectItem value="all">All modes</SelectItem>
-            {modes.map((m) => (
-              <SelectItem key={m} value={m}>
-                {m}
-              </SelectItem>
-            ))}
+            {modes
+              .filter((m) => !!m && m.trim() !== "")
+              .map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
