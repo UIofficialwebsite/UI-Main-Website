@@ -1,6 +1,5 @@
 import React from "react";
 import { Download } from "lucide-react";
-import AdminAddButton from "@/components/admin/AdminAddButton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
@@ -40,12 +39,6 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <AdminAddButton contentType="pyqs" examType="IITM_BS" branch={branchSlug} level={levelSlug}>
-          Add Paper
-        </AdminAddButton>
-      </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {contentLoading ? (
           <div className="col-span-3 flex justify-center py-20 animate-pulse text-slate-400 font-bold">LOADING PAPERS...</div>

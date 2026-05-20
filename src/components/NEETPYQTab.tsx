@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download, Trash2 } from "lucide-react";
+import { Download } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import AuthWrapper from "@/components/AuthWrapper";
 import { ShimmerButton } from "./ui/shimmer-button";
@@ -13,14 +12,12 @@ interface NEETPYQTabProps {
 }
 
 const NEETPYQTab = ({ subject, year, session }: NEETPYQTabProps) => {
-  const { 
-    isAdmin, 
-    handleDownload, 
-    downloadCounts, 
+  const {
+    handleDownload,
+    downloadCounts,
     updateDownloadCount,
     pyqs,
     contentLoading,
-    deletePyq
   } = useBackend();
   
   // Filter pyqs by filters and exam type
@@ -42,12 +39,6 @@ const NEETPYQTab = ({ subject, year, session }: NEETPYQTabProps) => {
 
   const handleDownloadClick = async (pyqId: string, fileUrl?: string) => {
     await handleDownload(pyqId, 'pyqs', fileUrl);
-  };
-
-  const handleDeleteClick = async (pyqId: string) => {
-    if (window.confirm('Are you sure you want to delete this PYQ?')) {
-      await deletePyq(pyqId);
-    }
   };
 
   const currentDownloads = downloadCounts;
@@ -76,16 +67,6 @@ const NEETPYQTab = ({ subject, year, session }: NEETPYQTabProps) => {
                         </div>
                       )}
                     </div>
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteClick(pyq.id)}
-                        className="admin-only text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </CardHeader>
                 <CardFooter className="flex justify-between">

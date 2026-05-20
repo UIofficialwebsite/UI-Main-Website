@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download } from "lucide-react";
-import AdminAddButton from "@/components/admin/AdminAddButton";
 import { ShimmerButton } from "./ui/shimmer-button";
 import { ShareButton } from "./ShareButton";
 
@@ -64,30 +63,20 @@ const SubjectPyqs = ({
 
   return (
     <div className="mt-4">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Year</label>
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-full max-w-xs">
-              <SelectValue placeholder="Select Year" />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((year) => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <AdminAddButton 
-          contentType="pyqs"
-          examType={examType}
-          prefilledSubject={subject}
-        >
-          Add {subject} PYQs
-        </AdminAddButton>
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Select Year</label>
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger className="w-full max-w-xs">
+            <SelectValue placeholder="Select Year" />
+          </SelectTrigger>
+          <SelectContent>
+            {years.map((year) => (
+              <SelectItem key={year} value={year}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="mb-4">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Eye, Trash2 } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import { ShimmerButton } from './ui/shimmer-button';
 import { ShareButton } from './ShareButton';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,8 +26,6 @@ interface ChapterListProps {
     chapters: Chapter[];
     downloadCounts: Record<string, number>;
     onDownload: (noteId: string, fileUrl?: string) => Promise<void>;
-    isAdmin?: boolean;
-    onDelete?: (noteId: string) => Promise<void>;
     contentType?: 'notes' | 'pyqs';
 }
 
@@ -55,7 +53,7 @@ const buildNoteUrl = (chapter: Chapter, contentType: string): string => {
     return window.location.href;
 };
 
-const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onDownload, isAdmin, onDelete, contentType = 'notes' }) => {
+const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onDownload, contentType = 'notes' }) => {
     const { user } = useAuth();
     const { openLogin } = useLoginModal();
 
@@ -111,17 +109,6 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onD
                                     <span className="hidden md:inline">Download</span>
                                 </span>
                             </ShimmerButton>
-                            {isAdmin && onDelete && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => onDelete(chapter.id)}
-                                    className="text-red-600 hover:text-red-800"
-                                    title="Delete note"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
                         </div>
                     </li>
                 ))}
