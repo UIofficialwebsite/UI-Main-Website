@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { 
+import {
   Menu, X, Atom, Stethoscope, GraduationCap, BookOpen,
   ChevronRight, ArrowLeft, LogOut, ChevronDown, CircleUser,
-  PencilLine, Monitor
+  PencilLine, Monitor, Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,7 @@ import { useLoginModal } from "@/context/LoginModalContext";
 import { supabase } from "@/integrations/supabase/client";
 
 // --- STABLE PROFILE MENU COMPONENT ---
-const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: any) => {
+const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAdmin }: any) => {
   // Priority: 1. Database Profile, 2. Google Metadata, 3. Fallback "User"
   const displayName = profile?.full_name || user?.user_metadata?.full_name || "User";
   const displayEmail = user?.email;
@@ -83,9 +83,22 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: an
              </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
-        
+
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
+            <DropdownMenuItem
+              onClick={() => navigate("/admin/dashboard")}
+              className="px-5 py-3.5 cursor-pointer text-[#1d4ed8] hover:bg-[#eff6ff]"
+            >
+              <Shield className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+              <span className="text-[16px] font-medium">Admin Panel</span>
+            </DropdownMenuItem>
+          </>
+        )}
+
         <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
-        
+
         <DropdownMenuItem onClick={handleSignOut} className="px-5 py-3.5 cursor-pointer text-[#dc2626] hover:bg-[#f9fafb]">
           <LogOut className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
           <span className="text-[16px] font-medium">Logout</span>
@@ -96,7 +109,7 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: an
 };
 
 const NavBar = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { courses, loadCourses } = useBackend();
   useEffect(() => { loadCourses(); }, [loadCourses]);
   const { openLogin } = useLoginModal();
@@ -241,12 +254,13 @@ const NavBar = () => {
 
           <div className="flex items-center">
             {user ? (
-              <ProfileMenu 
-                user={user} 
-                profile={profile} 
-                handleSignOut={handleSignOut} 
-                navigate={navigate} 
-                isDashboard={isDashboard} 
+              <ProfileMenu
+                user={user}
+                profile={profile}
+                handleSignOut={handleSignOut}
+                navigate={navigate}
+                isDashboard={isDashboard}
+                isAdmin={isAdmin}
               />
             ) : (
               <Button 
@@ -348,12 +362,13 @@ const NavBar = () => {
 
           <div className="flex items-center gap-3">
             {user ? (
-              <ProfileMenu 
-                user={user} 
-                profile={profile} 
-                handleSignOut={handleSignOut} 
-                navigate={navigate} 
-                isDashboard={isDashboard} 
+              <ProfileMenu
+                user={user}
+                profile={profile}
+                handleSignOut={handleSignOut}
+                navigate={navigate}
+                isDashboard={isDashboard}
+                isAdmin={isAdmin}
               />
             ) : (
               <Button 
