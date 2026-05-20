@@ -1,8 +1,118 @@
 import { useLocation } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
+
+// WebAudio-synthesized SFX. No asset files — each effect is built from
+// oscillators / noise buffers so the bundle stays light. AudioContext is
+// created lazily on the first sound (browsers require a user gesture to
+// resume; the player always interacts before sounds play).
+const MUTE_KEY = "ui-404-muted";
+const sfx = (() => {
+  let ctx: AudioContext | null = null;
+  let muted = false;
+  try {
+    muted = localStorage.getItem(MUTE_KEY) === "1";
+  } catch {
+    /* localStorage blocked — leave default */
+  }
+  const getCtx = (): AudioContext | null => {
+    if (muted || typeof window === "undefined") return null;
+    if (!ctx) {
+      const Ctor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!Ctor) return null;
+      try {
+        ctx = new Ctor();
+      } catch {
+        return null;
+      }
+    }
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+    }
+    return ctx;
+  };
+  const tone = (
+    c: AudioContext,
+    t: number,
+    type: OscillatorType,
+    fromHz: number,
+    toHz: number,
+    dur: number,
+    peakGain: number
+  ) => {
+    const o = c.createOscillator();
+    const g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(fromHz, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(1, toHz), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peakGain, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(c.destination);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  };
+  return {
+    isMuted: () => muted,
+    setMuted: (m: boolean) => {
+      muted = m;
+      try {
+        localStorage.setItem(MUTE_KEY, m ? "1" : "0");
+      } catch {
+        /* localStorage blocked — fine */
+      }
+    },
+    jump: () => {
+      const c = getCtx();
+      if (!c) return;
+      tone(c, c.currentTime, "sine", 620, 920, 0.11, 0.18);
+    },
+    duck: () => {
+      const c = getCtx();
+      if (!c) return;
+      tone(c, c.currentTime, "square", 300, 150, 0.09, 0.08);
+    },
+    milestone: () => {
+      const c = getCtx();
+      if (!c) return;
+      const t0 = c.currentTime;
+      // C5–E5–G5 quick triad
+      tone(c, t0, "triangle", 523.25, 523.25, 0.16, 0.12);
+      tone(c, t0 + 0.05, "triangle", 659.25, 659.25, 0.16, 0.12);
+      tone(c, t0 + 0.1, "triangle", 783.99, 783.99, 0.2, 0.14);
+    },
+    crash: () => {
+      const c = getCtx();
+      if (!c) return;
+      const t = c.currentTime;
+      // Noise burst — feels like a dust impact.
+      const dur = 0.4;
+      const buf = c.createBuffer(
+        1,
+        Math.floor(c.sampleRate * dur),
+        c.sampleRate
+      );
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      }
+      const noise = c.createBufferSource();
+      noise.buffer = buf;
+      const nGain = c.createGain();
+      nGain.gain.setValueAtTime(0.22, t);
+      nGain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      noise.connect(nGain).connect(c.destination);
+      noise.start(t);
+      // Low square fall — the "ow" underneath.
+      tone(c, t, "square", 280, 60, 0.35, 0.22);
+    },
+  };
+})();
 
 // Chrome-dino-style runner. Logical coordinates are in a fixed 620×160 grid;
 // every entity is positioned via percentages so the canvas scales fluidly
@@ -387,6 +497,8 @@ const DinoGame = () => {
   const cloudsRef = useRef<Cloud[]>(clouds);
   const hillsRef = useRef<Hill[]>(hills);
   const particlesRef = useRef<Particle[]>([]);
+  const lastMilestoneRef = useRef(0);
+  const [muted, setMuted] = useState(() => sfx.isMuted());
 
   // Day/night palette derived from score — flips every NIGHT_EVERY points.
   const palette = useMemo(
@@ -417,6 +529,7 @@ const DinoGame = () => {
     spawnGapRef.current = 1400;
     legAccRef.current = 0;
     flapAccRef.current = 0;
+    lastMilestoneRef.current = 0;
     // fresh backdrop so the parallax doesn't carry over from a previous run
     const freshClouds = seedClouds();
     const freshHills = seedHills();
@@ -439,11 +552,15 @@ const DinoGame = () => {
     }
     if (dinoYRef.current === 0) {
       vyRef.current = JUMP_V;
+      sfx.jump();
     }
   }, [start]);
 
   const duck = useCallback((on: boolean) => {
     if (statusRef.current !== "running") return;
+    if (on && !duckingRef.current) {
+      sfx.duck();
+    }
     duckingRef.current = on;
     setDucking(on);
     if (on && dinoYRef.current > 0) {
@@ -611,7 +728,14 @@ const DinoGame = () => {
       setObstacles(advanced);
 
       scoreRef.current += (speedRef.current * dt) / 8;
-      setScore(Math.floor(scoreRef.current));
+      const flooredScore = Math.floor(scoreRef.current);
+      setScore(flooredScore);
+      // Chime when crossing each 100-pt mark — small but consistent reward.
+      const milestone = Math.floor(flooredScore / 100);
+      if (milestone > lastMilestoneRef.current) {
+        lastMilestoneRef.current = milestone;
+        sfx.milestone();
+      }
 
       if (hit) {
         const finalScore = Math.floor(scoreRef.current);
@@ -639,6 +763,7 @@ const DinoGame = () => {
         setParticles(burst);
         setShake(true);
         window.setTimeout(() => setShake(false), 420);
+        sfx.crash();
         setStatus("over");
         return;
       }
@@ -779,6 +904,23 @@ const DinoGame = () => {
               {String(score).padStart(5, "0")}
             </span>
           </div>
+
+          {/* mute toggle — top-left, doesn't trigger jump (button blocks pointer) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const next = !muted;
+              sfx.setMuted(next);
+              setMuted(next);
+            }}
+            className="absolute top-2 left-2 z-10 inline-flex items-center justify-center rounded-md p-1.5 transition-colors"
+            style={{ color: palette.textMuted, background: "transparent" }}
+            aria-label={muted ? "Unmute game sounds" : "Mute game sounds"}
+            title={muted ? "Sound off" : "Sound on"}
+          >
+            {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
 
           {/* ground line */}
           <div
