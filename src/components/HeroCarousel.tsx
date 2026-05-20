@@ -80,7 +80,7 @@ const HeroCarousel = ({ pagePath = "/", fullWidth = false }: HeroCarouselProps) 
   }
 
   return (
-    <div className="relative w-full py-4">
+    <div className={`relative w-full ${fullWidth ? "" : "py-4"}`}>
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex">
           {carouselImages.map((image, index) => (
@@ -93,7 +93,9 @@ const HeroCarousel = ({ pagePath = "/", fullWidth = false }: HeroCarouselProps) 
               }
             >
               <div
-                className={`overflow-hidden rounded-xl shadow-md transition-all duration-500 ease-out ${
+                className={`overflow-hidden transition-all duration-500 ease-out ${
+                  fullWidth ? "" : "rounded-xl shadow-md"
+                } ${
                   fullWidth || index === selectedIndex
                     ? "opacity-100 scale-100"
                     : "opacity-60 scale-[0.97]"
@@ -112,7 +114,7 @@ const HeroCarousel = ({ pagePath = "/", fullWidth = false }: HeroCarouselProps) 
       </div>
 
       {carouselImages.length > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
+        <div className={`flex justify-center gap-2 ${fullWidth ? "mt-2" : "mt-4"}`}>
           {carouselImages.map((_, index) => (
             <button
               key={index}
