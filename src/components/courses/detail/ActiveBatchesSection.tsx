@@ -91,28 +91,14 @@ interface BatchCardProps {
   onExplore: () => void;
 }
 
-const BatchCard: React.FC<BatchCardProps> = ({ batch, onExplore }) => {
-  const isUpcoming = !!batch.start_date && new Date(batch.start_date) > new Date();
-  return (
+const BatchCard: React.FC<BatchCardProps> = ({ batch, onExplore }) => (
   <div className="snap-start flex-none w-[260px] sm:w-[280px] bg-white border border-[#e3e8ee] rounded-lg overflow-hidden flex flex-col hover:border-[#1a1f36] transition-colors">
-    <div className="relative">
-      <img
-        src={batch.image_url || '/placeholder.svg'}
-        alt={batch.title}
-        className="w-full aspect-video object-cover bg-slate-50"
-        loading="lazy"
-      />
-      <span
-        className={
-          'absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ' +
-          (isUpcoming
-            ? 'bg-amber-100 text-amber-800 border border-amber-200'
-            : 'bg-emerald-100 text-emerald-800 border border-emerald-200')
-        }
-      >
-        {isUpcoming ? 'Upcoming' : 'Active'}
-      </span>
-    </div>
+    <img
+      src={batch.image_url || '/placeholder.svg'}
+      alt={batch.title}
+      className="w-full aspect-video object-cover bg-slate-50"
+      loading="lazy"
+    />
     <div className="p-4 flex-1 flex flex-col">
       <h3 className="text-sm font-semibold text-[#1a1f36] line-clamp-2 min-h-[2.5rem]">
         {batch.title}
@@ -135,7 +121,6 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onExplore }) => {
       </Button>
     </div>
   </div>
-  );
-};
+);
 
 export default ActiveBatchesSection;
