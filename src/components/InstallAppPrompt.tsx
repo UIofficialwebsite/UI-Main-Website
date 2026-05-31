@@ -141,12 +141,12 @@ const InstallAppPrompt = () => {
     <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center lg:hidden font-['Inter',sans-serif]">
       {/* Square top edge (no rounded upper border), full-width sheet rising from below. No shadow. */}
       <div className="relative w-full overflow-hidden border-t border-slate-200 bg-white animate-in slide-in-from-bottom-6 duration-300">
-        {/* Hero image — taller, on a soft sky gradient */}
-        <div className="h-56 w-full bg-gradient-to-b from-sky-100 via-sky-50 to-white">
+        {/* Hero — deep-blue gradient with the app icon */}
+        <div className="flex h-56 w-full items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500">
           <img
-            src="/web-uploads/uibanner.png"
+            src="/pwa-192x192.png"
             alt="Unknown IITians app"
-            className="h-full w-full object-cover"
+            className="h-28 w-28 rounded-2xl ring-1 ring-white/30"
             loading="lazy"
           />
         </div>
@@ -190,14 +190,14 @@ const InstallAppPrompt = () => {
 
           <button
             onClick={handleInstall}
-            className="mt-6 w-full rounded-xl bg-[#5b3df5] px-4 py-4 text-base font-bold text-white transition-colors active:bg-[#4a2fd6]"
+            className="mt-6 w-full rounded-xl bg-blue-800 px-4 py-4 font-['Inter',sans-serif] text-base font-bold text-white transition-colors active:bg-blue-900"
           >
             Install App
           </button>
 
           <button
             onClick={dismiss}
-            className="mt-1.5 w-full rounded-xl py-4 text-[15px] font-semibold text-[#5b3df5] transition-colors active:bg-slate-50"
+            className="mt-1.5 w-full rounded-xl py-4 font-['Inter',sans-serif] text-[15px] font-semibold text-blue-800 transition-colors active:bg-slate-50"
           >
             Continue in Web
           </button>
