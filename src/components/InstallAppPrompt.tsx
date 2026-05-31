@@ -26,20 +26,20 @@ const DISMISS_KEY = "ui-install-dismissed-v1";
 // Rotating headline + one-line description pairs.
 const MESSAGES: { title: string; subtitle: string }[] = [
   {
-    title: "Exclusive App-Only Features",
-    subtitle: "Practice tests, quizzes & doubt-solving",
+    title: "Ace Your IITM BS Journey",
+    subtitle: "Live classes for Qualifier, Foundation & Diploma",
   },
   {
-    title: "Your Entire Prep in One App",
-    subtitle: "Download now & start learning today",
+    title: "Crack JEE & NEET 2026",
+    subtitle: "Mock tests, PYQs & real-time doubt solving",
   },
   {
-    title: "Live Classes On The Go",
-    subtitle: "Never miss a lecture — learn anywhere",
+    title: "Learn Live from IITians",
+    subtitle: "Expert-led classes, anytime, anywhere",
   },
   {
-    title: "Free Notes & PYQs",
-    subtitle: "Study material for JEE, NEET & IITM BS",
+    title: "Free Notes, PYQs & Tools",
+    subtitle: "Complete study material for JEE, NEET & IITM BS",
   },
 ];
 
