@@ -43,6 +43,13 @@ const MESSAGES: { title: string; subtitle: string }[] = [
   },
 ];
 
+// Rotating hero gradients (full class literals so Tailwind keeps them).
+const GRADIENTS = [
+  "bg-gradient-to-br from-rose-600 via-red-500 to-orange-500",
+  "bg-gradient-to-br from-emerald-600 via-green-500 to-teal-500",
+  "bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500",
+];
+
 function isStandalone(): boolean {
   return (
     window.matchMedia?.("(display-mode: standalone)").matches ||
@@ -61,6 +68,7 @@ const InstallAppPrompt = () => {
   const [visible, setVisible] = useState(false);
   const [showIosSteps, setShowIosSteps] = useState(false);
   const [msgIndex, setMsgIndex] = useState(0);
+  const [gradIndex, setGradIndex] = useState(0);
 
   // Did the QR / link explicitly ask us to show the install prompt?
   const forced =
@@ -116,6 +124,7 @@ const InstallAppPrompt = () => {
     if (!visible || showIosSteps) return;
     const id = setInterval(() => {
       setMsgIndex((i) => (i + 1) % MESSAGES.length);
+      setGradIndex((g) => (g + 1) % GRADIENTS.length);
     }, 3000);
     return () => clearInterval(id);
   }, [visible, showIosSteps]);
@@ -141,14 +150,16 @@ const InstallAppPrompt = () => {
     <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center lg:hidden font-['Inter',sans-serif]">
       {/* Square top edge (no rounded upper border), full-width sheet rising from below. No shadow. */}
       <div className="relative w-full overflow-hidden border-t border-slate-200 bg-white animate-in slide-in-from-bottom-6 duration-300">
-        {/* Hero — deep-blue gradient with the app icon */}
-        <div className="flex h-56 w-full items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500">
-          <img
-            src="/pwa-192x192.png"
-            alt="Unknown IITians app"
-            className="h-28 w-28 rounded-2xl ring-1 ring-white/30"
-            loading="lazy"
-          />
+        {/* Hero — rotating gradient (crossfades through 3 looks) */}
+        <div className="relative h-56 w-full overflow-hidden">
+          {GRADIENTS.map((g, i) => (
+            <div
+              key={i}
+              className={`absolute inset-0 ${g} transition-opacity duration-700 ${
+                i === gradIndex ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          ))}
         </div>
 
         <div className="px-6 pb-7 pt-6 text-center">
