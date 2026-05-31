@@ -9,6 +9,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
 import { LoginModalProvider } from "@/context/LoginModalContext";
 import GlobalLoginModal from "@/components/auth/GlobalLoginModal";
+import InstallAppPrompt from "@/components/InstallAppPrompt";
+import ScanToInstall from "@/components/ScanToInstall";
 import ScrollPersistence from "@/components/ScrollPersistence";
 import { Suspense, lazy, ComponentType } from "react";
 
@@ -111,6 +113,8 @@ const App = () => (
             <LoginModalProvider>
               <ScrollPersistence />
               <GlobalLoginModal />
+              <InstallAppPrompt />
+              <ScanToInstall />
               
               <Suspense fallback={
                 <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">
