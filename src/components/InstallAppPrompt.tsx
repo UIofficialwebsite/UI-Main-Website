@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { X, Download, Share, Plus } from "lucide-react";
+import { Share, Plus } from "lucide-react";
 
 /**
  * Auto-showing "Install this app" invitation.
@@ -139,18 +139,10 @@ const InstallAppPrompt = () => {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center lg:hidden font-['Inter',sans-serif]">
-      {/* Square top edge (no rounded upper border), full-width sheet rising from below */}
-      <div className="relative w-full overflow-hidden bg-white shadow-[0_-8px_30px_rgba(15,23,42,0.18)] animate-in slide-in-from-bottom-6 duration-300">
-        <button
-          onClick={dismiss}
-          aria-label="Dismiss"
-          className="absolute right-3 top-3 z-10 rounded-full bg-white/80 p-1.5 text-slate-500 backdrop-blur transition-colors hover:bg-white hover:text-slate-700"
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        {/* Hero image */}
-        <div className="h-36 w-full bg-gradient-to-b from-sky-50 to-white">
+      {/* Square top edge (no rounded upper border), full-width sheet rising from below. No shadow. */}
+      <div className="relative w-full overflow-hidden border-t border-slate-200 bg-white animate-in slide-in-from-bottom-6 duration-300">
+        {/* Hero image — taller, on a soft sky gradient */}
+        <div className="h-56 w-full bg-gradient-to-b from-sky-100 via-sky-50 to-white">
           <img
             src="/web-uploads/uibanner.png"
             alt="Unknown IITians app"
@@ -159,8 +151,8 @@ const InstallAppPrompt = () => {
           />
         </div>
 
-        <div className="px-5 pb-5 pt-3 text-center">
-          <p className="text-xs font-medium text-slate-400">
+        <div className="px-6 pb-7 pt-6 text-center">
+          <p className="text-[13px] font-medium text-slate-400">
             Get the Unknown IITians App for
           </p>
 
@@ -189,24 +181,23 @@ const InstallAppPrompt = () => {
           ) : (
             // Rotating headline + description (re-mounts each cycle for a fade-in)
             <div key={msgIndex} className="animate-in fade-in duration-500">
-              <h2 className="mt-1 text-2xl font-extrabold leading-tight text-slate-900">
+              <h2 className="mt-2 text-[26px] font-extrabold leading-tight tracking-tight text-slate-900">
                 {msg.title}
               </h2>
-              <p className="mt-1.5 text-sm text-slate-500">{msg.subtitle}</p>
+              <p className="mt-2 text-[15px] text-slate-500">{msg.subtitle}</p>
             </div>
           )}
 
           <button
             onClick={handleInstall}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3.5 text-base font-bold text-white shadow-lg shadow-violet-600/25 transition-transform active:scale-[0.98]"
+            className="mt-6 w-full rounded-xl bg-[#5b3df5] px-4 py-4 text-base font-bold text-white transition-colors active:bg-[#4a2fd6]"
           >
-            <Download className="h-5 w-5" />
             Install App
           </button>
 
           <button
             onClick={dismiss}
-            className="mt-2.5 text-sm font-medium text-indigo-600 hover:underline"
+            className="mt-1.5 w-full rounded-xl py-4 text-[15px] font-semibold text-[#5b3df5] transition-colors active:bg-slate-50"
           >
             Continue in Web
           </button>
