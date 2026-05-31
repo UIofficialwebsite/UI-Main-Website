@@ -27,7 +27,7 @@ const ScanToInstall = () => {
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Hide QR code" : "Scan to install app"}
-          className="flex h-7 shrink-0 items-center justify-center gap-0.5 rounded-l-md bg-blue-600 px-1.5 text-white transition-transform duration-200 active:scale-95"
+          className="flex h-7 shrink-0 items-center justify-center gap-0.5 rounded-l-md bg-blue-800 px-1.5 text-white transition-transform duration-200 active:scale-95"
         >
           {open ? (
             <ChevronRight className="h-4 w-4" />
@@ -45,7 +45,7 @@ const ScanToInstall = () => {
             open ? "w-[116px] opacity-100" : "w-0 opacity-0"
           }`}
         >
-          <div className="rounded-b-lg rounded-tr-lg bg-blue-600 p-2 shadow-md">
+          <div className="rounded-b-lg rounded-tr-lg bg-blue-800 p-2 shadow-md">
             <div className="rounded-md bg-white p-1.5">
               <img
                 src={QR_SRC}
