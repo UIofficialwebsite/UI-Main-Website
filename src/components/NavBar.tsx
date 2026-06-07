@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { supabase } from "@/integrations/supabase/client";
+import PushNotificationToggle from "@/components/PushNotificationToggle";
 
 // --- STABLE PROFILE MENU COMPONENT ---
 const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAdmin }: any) => {
@@ -82,6 +83,8 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAd
                <span className="text-[16px] font-medium">My Enrollments</span>
              </DropdownMenuItem>
           )}
+
+          <PushNotificationToggle />
         </DropdownMenuGroup>
 
         {isAdmin && (

@@ -19,6 +19,7 @@ import {
   ClipboardList,
   CreditCard,
   Receipt,
+  Bell,
   LucideIcon,
 } from "lucide-react";
 
@@ -70,6 +71,7 @@ const groups: MenuGroup[] = [
       { id: "news", label: "News Updates", icon: Newspaper },
       { id: "dates", label: "Important Dates", icon: Calendar },
       { id: "jobs", label: "Jobs", icon: Briefcase },
+      { id: "push-notifications", label: "Push Notifications", icon: Bell },
     ],
   },
   {

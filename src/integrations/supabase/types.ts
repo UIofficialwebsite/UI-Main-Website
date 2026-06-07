@@ -1055,6 +1055,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_seen: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_seen?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_seen?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payment_processor_log: {
         Row: {
           amount: number | null
@@ -1674,6 +1707,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      save_push_subscription: {
+        Args: {
+          p_endpoint: string
+          p_p256dh: string
+          p_auth: string
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
+      delete_push_subscription: {
+        Args: { p_endpoint: string }
+        Returns: undefined
+      }
       bulk_assign_promotional_group_slots: {
         Args: { p_emails: string[]; p_group_id: string }
         Returns: number

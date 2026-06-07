@@ -21,6 +21,7 @@ import UsersViewTab from "@/components/admin/UsersViewTab";
 import EnrollmentsViewTab from "@/components/admin/EnrollmentsViewTab";
 import PaymentsViewTab from "@/components/admin/PaymentsViewTab";
 import CouponRedemptionsViewTab from "@/components/admin/CouponRedemptionsViewTab";
+import PushNotificationsManagerTab from "@/components/admin/PushNotificationsManagerTab";
 import EmployeeManagerTab from "@/components/admin/EmployeeManagerTab";
 import AdminManagementTab from "@/components/admin/AdminManagementTab";
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
@@ -65,6 +66,7 @@ const AdminDashboard = () => {
               {activeTab === "enrollments" && <EnrollmentsViewTab />}
               {activeTab === "payments" && <PaymentsViewTab />}
               {activeTab === "coupon-redemptions" && <CouponRedemptionsViewTab />}
+              {activeTab === "push-notifications" && <PushNotificationsManagerTab />}
 
               {activeTab === "employees" && (
                 <AdminCheck requireSuperAdmin>

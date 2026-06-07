@@ -1,5 +1,6 @@
 {
   "imports": {
-    "resend": "npm:resend@3.4.0"
+    "resend": "npm:resend@3.4.0",
+    "web-push": "npm:web-push@3.6.7"
   }
 }
