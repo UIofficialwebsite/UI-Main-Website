@@ -35,7 +35,8 @@ const HeroCarousel = ({ pagePath = "/", fullWidth = false }: HeroCarouselProps) 
         const { data, error } = await supabase
           .from("page_banners")
           .select("image_url")
-          .eq("page_path", pagePath);
+          .eq("page_path", pagePath)
+          .order("created_at", { ascending: false });
 
         if (error) {
           console.error("Error fetching banners:", error);

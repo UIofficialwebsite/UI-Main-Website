@@ -63,7 +63,7 @@ const PageBannersManagerTab = () => {
       .from("page_banners")
       .select("*")
       .order("page_path", { ascending: true })
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false });
     if (error) {
       toast({
         title: "Couldn't load banners",
