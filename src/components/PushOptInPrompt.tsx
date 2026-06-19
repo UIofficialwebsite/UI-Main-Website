@@ -101,7 +101,7 @@ const PushOptInPrompt = () => {
         </button>
 
         <div className="flex items-start gap-3 pr-6">
-          <Bell className="mt-0.5 h-5 w-5 shrink-0 text-slate-700" strokeWidth={1.8} />
+          <Bell className="mt-0.5 h-5 w-5 shrink-0 text-golden-dark" strokeWidth={1.8} />
           <div className="min-w-0">
             <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
               Turn on notifications
