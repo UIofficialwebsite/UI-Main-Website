@@ -91,7 +91,7 @@ const PushOptInPrompt = () => {
 
   return (
     <div className="fixed z-[1000] inset-x-4 bottom-4 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[356px] font-['Inter',sans-serif] animate-in slide-in-from-bottom-3 fade-in duration-300">
-      <div className="relative rounded-[12px] border border-slate-200 bg-white p-5 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.22)]">
+      <div className="relative rounded-[8px] border border-slate-200 bg-white p-5 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.18)]">
         <button
           onClick={snooze}
           aria-label="Dismiss"
@@ -100,31 +100,30 @@ const PushOptInPrompt = () => {
           <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-center gap-3 pr-6">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-slate-200 bg-slate-50">
-            <Bell className="h-[18px] w-[18px] text-slate-700" strokeWidth={1.8} />
+        <div className="flex items-start gap-3 pr-6">
+          <Bell className="mt-0.5 h-5 w-5 shrink-0 text-slate-700" strokeWidth={1.8} />
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
+              Turn on notifications
+            </h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              Get notified about offers, new batches, study resources and career
+              &amp; job openings.
+            </p>
           </div>
-          <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
-            Turn on notifications
-          </h3>
         </div>
 
-        <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
-          Get notified about offers, new batches, study resources and career
-          &amp; job openings.
-        </p>
-
-        <div className="mt-4 flex items-center gap-1">
+        <div className="mt-4 flex items-center gap-2.5">
           <button
             onClick={handleEnable}
             disabled={working}
-            className="rounded-[8px] bg-royal px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-royal-dark disabled:opacity-60"
+            className="rounded-[6px] bg-royal px-4 py-2 font-['Inter',sans-serif] text-[13px] font-semibold text-white shadow-none transition-colors hover:bg-royal-dark disabled:opacity-60"
           >
             {working ? "Turning on…" : "Turn on"}
           </button>
           <button
             onClick={snooze}
-            className="rounded-[8px] px-3 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:text-slate-600"
+            className="rounded-[6px] border border-slate-200 bg-white px-4 py-2 font-['Inter',sans-serif] text-[13px] font-semibold text-slate-600 shadow-none transition-colors hover:bg-slate-50"
           >
             Not now
           </button>
