@@ -102,9 +102,12 @@ serve(async (req: Request) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 
-  // Cron-only: require the service-role key as the bearer.
-  const auth = req.headers.get("authorization") ?? "";
-  if (auth !== `Bearer ${serviceKey}`) return json({ error: "Forbidden." }, 403);
+  // Cron-only: require the shared secret. Deployed with --no-verify-jwt, so the
+  // gateway doesn't gate it — this header is the access control.
+  const cronSecret = Deno.env.get("CRON_SECRET") ?? "";
+  if (!cronSecret || req.headers.get("x-cron-secret") !== cronSecret) {
+    return json({ error: "Forbidden." }, 403);
+  }
 
   if ((Deno.env.get("CART_RECOVERY_ENABLED") ?? "").toLowerCase() !== "true") {
     return json({ disabled: true, scanned: 0, recovered: 0 });
