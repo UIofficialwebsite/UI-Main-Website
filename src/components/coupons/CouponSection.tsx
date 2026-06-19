@@ -314,10 +314,40 @@ const CouponSection: React.FC<CouponSectionProps> = ({
     }
   };
 
+  // Auto-apply a coupon passed via ?coupon= (e.g. from a cart-recovery email).
+  // Persist it in sessionStorage so it survives the course-detail -> checkout
+  // navigation, and apply once the course/cart is ready. Cleared when the user
+  // removes the coupon, or automatically when the tab closes.
+  useEffect(() => {
+    if (!courseId) return;
+    let pending: string | null = null;
+    try {
+      const fromUrl = new URLSearchParams(window.location.search).get("coupon");
+      if (fromUrl && fromUrl.trim()) {
+        pending = fromUrl.trim();
+        sessionStorage.setItem("ui-pending-coupon", pending);
+      } else {
+        pending = sessionStorage.getItem("ui-pending-coupon");
+      }
+    } catch {
+      /* storage unavailable (private mode) */
+    }
+    if (pending && !appliedCoupon) {
+      applyCode(pending);
+    }
+    // Apply once when the course becomes available; intentionally limited deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
+
   const removeApplied = () => {
     onRemove();
     setCouponInput("");
     setCouponError(null);
+    try {
+      sessionStorage.removeItem("ui-pending-coupon");
+    } catch {
+      /* ignore */
+    }
   };
 
   const teaserSubtitle = appliedCoupon
