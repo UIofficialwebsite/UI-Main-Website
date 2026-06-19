@@ -10,6 +10,7 @@ import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper"
 import { LoginModalProvider } from "@/context/LoginModalContext";
 import GlobalLoginModal from "@/components/auth/GlobalLoginModal";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
+import PushOptInPrompt from "@/components/PushOptInPrompt";
 import ScanToInstall from "@/components/ScanToInstall";
 import ScrollPersistence from "@/components/ScrollPersistence";
 import { Suspense, lazy, ComponentType } from "react";
@@ -114,6 +115,7 @@ const App = () => (
               <ScrollPersistence />
               <GlobalLoginModal />
               <InstallAppPrompt />
+              <PushOptInPrompt />
               <ScanToInstall />
               
               <Suspense fallback={
