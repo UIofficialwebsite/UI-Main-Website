@@ -91,6 +91,7 @@ const PushOptInPrompt = () => {
 
   return (
     <div className="fixed z-[1000] inset-x-4 bottom-4 sm:inset-x-auto sm:left-5 sm:bottom-5 sm:w-[356px] font-['Inter',sans-serif] animate-in slide-in-from-bottom-3 fade-in duration-300">
+      <style>{BELL_STYLE}</style>
       <div className="relative rounded-[8px] border border-slate-200 bg-white p-5 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.18)]">
         <button
           onClick={snooze}
@@ -101,7 +102,11 @@ const PushOptInPrompt = () => {
         </button>
 
         <div className="flex items-start gap-3 pr-6">
-          <Bell className="mt-0.5 h-5 w-5 shrink-0 text-golden-dark" strokeWidth={1.8} />
+          <Bell
+            className="pn-bell mt-0.5 h-5 w-5 shrink-0 text-golden-dark"
+            fill="#fbbf24"
+            strokeWidth={1.8}
+          />
           <div className="min-w-0">
             <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
               Turn on notifications
@@ -132,5 +137,18 @@ const PushOptInPrompt = () => {
     </div>
   );
 };
+
+// Subtle periodic "ring" — the bell tilts gently every few seconds.
+const BELL_STYLE = `
+  @keyframes pnBellTilt {
+    0%, 70%, 100% { transform: rotate(0deg); }
+    76% { transform: rotate(9deg); }
+    82% { transform: rotate(-7deg); }
+    88% { transform: rotate(4deg); }
+    94% { transform: rotate(-2deg); }
+  }
+  .pn-bell { transform-origin: 50% 16%; animation: pnBellTilt 3.6s ease-in-out 1s infinite; }
+  @media (prefers-reduced-motion: reduce) { .pn-bell { animation: none; } }
+`;
 
 export default PushOptInPrompt;
