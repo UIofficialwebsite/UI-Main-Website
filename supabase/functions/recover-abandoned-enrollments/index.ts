@@ -49,6 +49,7 @@ function emailHtml(name: string, course: string, url: string): string {
   const c = esc(course);
   const font =
     "'Inter',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  const serif = "Georgia,'Times New Roman',Times,serif";
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></head>
@@ -57,8 +58,7 @@ function emailHtml(name: string, course: string, url: string): string {
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;">
         <tr><td style="padding:32px 32px 0 32px;">
-          <p style="margin:0 0 24px;font-family:${font};font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1e3a8a;">Unknown IITians</p>
-          <h1 style="margin:0 0 12px;font-family:${font};font-size:21px;font-weight:700;color:#0f172a;">Complete your enrolment</h1>
+          <h1 style="margin:0 0 12px;font-family:${serif};font-size:23px;font-weight:700;color:#0f172a;">Complete your enrolment</h1>
           <p style="margin:0 0 4px;font-family:${font};font-size:14px;line-height:1.65;color:#475569;">
             Hi ${hi}, you recently started enrolling in <strong style="color:#0f172a;">${c}</strong> but did not complete checkout. Your place is still available — finish your enrolment to secure it.
           </p>
