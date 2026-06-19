@@ -54,7 +54,7 @@ function emailHtml(name: string, course: string, url: string): string {
 <body style="margin:0;padding:0;background:#f4f4f5;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px;">
     <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;background:#ffffff;border:1px solid #e5e7eb;">
         <tr><td style="padding:40px 40px 0 40px;font-family:${serif};">
           <h1 style="margin:0 0 18px;font-size:24px;font-weight:700;color:#1a1a1a;letter-spacing:-0.2px;">Complete your enrolment</h1>
           <div style="border-top:1px solid #ececec;"></div>
@@ -67,7 +67,7 @@ function emailHtml(name: string, course: string, url: string): string {
         </td></tr>
 
         <tr><td style="padding:26px 40px 0 40px;font-family:${serif};">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:6px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;">
             <tr><td style="padding:18px 22px;">
               <p style="margin:0 0 6px;font-size:13px;color:#71717a;">Apply this code at checkout for 10% off</p>
               <p style="margin:0;font-size:19px;font-weight:700;letter-spacing:3px;color:#1e3a8a;">${COUPON}</p>
@@ -75,8 +75,8 @@ function emailHtml(name: string, course: string, url: string): string {
           </table>
         </td></tr>
 
-        <tr><td style="padding:28px 40px 4px 40px;font-family:${serif};">
-          <a href="${url}" style="display:inline-block;background:#1e3a8a;color:#ffffff;font-family:${serif};font-size:15px;font-weight:600;text-decoration:none;padding:13px 30px;border-radius:6px;">Complete enrolment</a>
+        <tr><td align="center" style="padding:28px 40px 4px 40px;font-family:${serif};text-align:center;">
+          <a href="${url}" style="display:inline-block;background:#1e3a8a;color:#ffffff;font-family:${serif};font-size:15px;font-weight:600;text-decoration:none;padding:13px 30px;">Complete enrolment</a>
         </td></tr>
 
         <tr><td style="padding:28px 40px 0 40px;">
