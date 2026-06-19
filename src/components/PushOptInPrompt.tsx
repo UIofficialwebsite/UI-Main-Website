@@ -74,7 +74,8 @@ const PushOptInPrompt = () => {
     if (ok) {
       toast({
         title: "Notifications enabled",
-        description: "You'll hear about new batches, classes and offers.",
+        description:
+          "You'll hear about offers, new batches, resources and job openings.",
       });
     } else {
       // Permission denied / dismissed — don't keep pestering.
@@ -89,99 +90,48 @@ const PushOptInPrompt = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed z-[1000] inset-x-4 bottom-4 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[384px] font-['Inter',sans-serif] animate-in slide-in-from-bottom-6 fade-in zoom-in-95 duration-500">
-      <style>{PROMPT_STYLES}</style>
-
-      <div className="relative overflow-hidden rounded-[22px] bg-white shadow-[0_24px_60px_-15px_rgba(26,86,219,0.4)] ring-1 ring-slate-900/[0.06]">
-        {/* Top gradient hairline — royal sweeping into the brand gold */}
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-royal via-royal-light to-golden" />
-
-        {/* Atmospheric glow behind the icon for depth */}
-        <div className="pointer-events-none absolute -left-10 -top-14 h-40 w-40 rounded-full bg-gradient-to-br from-royal/25 via-royal/10 to-golden/10 blur-3xl" />
-
+    <div className="fixed z-[1000] inset-x-4 bottom-4 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[356px] font-['Inter',sans-serif] animate-in slide-in-from-bottom-3 fade-in duration-300">
+      <div className="relative rounded-[12px] border border-slate-200 bg-white p-5 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.22)]">
         <button
           onClick={snooze}
           aria-label="Dismiss"
-          className="absolute right-3.5 top-3.5 z-10 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          className="absolute right-3 top-3 rounded-md p-1 text-slate-300 transition-colors hover:text-slate-500"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <div className="relative p-5 pt-[22px]">
-          <div className="flex items-start gap-4">
-            {/* Dimensional icon medallion with gloss, ring, glow + live gold ping */}
-            <div className="relative shrink-0">
-              <div className="relative grid h-[52px] w-[52px] place-items-center rounded-[16px] bg-gradient-to-br from-royal-light via-royal to-royal-dark shadow-[0_10px_22px_-6px_rgba(26,86,219,0.65)] ring-1 ring-white/25">
-                {/* glossy top sheen */}
-                <div className="pointer-events-none absolute inset-0 rounded-[16px] bg-gradient-to-b from-white/30 to-transparent" />
-                <Bell
-                  className="pn-bell relative h-[23px] w-[23px] text-white drop-shadow-sm"
-                  strokeWidth={2.2}
-                />
-              </div>
-              {/* live notification dot */}
-              <span className="absolute -right-1 -top-1 flex h-4 w-4">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-golden opacity-75" />
-                <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-golden-light to-golden ring-[2.5px] ring-white">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/90" />
-                </span>
-              </span>
-            </div>
-
-            <div className="min-w-0 pr-4">
-              <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-royal">
-                Stay updated
-              </p>
-              <h3 className="mt-1 text-[16.5px] font-bold leading-[1.2] tracking-tight text-slate-900">
-                Never miss a new batch
-              </h3>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-                Live class alerts, fresh batches and limited-time offers —
-                delivered straight to your device.
-              </p>
-            </div>
+        <div className="flex items-center gap-3 pr-6">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-slate-200 bg-slate-50">
+            <Bell className="h-[18px] w-[18px] text-slate-700" strokeWidth={1.8} />
           </div>
+          <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
+            Turn on notifications
+          </h3>
+        </div>
 
-          <div className="mt-5 flex items-center gap-2.5">
-            <button
-              onClick={handleEnable}
-              disabled={working}
-              className="group relative flex-1 overflow-hidden rounded-[13px] bg-gradient-to-b from-royal to-royal-dark px-4 py-[11px] text-sm font-semibold text-white shadow-[0_8px_18px_-5px_rgba(26,86,219,0.6)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-5px_rgba(26,86,219,0.7)] active:translate-y-0 disabled:opacity-60 disabled:hover:translate-y-0"
-            >
-              {/* sheen swipe on hover */}
-              <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              <span className="relative">
-                {working ? "Enabling…" : "Enable notifications"}
-              </span>
-            </button>
-            <button
-              onClick={snooze}
-              className="rounded-[13px] px-3.5 py-[11px] text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            >
-              Not now
-            </button>
-          </div>
+        <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
+          Get notified about offers, new batches, study resources and career
+          &amp; job openings.
+        </p>
+
+        <div className="mt-4 flex items-center gap-1">
+          <button
+            onClick={handleEnable}
+            disabled={working}
+            className="rounded-[8px] bg-royal px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-royal-dark disabled:opacity-60"
+          >
+            {working ? "Turning on…" : "Turn on"}
+          </button>
+          <button
+            onClick={snooze}
+            className="rounded-[8px] px-3 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:text-slate-600"
+          >
+            Not now
+          </button>
         </div>
       </div>
     </div>
   );
 };
-
-// Scoped keyframes (unique names so they never collide with global styles).
-const PROMPT_STYLES = `
-  @keyframes pnBellRing {
-    0%, 55%, 100% { transform: rotate(0deg); }
-    60% { transform: rotate(15deg); }
-    66% { transform: rotate(-13deg); }
-    72% { transform: rotate(9deg); }
-    78% { transform: rotate(-6deg); }
-    84% { transform: rotate(3deg); }
-    90% { transform: rotate(0deg); }
-  }
-  .pn-bell { transform-origin: 50% 18%; animation: pnBellRing 4s ease-in-out 0.6s infinite; }
-  @media (prefers-reduced-motion: reduce) {
-    .pn-bell { animation: none; }
-  }
-`;
 
 export default PushOptInPrompt;
