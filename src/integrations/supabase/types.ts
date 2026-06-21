@@ -1034,6 +1034,63 @@ export type Database = {
         }
         Relationships: []
       }
+      abandoned_cart_recovery: {
+        Row: {
+          coupon_code: string | null
+          course_id: string | null
+          created_at: string
+          email_sent: boolean
+          enrollment_id: string
+          id: string
+          push_sent: boolean
+          user_id: string | null
+        }
+        Insert: {
+          coupon_code?: string | null
+          course_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          enrollment_id: string
+          id?: string
+          push_sent?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          coupon_code?: string | null
+          course_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          enrollment_id?: string
+          id?: string
+          push_sent?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cart_recovery_config: {
+        Row: {
+          coupon_code: string
+          enabled: boolean
+          id: number
+          min_coupon_amount: number
+          updated_at: string
+        }
+        Insert: {
+          coupon_code?: string
+          enabled?: boolean
+          id?: number
+          min_coupon_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          coupon_code?: string
+          enabled?: boolean
+          id?: number
+          min_coupon_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       page_banners: {
         Row: {
           created_at: string

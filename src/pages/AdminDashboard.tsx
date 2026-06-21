@@ -22,6 +22,7 @@ import EnrollmentsViewTab from "@/components/admin/EnrollmentsViewTab";
 import PaymentsViewTab from "@/components/admin/PaymentsViewTab";
 import CouponRedemptionsViewTab from "@/components/admin/CouponRedemptionsViewTab";
 import PushNotificationsManagerTab from "@/components/admin/PushNotificationsManagerTab";
+import CartRecoveryManagerTab from "@/components/admin/CartRecoveryManagerTab";
 import EmployeeManagerTab from "@/components/admin/EmployeeManagerTab";
 import AdminManagementTab from "@/components/admin/AdminManagementTab";
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
@@ -67,6 +68,7 @@ const AdminDashboard = () => {
               {activeTab === "payments" && <PaymentsViewTab />}
               {activeTab === "coupon-redemptions" && <CouponRedemptionsViewTab />}
               {activeTab === "push-notifications" && <PushNotificationsManagerTab />}
+              {activeTab === "cart-recovery" && <CartRecoveryManagerTab />}
 
               {activeTab === "employees" && (
                 <AdminCheck requireSuperAdmin>

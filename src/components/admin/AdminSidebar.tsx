@@ -20,6 +20,7 @@ import {
   CreditCard,
   Receipt,
   Bell,
+  MailWarning,
   LucideIcon,
 } from "lucide-react";
 
@@ -72,6 +73,7 @@ const groups: MenuGroup[] = [
       { id: "dates", label: "Important Dates", icon: Calendar },
       { id: "jobs", label: "Jobs", icon: Briefcase },
       { id: "push-notifications", label: "Push Notifications", icon: Bell },
+      { id: "cart-recovery", label: "Cart Recovery", icon: MailWarning },
     ],
   },
   {

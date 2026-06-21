@@ -44,10 +44,21 @@ function esc(s: string): string {
 // Professional, minimal dual-tone (royal blue + slate) transactional email.
 // Table-based with inline styles for broad email-client support; slightly
 // rounded surfaces; no decorative imagery or emoji.
-function emailHtml(name: string, course: string, url: string): string {
+function emailHtml(name: string, course: string, url: string, withCoupon: boolean): string {
   const hi = name ? esc(name.split(" ")[0]) : "there";
   const c = esc(course);
   const serif = "Georgia,'Times New Roman',Times,serif";
+  const couponBlock = withCoupon
+    ? `
+        <tr><td style="padding:26px 40px 0 40px;font-family:${serif};">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;">
+            <tr><td style="padding:18px 22px;">
+              <p style="margin:0 0 6px;font-size:13px;color:#71717a;">Apply this code at checkout for 10% off</p>
+              <p style="margin:0;font-size:19px;font-weight:700;letter-spacing:3px;color:#1e3a8a;">${COUPON}</p>
+            </td></tr>
+          </table>
+        </td></tr>`
+    : "";
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -65,16 +76,7 @@ function emailHtml(name: string, course: string, url: string): string {
             You recently began enrolling in <strong style="color:#1a1a1a;">${c}</strong> but did not complete checkout. Your place is still available, and you can finish your enrolment whenever you are ready.
           </p>
         </td></tr>
-
-        <tr><td style="padding:26px 40px 0 40px;font-family:${serif};">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;">
-            <tr><td style="padding:18px 22px;">
-              <p style="margin:0 0 6px;font-size:13px;color:#71717a;">Apply this code at checkout for 10% off</p>
-              <p style="margin:0;font-size:19px;font-weight:700;letter-spacing:3px;color:#1e3a8a;">${COUPON}</p>
-            </td></tr>
-          </table>
-        </td></tr>
-
+${couponBlock}
         <tr><td align="center" style="padding:28px 40px 4px 40px;font-family:${serif};text-align:center;">
           <a href="${url}" style="display:inline-block;background:#1e3a8a;color:#ffffff;font-family:${serif};font-size:15px;font-weight:600;text-decoration:none;padding:13px 30px;">Complete enrolment</a>
         </td></tr>
@@ -133,16 +135,12 @@ serve(async (req: Request) => {
         from: "Unknown IITians <desk@unknowniitians.com>",
         to: [body.test_email],
         subject: `Complete your enrolment for ${sampleCourse}`,
-        html: emailHtml("Tester", sampleCourse, sampleUrl),
+        html: emailHtml("Tester", sampleCourse, sampleUrl, true),
       });
       return json({ test: true, emailed: !mailErr, to: body.test_email, error: mailErr?.message ?? null });
     } catch (e) {
       return json({ test: true, emailed: false, error: (e as Error).message }, 500);
     }
-  }
-
-  if ((Deno.env.get("CART_RECOVERY_ENABLED") ?? "").toLowerCase() !== "true") {
-    return json({ disabled: true, scanned: 0, recovered: 0 });
   }
 
   const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
@@ -153,6 +151,20 @@ serve(async (req: Request) => {
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  // Admin-editable config: on/off switch + the minimum cart amount that earns a
+  // coupon. At/above the threshold we include COUPON; below it we send a plain
+  // "you didn't finish" reminder with no discount (so we never dangle a coupon
+  // on a cheap order, or one the user can't even use).
+  const { data: cfg } = await admin
+    .from("cart_recovery_config")
+    .select("enabled, min_coupon_amount")
+    .eq("id", 1)
+    .maybeSingle();
+  if (!cfg?.enabled) {
+    return json({ disabled: true, scanned: 0, recovered: 0 });
+  }
+  const minCoupon = Number(cfg.min_coupon_amount ?? 0);
 
   if (vapidPublic && vapidPrivate) {
     webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
@@ -168,6 +180,9 @@ serve(async (req: Request) => {
   let emailed = 0;
 
   for (const c of list) {
+    // At/above the threshold, offer the coupon; below it, a plain reminder.
+    const withCoupon = Number(c.amount ?? 0) >= minCoupon;
+
     // Claim this enrollment first (idempotency). If another run already claimed
     // it, the insert conflicts and we skip — no double nudge.
     const { data: claim, error: claimErr } = await admin
@@ -176,17 +191,21 @@ serve(async (req: Request) => {
         enrollment_id: c.enrollment_id,
         user_id: c.user_id,
         course_id: c.course_id,
-        coupon_code: COUPON,
+        coupon_code: withCoupon ? COUPON : null,
       })
       .select("id")
       .maybeSingle();
     if (claimErr || !claim) continue; // conflict / already handled
 
     recovered++;
-    const url = `${SITE}/courses/${c.course_id}?coupon=${COUPON}`;
+    const url = withCoupon
+      ? `${SITE}/courses/${c.course_id}?coupon=${COUPON}`
+      : `${SITE}/courses/${c.course_id}`;
 
     // Allowlist this recipient so COMEBACK10 only works for people we email.
-    await admin.rpc("allow_recovery_coupon_email", { p_email: c.email });
+    if (withCoupon) {
+      await admin.rpc("allow_recovery_coupon_email", { p_email: c.email });
+    }
 
     // --- Web Push (to every device this user has) ---
     let didPush = false;
@@ -197,7 +216,9 @@ serve(async (req: Request) => {
         .eq("user_id", c.user_id);
       const payload = JSON.stringify({
         title: "Complete your enrolment",
-        body: `Your enrolment for ${c.course_title} is incomplete. Use ${COUPON} for 10% off.`,
+        body: withCoupon
+          ? `Your enrolment for ${c.course_title} is incomplete. Use ${COUPON} for 10% off.`
+          : `Your enrolment for ${c.course_title} is incomplete. Complete it to secure your place.`,
         url,
         icon: "/favicon.ico",
       });
@@ -226,7 +247,7 @@ serve(async (req: Request) => {
           from: "Unknown IITians <desk@unknowniitians.com>",
           to: [c.email],
           subject: `Complete your enrolment for ${c.course_title}`,
-          html: emailHtml(c.full_name ?? "", c.course_title, url),
+          html: emailHtml(c.full_name ?? "", c.course_title, url, withCoupon),
         });
         didEmail = !mailErr;
       } catch (_e) {
