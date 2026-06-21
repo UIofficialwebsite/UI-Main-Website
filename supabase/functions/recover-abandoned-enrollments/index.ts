@@ -114,7 +114,7 @@ serve(async (req: Request) => {
   // Test mode: POST {"test_email":"you@x.com"} to send one sample recovery email
   // to that address. Ignores the enabled flag and candidate list (still requires
   // the secret above) so the email + link can be verified without real users.
-  let body: { test_email?: string } = {};
+  let body: { test_email?: string; with_coupon?: boolean } = {};
   try {
     body = await req.json();
   } catch {
@@ -123,21 +123,25 @@ serve(async (req: Request) => {
   if (body?.test_email) {
     const key = Deno.env.get("RESEND_API_KEY") ?? "";
     if (!key) return json({ test: true, emailed: false, error: "RESEND_API_KEY not set" }, 500);
+    const withCoupon = body.with_coupon !== false; // default true
     const sampleCourse = "IITM BS Foundation Batch";
-    const sampleUrl = `${SITE}/courses/c2ca5644-6047-4be5-833a-2d70ca05a1ec?coupon=${COUPON}`;
-    // Allowlist the test address so the code actually applies for it.
-    const testAdmin = createClient(supabaseUrl, serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-    await testAdmin.rpc("allow_recovery_coupon_email", { p_email: body.test_email });
+    const courseUrl = `${SITE}/courses/c2ca5644-6047-4be5-833a-2d70ca05a1ec`;
+    const sampleUrl = withCoupon ? `${courseUrl}?coupon=${COUPON}` : courseUrl;
+    if (withCoupon) {
+      // Allowlist the test address so the code actually applies for it.
+      const testAdmin = createClient(supabaseUrl, serviceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      await testAdmin.rpc("allow_recovery_coupon_email", { p_email: body.test_email });
+    }
     try {
       const { error: mailErr } = await new Resend(key).emails.send({
         from: "Unknown IITians <desk@unknowniitians.com>",
         to: [body.test_email],
         subject: `Complete your enrolment for ${sampleCourse}`,
-        html: emailHtml("Tester", sampleCourse, sampleUrl, true),
+        html: emailHtml("Tester", sampleCourse, sampleUrl, withCoupon),
       });
-      return json({ test: true, emailed: !mailErr, to: body.test_email, error: mailErr?.message ?? null });
+      return json({ test: true, withCoupon, emailed: !mailErr, to: body.test_email, error: mailErr?.message ?? null });
     } catch (e) {
       return json({ test: true, emailed: false, error: (e as Error).message }, 500);
     }
