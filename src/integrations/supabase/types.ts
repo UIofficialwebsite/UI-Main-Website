@@ -1091,6 +1091,63 @@ export type Database = {
         }
         Relationships: []
       }
+      note_download_logs: {
+        Row: {
+          branch: string | null
+          class_level: string | null
+          content_id: string | null
+          created_at: string
+          email: string | null
+          exam_type: string | null
+          file_link: string | null
+          id: string
+          level: string | null
+          phone: string | null
+          source: string
+          subject: string | null
+          title: string | null
+          user_id: string | null
+          week_number: number | null
+          year: number | null
+        }
+        Insert: {
+          branch?: string | null
+          class_level?: string | null
+          content_id?: string | null
+          created_at?: string
+          email?: string | null
+          exam_type?: string | null
+          file_link?: string | null
+          id?: string
+          level?: string | null
+          phone?: string | null
+          source: string
+          subject?: string | null
+          title?: string | null
+          user_id?: string | null
+          week_number?: number | null
+          year?: number | null
+        }
+        Update: {
+          branch?: string | null
+          class_level?: string | null
+          content_id?: string | null
+          created_at?: string
+          email?: string | null
+          exam_type?: string | null
+          file_link?: string | null
+          id?: string
+          level?: string | null
+          phone?: string | null
+          source?: string
+          subject?: string | null
+          title?: string | null
+          user_id?: string | null
+          week_number?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       page_banners: {
         Row: {
           created_at: string
