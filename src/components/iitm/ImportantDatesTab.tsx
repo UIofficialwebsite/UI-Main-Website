@@ -1,141 +1,105 @@
 import React from "react";
 
 const ImportantDatesTab = () => {
-  // Data derived from Jan 2026 Grading Document (hh.pdf) and standard IITM Schedules
+  // May 2026 Term — official IITM BS exam schedule.
+  // Weekly assignment deadlines are intentionally excluded.
   const importantDates = [
     {
       id: 1,
       title: "Term Start & Week 1 Content Release",
-      date: "2026-02-06",
-      description: "Official start of the Jan 2026 Term. Content for Week 1 is released on the portal.",
+      date: "2026-06-12",
+      description:
+        "Official start of the May 2026 Term. Week 1 content is released on the portal.",
       type: "Academic",
       is_important: true,
     },
     {
       id: 2,
-      title: "NPPE 1 Registration Opens",
-      date: "2026-03-06",
-      description: "Registration portal opens for Network Proctored Program Evaluation (NPPE) 1 at 5:00 PM.",
-      type: "Registration",
-      is_important: true,
+      title: "OPPE Slot Allocation (Tentative)",
+      date: "2026-07-01",
+      description:
+        "Tentative — early July. Exam slots are released to individual students. Complete the OPPE System Compatibility Test (SCT) to stay eligible for the programming exams.",
+      type: "Academic",
+      is_important: false,
     },
     {
       id: 3,
-      title: "OPPE 1 Eligibility Closes",
-      date: "2026-03-08",
-      description: "Strict deadline to meet eligibility criteria for OPPE 1 (based on Week 1-4 assignments).",
-      type: "Deadline",
-      is_important: true,
-    },
-    {
-      id: 4,
-      title: "Quiz 1/Qualifier (Jan 2026 Term)",
-      date: "2026-03-15",
-      description: "In-person quiz at designated centers. Syllabus: Weeks 1-4. Time: 2:00 PM - 6:00 PM.",
+      title: "Quiz 1",
+      date: "2026-07-19",
+      description:
+        "In-person quiz at designated exam centres. Time: 2:00 PM – 6:00 PM (a morning session may be added if required).",
       type: "Exam",
       is_important: true,
     },
     {
-      id: 5,
-      title: "Qualifier Re-attempt (1-2) Registration Opens",
-      date: "2026-03-19",
-      description: "Application opens for students re-attempting the Qualifier Exam (Attempt 1 of 2 for this cycle).",
-      type: "Registration",
-      is_important: false,
-    },
-    {
-      id: 6,
-      title: "Qualifier Re-attempt (1-2) Registration Closes",
-      date: "2026-03-20",
-      description: "Deadline to register for the Qualifier Re-attempt (1-2). Late applications not accepted.",
-      type: "Deadline",
-      is_important: false,
-    },
-    {
-      id: 7,
-      title: "OPPE 1 - Day 1",
-      date: "2026-04-04",
-      description: "Online Proctored Programming Exam. Courses: Diploma (Python, MLP), Degree (C Prog, Intro to Big Data).",
+      id: 4,
+      title: "OPPE 1 — Day 1",
+      date: "2026-08-01",
+      description:
+        "Online Proctored Programming Exam. Courses: Foundation Python, Diploma MLP, Degree C Programming. Slot timings are allocated closer to the date.",
       type: "OPPE",
       is_important: true,
     },
     {
+      id: 5,
+      title: "OPPE 1 — Day 2",
+      date: "2026-08-02",
+      description:
+        "Online Proctored Programming Exam. Courses: Foundation Python, Diploma Java/TDS, Degree MLOPS.",
+      type: "OPPE",
+      is_important: true,
+    },
+    {
+      id: 6,
+      title: "Quiz 2",
+      date: "2026-08-16",
+      description:
+        "In-person quiz at designated exam centres. Time: 2:00 PM – 6:00 PM (a morning session may be added if required).",
+      type: "Exam",
+      is_important: true,
+    },
+    {
+      id: 7,
+      title: "OPPE 2 — Day 1",
+      date: "2026-08-29",
+      description:
+        "Online Proctored Programming Exam. Courses: Diploma System Commands/DBMS, Degree C Programming.",
+      type: "OPPE",
+      is_important: false,
+    },
+    {
       id: 8,
-      title: "OPPE 1 - Day 2",
-      date: "2026-04-05",
-      description: "Online Proctored Programming Exam. Courses: Foundation (Python), Diploma (Java, MLOPS), TDS (ROE).",
+      title: "OPPE 2 — Day 2",
+      date: "2026-08-30",
+      description:
+        "Online Proctored Programming Exam. Multiple Diploma & Degree courses.",
       type: "OPPE",
       is_important: true,
     },
     {
       id: 9,
-      title: "End Term & OPPE 2 Eligibility Closes",
-      date: "2026-04-08",
-      description: "Strict deadline to meet eligibility for End Term Exams and OPPE 2 (Week 9 Assignment Deadline).",
-      type: "Deadline",
-      is_important: true,
+      title: "OPPE 2 — Day 3",
+      date: "2026-09-05",
+      description:
+        "Online Proctored Programming Exam. Courses: Diploma System Commands, Foundation Python.",
+      type: "OPPE",
+      is_important: false,
     },
     {
       id: 10,
-      title: "Quiz 2 & Qualifier Re-attempt Exam (1-2)",
-      date: "2026-04-12",
-      description: "Quiz 2 for current students. Qualifier Re-attempt Exam (1-2) for re-applicants. In-person.",
-      type: "Exam",
+      title: "OPPE 2 — Day 4",
+      date: "2026-09-06",
+      description:
+        "Online Proctored Programming Exam. Multiple courses including MLOPS.",
+      type: "OPPE",
       is_important: true,
     },
     {
       id: 11,
-      title: "Qualifier Re-attempt (2-2) Registration Opens",
-      date: "2026-04-16",
-      description: "Application opens for the second re-attempt (2-2) of the Qualifier Exam.",
-      type: "Registration",
-      is_important: false,
-    },
-    {
-      id: 12,
-      title: "Qualifier Re-attempt (2-2) Registration Closes",
-      date: "2026-04-17",
-      description: "Strict deadline to register for the final re-attempt opportunity for this term.",
-      type: "Deadline",
-      is_important: false,
-    },
-    {
-      id: 13,
-      title: "OPPE 2 - Day 1",
-      date: "2026-04-25",
-      description: "Online Proctored Programming Exam. Courses: Diploma (System Commands).",
-      type: "OPPE",
-      is_important: false,
-    },
-    {
-      id: 14,
-      title: "OPPE 2 - Day 2",
-      date: "2026-04-26",
-      description: "Online Proctored Programming Exam. Courses: Diploma (DBMS, PDSA, Java, MLP), Degree (C Prog, Intro to Big Data).",
-      type: "OPPE",
-      is_important: true,
-    },
-    {
-      id: 15,
-      title: "OPPE 2 - Day 3",
-      date: "2026-05-02",
-      description: "Online Proctored Programming Exam. Courses: Diploma (System Commands, Python).",
-      type: "OPPE",
-      is_important: false,
-    },
-    {
-      id: 16,
-      title: "OPPE 2 - Day 4",
-      date: "2026-05-03",
-      description: "Online Proctored Programming Exam. Courses: Foundation (Python), Diploma (Exceptions), Degree (MLOPS).",
-      type: "OPPE",
-      is_important: true,
-    },
-    {
-      id: 17,
-      title: "End Term Exam & Qualifier Re-attempt (2-2)",
-      date: "2026-05-10",
-      description: "Final End Term Exam for all levels. Qualifier Re-attempt Exam (2-2). In-person at centers.",
+      title: "End Term Exam",
+      date: "2026-09-13",
+      description:
+        "Final End Term Exam for all levels. In-person at exam centres. Sessions: 9:00 AM – 12:00 PM and 2:00 PM – 5:00 PM.",
       type: "Exam",
       is_important: true,
     },
@@ -147,7 +111,7 @@ const ImportantDatesTab = () => {
   return (
     <div className="w-full font-['Inter'] bg-white">
       <h2 className="text-[14px] font-semibold text-black uppercase tracking-[0.05em] mb-5">
-        Important Dates & Deadlines (Jan 2026 Term)
+        Important Exam Dates (May 2026 Term)
       </h2>
 
       <div className="overflow-x-auto border border-black rounded-none">
@@ -179,7 +143,7 @@ const ImportantDatesTab = () => {
                     </span>
                   </div>
                 </td>
-                
+
                 {/* Details Column */}
                 <td className="p-5 align-top">
                   <div className="flex flex-col gap-2">
@@ -198,7 +162,7 @@ const ImportantDatesTab = () => {
                         {item.type}
                       </span>
                     </div>
-                    
+
                     <p className="text-[13px] text-[#4b5563] leading-[1.5]">
                       {item.description}
                     </p>
@@ -206,7 +170,7 @@ const ImportantDatesTab = () => {
                     {item.is_important && (
                       <div className="mt-1">
                          <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-black text-white">
-                            {item.type === 'Deadline' ? 'Strict Deadline' : 'Important'}
+                            Important
                          </span>
                       </div>
                     )}
