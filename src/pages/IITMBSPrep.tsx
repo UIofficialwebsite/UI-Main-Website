@@ -4,6 +4,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import BranchNotesTab from "@/components/iitm/BranchNotesTab";
+import { useIITMNotesFilters } from "@/components/iitm/hooks/useIITMNotesFilters";
 import PYQsTab from "@/components/iitm/PYQsTab";
 import NewsTab from "@/components/iitm/NewsTab";
 import ImportantDatesTab from "@/components/iitm/ImportantDatesTab";
@@ -171,6 +172,40 @@ const IITMBSPrep = () => {
 
   const branches = useMemo(() => Array.from(new Set(iitmCourses.map(c => c.branch))).filter(Boolean).sort() as string[], [iitmCourses]);
   const levels = useMemo(() => Array.from(new Set(iitmCourses.map(c => c.level))).filter(Boolean).sort() as string[], [iitmCourses]);
+
+  // --- Notes & PYQ filters derived from CONTENT (not courses) ---
+  // The Notes/PYQ branch+level options must reflect what actually has content,
+  // so Diploma/Degree notes show even when no matching course exists.
+  const { pairs: notesFilterPairs } = useIITMNotesFilters();
+  const slugToTitle = (slug: string) =>
+    slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  const LEVEL_ORDER = ["qualifier", "foundation", "diploma", "degree"];
+  const sortByLevel = (a: string, b: string) => {
+    const ia = LEVEL_ORDER.indexOf(a.toLowerCase());
+    const ib = LEVEL_ORDER.indexOf(b.toLowerCase());
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  };
+
+  const notesBranches = useMemo(
+    () => Array.from(new Set(notesFilterPairs.map(p => p.branch))).map(slugToTitle).sort(),
+    [notesFilterPairs]
+  );
+  const notesLevels = useMemo(() => {
+    const bSlug = notesBranch.toLowerCase().replace(/\s+/g, "-");
+    const lv = notesFilterPairs.filter(p => p.branch === bSlug).map(p => p.level);
+    return Array.from(new Set(lv)).map(slugToTitle).sort(sortByLevel);
+  }, [notesFilterPairs, notesBranch]);
+
+  const pyqBranches = useMemo(
+    () => Array.from(new Set(pyqs.map(p => p.branch).filter(Boolean) as string[]))
+      .map(s => slugToTitle(s.toLowerCase())).sort(),
+    [pyqs]
+  );
+  const pyqLevels = useMemo(() => {
+    const bSlug = pyqBranch.toLowerCase().replace(/\s+/g, "-");
+    const lv = pyqs.filter(p => p.branch === bSlug).map(p => p.level).filter(Boolean) as string[];
+    return Array.from(new Set(lv)).map(s => slugToTitle(s)).sort(sortByLevel);
+  }, [pyqs, pyqBranch]);
 
   const availableCourseLevels = useMemo(() => 
     Array.from(new Set(iitmCourses.filter(c => c.branch === courseBranch).map(c => c.level))).filter(Boolean).sort() as string[]
@@ -451,17 +486,20 @@ const IITMBSPrep = () => {
             currentSelection = tempBranch;
             setSelection = setTempBranch;
         } else {
-            items = branches; 
-            isCheckbox = false; 
-            currentSelection = tempBranch; 
-            setSelection = setTempBranch; 
+            // Notes/PYQ branch options come from actual content; courses fall back to course list.
+            items = activeTab === 'notes' ? notesBranches : activeTab === 'pyqs' ? pyqBranches : branches;
+            isCheckbox = false;
+            currentSelection = tempBranch;
+            setSelection = setTempBranch;
         }
     }
-    else if (type === 'level') { 
-        items = (activeTab === 'syllabus' || activeTab === 'tools') ? ["Qualifier", "Foundation", "Diploma", "Degree"] : levels;
-        // Filter out Qualifier for tools if needed, but keeping for consistency with other tabs
-        if (activeTab === 'tools') items = ["Foundation", "Diploma", "Degree"];
-        isCheckbox = false; currentSelection = tempLevel; setSelection = setTempLevel; 
+    else if (type === 'level') {
+        if (activeTab === 'syllabus') items = ["Qualifier", "Foundation", "Diploma", "Degree"];
+        else if (activeTab === 'tools') items = ["Foundation", "Diploma", "Degree"];
+        else if (activeTab === 'notes') items = notesLevels;   // levels that actually have notes
+        else if (activeTab === 'pyqs') items = pyqLevels;      // levels that actually have PYQs
+        else items = levels;
+        isCheckbox = false; currentSelection = tempLevel; setSelection = setTempLevel;
     }
     else if (type === 'subject') {
         items = syllabusSubjectOptions;
