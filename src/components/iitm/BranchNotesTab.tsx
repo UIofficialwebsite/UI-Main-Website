@@ -6,28 +6,42 @@ export interface BranchNotesTabProps {
   branch: string;
   level: string;
   selectedSubjects: string[];
+  specialization?: string | null;
   onSubjectsLoaded?: (subjects: string[]) => void;
 }
 
-const BranchNotesTab = ({ branch, level, selectedSubjects, onSubjectsLoaded }: BranchNotesTabProps) => {
+const BranchNotesTab = ({ branch, level, selectedSubjects, specialization, onSubjectsLoaded }: BranchNotesTabProps) => {
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
 
   const { loading, groupedData } = useIITMBranchNotes(branchSlug, levelSlug);
 
+  // When a specialization is selected, keep only its notes (and drop now-empty
+  // subject groups). Subjects available for the multi-select reflect what's
+  // visible after the specialization filter.
+  const specializationData = useMemo(() => {
+    if (!specialization) return groupedData;
+    return groupedData
+      .map(g => ({
+        ...g,
+        notes: g.notes.filter(n => (n.diploma_specialization ?? '') === specialization),
+      }))
+      .filter(g => g.notes.length > 0);
+  }, [groupedData, specialization]);
+
   // Extract available subject names and notify parent
   useEffect(() => {
-    if (groupedData.length > 0 && onSubjectsLoaded) {
-      const subjects = groupedData.map(g => g.subjectName);
+    if (specializationData.length > 0 && onSubjectsLoaded) {
+      const subjects = specializationData.map(g => g.subjectName);
       onSubjectsLoaded(subjects);
     }
-  }, [groupedData, onSubjectsLoaded]);
+  }, [specializationData, onSubjectsLoaded]);
 
   const filteredData = useMemo(() => {
-    // If no filter chosen from the main header dropdown, show all
-    if (selectedSubjects.length === 0) return groupedData;
-    return groupedData.filter(g => selectedSubjects.includes(g.subjectName));
-  }, [groupedData, selectedSubjects]);
+    // If no subject filter chosen, show all (post-specialization)
+    if (selectedSubjects.length === 0) return specializationData;
+    return specializationData.filter(g => selectedSubjects.includes(g.subjectName));
+  }, [specializationData, selectedSubjects]);
 
   return (
     <div className="space-y-8">

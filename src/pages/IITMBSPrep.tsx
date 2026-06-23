@@ -87,6 +87,7 @@ const IITMBSPrep = () => {
   const [notesLevel, setNotesLevel] = useState(initialUrlState.level || "Foundation");
   const [selectedNotesSubjects, setSelectedNotesSubjects] = useState<string[]>([]);
   const [availableNotesSubjects, setAvailableNotesSubjects] = useState<string[]>([]);
+  const [notesSpecialization, setNotesSpecialization] = useState<string | null>(null);
 
   // Courses Tab State
   const [courseBranch, setCourseBranch] = useState(initialUrlState.branch || "Data Science");
@@ -176,7 +177,7 @@ const IITMBSPrep = () => {
   // --- Notes & PYQ filters derived from CONTENT (not courses) ---
   // The Notes/PYQ branch+level options must reflect what actually has content,
   // so Diploma/Degree notes show even when no matching course exists.
-  const { pairs: notesFilterPairs } = useIITMNotesFilters();
+  const { rows: notesFilterRows } = useIITMNotesFilters();
   const slugToTitle = (slug: string) =>
     slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   const LEVEL_ORDER = ["qualifier", "foundation", "diploma", "degree"];
@@ -187,14 +188,26 @@ const IITMBSPrep = () => {
   };
 
   const notesBranches = useMemo(
-    () => Array.from(new Set(notesFilterPairs.map(p => p.branch))).map(slugToTitle).sort(),
-    [notesFilterPairs]
+    () => Array.from(new Set(notesFilterRows.map(p => p.branch))).map(slugToTitle).sort(),
+    [notesFilterRows]
   );
   const notesLevels = useMemo(() => {
     const bSlug = notesBranch.toLowerCase().replace(/\s+/g, "-");
-    const lv = notesFilterPairs.filter(p => p.branch === bSlug).map(p => p.level);
+    const lv = notesFilterRows.filter(p => p.branch === bSlug).map(p => p.level);
     return Array.from(new Set(lv)).map(slugToTitle).sort(sortByLevel);
-  }, [notesFilterPairs, notesBranch]);
+  }, [notesFilterRows, notesBranch]);
+
+  // Specialization is a GENERAL sub-filter: it appears only when the selected
+  // branch+level actually has specialization values in its notes (e.g. DS
+  // Diploma → Data Science / Programming). Empty for levels without one.
+  const notesSpecializations = useMemo(() => {
+    const bSlug = notesBranch.toLowerCase().replace(/\s+/g, "-");
+    const lSlug = notesLevel.toLowerCase().replace(/\s+/g, "-");
+    const specs = notesFilterRows
+      .filter(p => p.branch === bSlug && p.level === lSlug && p.specialization)
+      .map(p => p.specialization as string);
+    return Array.from(new Set(specs)).sort();
+  }, [notesFilterRows, notesBranch, notesLevel]);
 
   const pyqBranches = useMemo(
     () => Array.from(new Set(pyqs.map(p => p.branch).filter(Boolean) as string[]))
@@ -218,6 +231,7 @@ const IITMBSPrep = () => {
   // --- TEMP STATES (For "Apply" Logic) ---
   const [tempBranch, setTempBranch] = useState(activeBranch);
   const [tempLevel, setTempLevel] = useState(activeLevel);
+  const [tempSpecialization, setTempSpecialization] = useState<string | null>(null);
   // Syllabus Temps
   const [tempSyllabusSubjectIds, setTempSyllabusSubjectIds] = useState<string[]>([]);
   // PYQ Temps
@@ -250,6 +264,7 @@ const IITMBSPrep = () => {
     } else if (activeTab === 'notes') {
         setTempBranch(notesBranch); setTempLevel(notesLevel);
         setTempNotesSubjects(selectedNotesSubjects);
+        setTempSpecialization(notesSpecialization);
     } else if (activeTab === 'syllabus') {
         setTempLevel(syllabusLevel); setTempBranch(syllabusBranch); setTempSyllabusSubjectIds(syllabusSubjectIds);
     } else if (activeTab === 'courses') {
@@ -365,9 +380,11 @@ const IITMBSPrep = () => {
         if (type === 'pyqSubject') setPyqSubjects(tempPyqSubjects);
         navigate(buildCurrentUrl('pyqs', { branch: type === 'branch' ? tempBranch : pyqBranch, level: type === 'level' ? tempLevel : pyqLevel }), { replace: true });
     } else if (activeTab === 'notes') {
-        if (type === 'branch') { setNotesBranch(tempBranch); newBranch = tempBranch; }
-        if (type === 'level') { setNotesLevel(tempLevel); newLevel = tempLevel; }
+        // Branch/level change invalidates the specialization sub-filter.
+        if (type === 'branch') { setNotesBranch(tempBranch); setNotesSpecialization(null); newBranch = tempBranch; }
+        if (type === 'level') { setNotesLevel(tempLevel); setNotesSpecialization(null); newLevel = tempLevel; }
         if (type === 'notesSubject') setSelectedNotesSubjects(tempNotesSubjects);
+        if (type === 'specialization') setNotesSpecialization(tempSpecialization);
         navigate(buildCurrentUrl('notes', { branch: type === 'branch' ? tempBranch : notesBranch, level: type === 'level' ? tempLevel : notesLevel }), { replace: true });
     } else if (activeTab === 'syllabus') {
         if (type === 'level') { handleSyllabusLevelChange(tempLevel as CourseLevel); newLevel = tempLevel; }
@@ -501,6 +518,12 @@ const IITMBSPrep = () => {
         else items = levels;
         isCheckbox = false; currentSelection = tempLevel; setSelection = setTempLevel;
     }
+    else if (type === 'specialization') {
+        items = ['All Specializations', ...notesSpecializations];
+        isCheckbox = false;
+        currentSelection = tempSpecialization ?? 'All Specializations';
+        setSelection = (v: string) => setTempSpecialization(v === 'All Specializations' ? null : v);
+    }
     else if (type === 'subject') {
         items = syllabusSubjectOptions;
         isCheckbox = true; 
@@ -598,13 +621,17 @@ const IITMBSPrep = () => {
                 {(activeTab === 'notes' || activeTab === 'pyqs') && (
                     <>
                       <div className="flex-shrink-0">
-                          <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                          Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                          <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#6366f1] rounded-[30px] text-[12px] flex items-center gap-2 bg-[#eef2ff] font-sans text-[#374151]">
+                          <span className="text-[#6b7280]">Branch:</span>
+                          <span className="font-semibold text-[#111827]">{activeBranch}</span>
+                          <FilledArrow isOpen={openDropdown === 'branch'} />
                           </button>
                       </div>
                       <div className="flex-shrink-0">
-                          <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                          Level <FilledArrow isOpen={openDropdown === 'level'} />
+                          <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#6366f1] rounded-[30px] text-[12px] flex items-center gap-2 bg-[#eef2ff] font-sans text-[#374151]">
+                          <span className="text-[#6b7280]">Level:</span>
+                          <span className="font-semibold text-[#111827]">{activeLevel}</span>
+                          <FilledArrow isOpen={openDropdown === 'level'} />
                           </button>
                       </div>
                     </>
@@ -671,7 +698,15 @@ const IITMBSPrep = () => {
                 {/* 2. Tab Specific Filters */}
                 {activeTab === 'notes' && (
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <button onClick={(e) => handleOpenDropdown('notesSubject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                    {/* Specialization sub-filter — only shows when this level has specializations */}
+                    {notesSpecializations.length > 0 && (
+                      <button onClick={(e) => handleOpenDropdown('specialization', e)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] flex items-center gap-2 font-sans ${notesSpecialization ? 'border-[#6366f1] bg-[#eef2ff]' : 'border-[#e5e7eb] bg-white'} text-[#374151]`}>
+                        <span className="text-[#6b7280]">Specialization{notesSpecialization ? ':' : ''}</span>
+                        {notesSpecialization && <span className="font-semibold text-[#111827]">{notesSpecialization}</span>}
+                        <FilledArrow isOpen={openDropdown === 'specialization'} />
+                      </button>
+                    )}
+                    <button onClick={(e) => handleOpenDropdown('notesSubject', e)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] flex items-center gap-2 font-sans ${selectedNotesSubjects.length > 0 ? 'border-[#6366f1] bg-[#eef2ff]' : 'border-[#e5e7eb] bg-white'} text-[#374151]`}>
                       {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{selectedNotesSubjects.length}</span>}
                       Subjects <FilledArrow isOpen={openDropdown === 'notesSubject'} />
                     </button>
@@ -773,7 +808,7 @@ const IITMBSPrep = () => {
         <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "pyqs" && <PYQsTab branch={pyqBranch} level={pyqLevel} years={pyqYears} examTypes={examTypes} subjects={pyqSubjects} />}
-            {activeTab === "notes" && <BranchNotesTab branch={notesBranch} level={notesLevel} selectedSubjects={selectedNotesSubjects} onSubjectsLoaded={setAvailableNotesSubjects} />}
+            {activeTab === "notes" && <BranchNotesTab branch={notesBranch} level={notesLevel} specialization={notesSpecialization} selectedSubjects={selectedNotesSubjects} onSubjectsLoaded={setAvailableNotesSubjects} />}
             {activeTab === "syllabus" && <SyllabusTab level={syllabusLevel} branch={syllabusBranch} selectedCourseIds={syllabusSubjectIds} />}
             
             {/* UPDATED TOOLS SECTION */}
