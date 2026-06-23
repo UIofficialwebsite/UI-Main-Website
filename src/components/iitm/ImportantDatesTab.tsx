@@ -24,7 +24,7 @@ const ImportantDatesTab = () => {
     },
     {
       id: 3,
-      title: "Quiz 1",
+      title: "Quiz 1 / Qualifier",
       date: "2026-07-19",
       description:
         "In-person quiz at designated exam centres. Time: 2:00 PM – 6:00 PM (a morning session may be added if required).",
@@ -51,7 +51,7 @@ const ImportantDatesTab = () => {
     },
     {
       id: 6,
-      title: "Quiz 2",
+      title: "Quiz 2 / 2nd Qualifier / Re-attempt",
       date: "2026-08-16",
       description:
         "In-person quiz at designated exam centres. Time: 2:00 PM – 6:00 PM (a morning session may be added if required).",
@@ -96,7 +96,7 @@ const ImportantDatesTab = () => {
     },
     {
       id: 11,
-      title: "End Term Exam",
+      title: "End Term Exam / 2nd Re-attempt",
       date: "2026-09-13",
       description:
         "Final End Term Exam for all levels. In-person at exam centres. Sessions: 9:00 AM – 12:00 PM and 2:00 PM – 5:00 PM.",
