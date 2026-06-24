@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course } from '@/components/admin/courses/types';
 import { cn } from '@/lib/utils';
+import ShareButton from '@/components/share/ShareButton';
 
 interface CourseHeaderProps {
   course: Course;
@@ -105,6 +106,18 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
                 <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-md px-3 py-1.5 text-[13px] text-black font-medium">
                   Bestseller
                 </div>
+             )}
+
+             {/* Share */}
+             {course.id && (
+               <ShareButton
+                 contentType="course"
+                 contentId={course.id}
+                 title={course.title}
+                 path={`/courses/${course.id}`}
+                 variant="button"
+                 className="ml-auto"
+               />
              )}
         </div>
 

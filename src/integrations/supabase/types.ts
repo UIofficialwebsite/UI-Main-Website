@@ -1034,6 +1034,78 @@ export type Database = {
         }
         Relationships: []
       }
+      shares: {
+        Row: {
+          channel: string | null
+          content_id: string | null
+          content_type: string
+          created_at: string
+          id: string
+          sharer_user_id: string | null
+          target_url: string
+          title: string | null
+          token: string
+        }
+        Insert: {
+          channel?: string | null
+          content_id?: string | null
+          content_type: string
+          created_at?: string
+          id?: string
+          sharer_user_id?: string | null
+          target_url: string
+          title?: string | null
+          token: string
+        }
+        Update: {
+          channel?: string | null
+          content_id?: string | null
+          content_type?: string
+          created_at?: string
+          id?: string
+          sharer_user_id?: string | null
+          target_url?: string
+          title?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
+      share_clicks: {
+        Row: {
+          clicked_by_user_id: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          is_bot: boolean
+          referrer: string | null
+          share_id: string | null
+          token: string
+          user_agent: string | null
+        }
+        Insert: {
+          clicked_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          is_bot?: boolean
+          referrer?: string | null
+          share_id?: string | null
+          token: string
+          user_agent?: string | null
+        }
+        Update: {
+          clicked_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          is_bot?: boolean
+          referrer?: string | null
+          share_id?: string | null
+          token?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       abandoned_cart_recovery: {
         Row: {
           coupon_code: string | null
@@ -1821,6 +1893,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_share_analytics: { Args: never; Returns: Json }
+      create_share: {
+        Args: {
+          p_content_type: string
+          p_content_id: string
+          p_title: string
+          p_target_url: string
+          p_channel?: string
+        }
+        Returns: string
+      }
       save_push_subscription: {
         Args: {
           p_endpoint: string

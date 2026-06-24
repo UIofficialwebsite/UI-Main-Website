@@ -22,6 +22,7 @@ import EnrollmentsViewTab from "@/components/admin/EnrollmentsViewTab";
 import PaymentsViewTab from "@/components/admin/PaymentsViewTab";
 import CouponRedemptionsViewTab from "@/components/admin/CouponRedemptionsViewTab";
 import DownloadLogsViewTab from "@/components/admin/DownloadLogsViewTab";
+import SharesViewTab from "@/components/admin/SharesViewTab";
 import PushNotificationsManagerTab from "@/components/admin/PushNotificationsManagerTab";
 import CartRecoveryManagerTab from "@/components/admin/CartRecoveryManagerTab";
 import EmployeeManagerTab from "@/components/admin/EmployeeManagerTab";
@@ -69,6 +70,7 @@ const AdminDashboard = () => {
               {activeTab === "payments" && <PaymentsViewTab />}
               {activeTab === "coupon-redemptions" && <CouponRedemptionsViewTab />}
               {activeTab === "download-logs" && <DownloadLogsViewTab />}
+              {activeTab === "shares" && <SharesViewTab />}
               {activeTab === "push-notifications" && <PushNotificationsManagerTab />}
               {activeTab === "cart-recovery" && <CartRecoveryManagerTab />}
 

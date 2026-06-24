@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/s/:token",
+      "destination": "https://qzrvctpwefhmcduariuw.supabase.co/functions/v1/share-redirect?token=:token"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

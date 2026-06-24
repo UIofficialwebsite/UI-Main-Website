@@ -22,6 +22,7 @@ import {
   Bell,
   MailWarning,
   FileDown,
+  Share2,
   LucideIcon,
 } from "lucide-react";
 
@@ -85,6 +86,7 @@ const groups: MenuGroup[] = [
       { id: "payments", label: "Payments", icon: CreditCard },
       { id: "coupon-redemptions", label: "Coupon Redemptions", icon: Receipt },
       { id: "download-logs", label: "Download Logs", icon: FileDown },
+      { id: "shares", label: "Shares", icon: Share2 },
     ],
   },
   {
