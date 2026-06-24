@@ -21,6 +21,7 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import PushNotificationToggle from "@/components/PushNotificationToggle";
+import SubjectIcon, { subjectKindFor, SubjectKind } from "@/components/SubjectIcon";
 
 // --- STABLE PROFILE MENU COMPONENT ---
 const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAdmin }: any) => {
@@ -173,10 +174,10 @@ const NavBar = () => {
     return { icon: BookOpen, color: "text-gray-600", slug: category.toLowerCase().replace(/\s+/g, '-') };
   };
 
-  const examPrepItems = [
-    { title: "IIT JEE", path: "/exam-preparation/jee", icon: Atom, color: "text-[#3B82F6]" },
-    { title: "NEET", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#EF4444]" },
-    { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
+  const examPrepItems: { title: string; path: string; kind: SubjectKind }[] = [
+    { title: "IIT JEE", path: "/exam-preparation/jee", kind: "jee" },
+    { title: "NEET", path: "/exam-preparation/neet", kind: "neet" },
+    { title: "IITM BS", path: "/exam-preparation/iitm-bs", kind: "iitm" }
   ];
 
   return (
@@ -206,13 +207,10 @@ const NavBar = () => {
                        <div className="grid grid-cols-2 gap-3">
                           {courseCategories.map((category) => {
                             const style = getCategoryStyle(category);
-                            const IconComponent = style.icon;
                             return (
                               <NavigationMenuLink key={category} asChild>
-                                <Link to={`/courses/category/${style.slug}`} className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black transition-all">
-                                  <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                                    <IconComponent className={`w-full h-full ${style.color}`} />
-                                  </div>
+                                <Link to={`/courses/category/${style.slug}`} className="group flex items-center gap-4 p-3.5 bg-white border border-[#e8e8ec] rounded-xl cursor-pointer hover:border-[#cdd0ff] hover:bg-[#fafaff] hover:shadow-[0_6px_18px_-8px_rgba(60,60,120,0.25)] transition-all">
+                                  <SubjectIcon kind={subjectKindFor(category)} />
                                   <span className="text-base font-semibold text-[#1a1a1a] font-sans">{category}</span>
                                 </Link>
                               </NavigationMenuLink>
@@ -236,10 +234,8 @@ const NavBar = () => {
                        <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (
                             <NavigationMenuLink key={item.path} asChild>
-                              <Link to={item.path} className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black transition-all">
-                                <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                                  <item.icon className={`w-full h-full ${item.color}`} />
-                                </div>
+                              <Link to={item.path} className="group flex items-center gap-4 p-3.5 bg-white border border-[#e8e8ec] rounded-xl cursor-pointer hover:border-[#cdd0ff] hover:bg-[#fafaff] hover:shadow-[0_6px_18px_-8px_rgba(60,60,120,0.25)] transition-all">
+                                <SubjectIcon kind={item.kind} />
                                 <span className="text-base font-semibold text-[#1a1a1a] font-sans">{item.title}</span>
                               </Link>
                             </NavigationMenuLink>
@@ -323,14 +319,12 @@ const NavBar = () => {
                   {(activePane === "courses" || activePane === "examprep") && (
                     <div className="p-5 grid grid-cols-2 gap-4 animate-in slide-in-from-left duration-200">
                       {(activePane === "courses" ? courseCategories : examPrepItems).map((item: any) => {
-                        const style = activePane === "courses" ? getCategoryStyle(item) : item;
                         const label = activePane === "courses" ? item : item.title;
-                        const path = activePane === "courses" ? `/courses/category/${style.slug}` : item.path;
+                        const kind: SubjectKind = activePane === "courses" ? subjectKindFor(item) : item.kind;
+                        const path = activePane === "courses" ? `/courses/category/${getCategoryStyle(item).slug}` : item.path;
                         return (
-                          <Link key={label} to={path} className="flex items-center gap-3 px-3 py-4 bg-white border border-[#e2e2e2] rounded-[4px] hover:border-black transition-all" onClick={() => setIsSheetOpen(false)}>
-                            <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-                              <style.icon className={`w-full h-full ${style.color || 'text-black'}`} />
-                            </div>
+                          <Link key={label} to={path} className="group flex items-center gap-3 px-3 py-4 bg-white border border-[#e8e8ec] rounded-xl hover:border-[#cdd0ff] hover:bg-[#fafaff] transition-all" onClick={() => setIsSheetOpen(false)}>
+                            <SubjectIcon kind={kind} />
                             <span className="text-[14px] font-semibold text-[#1a1a1a] leading-tight">{label}</span>
                           </Link>
                         );
