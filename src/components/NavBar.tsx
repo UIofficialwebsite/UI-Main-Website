@@ -209,7 +209,7 @@ const NavBar = () => {
                             const style = getCategoryStyle(category);
                             return (
                               <NavigationMenuLink key={category} asChild>
-                                <Link to={`/courses/category/${style.slug}`} className="group flex items-center gap-4 p-3.5 bg-white border border-[#e8e8ec] rounded-xl cursor-pointer hover:border-[#cdd0ff] hover:bg-[#fafaff] hover:shadow-[0_6px_18px_-8px_rgba(60,60,120,0.25)] transition-all">
+                                <Link to={`/courses/category/${style.slug}`} className="flex items-center gap-4 p-3.5 bg-white border border-[#e8e8ec] rounded-xl cursor-pointer hover:border-[#b9bdf0] transition-colors">
                                   <SubjectIcon kind={subjectKindFor(category)} />
                                   <span className="text-base font-semibold text-[#1a1a1a] font-sans">{category}</span>
                                 </Link>
@@ -234,7 +234,7 @@ const NavBar = () => {
                        <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (
                             <NavigationMenuLink key={item.path} asChild>
-                              <Link to={item.path} className="group flex items-center gap-4 p-3.5 bg-white border border-[#e8e8ec] rounded-xl cursor-pointer hover:border-[#cdd0ff] hover:bg-[#fafaff] hover:shadow-[0_6px_18px_-8px_rgba(60,60,120,0.25)] transition-all">
+                              <Link to={item.path} className="flex items-center gap-4 p-3.5 bg-white border border-[#e8e8ec] rounded-xl cursor-pointer hover:border-[#b9bdf0] transition-colors">
                                 <SubjectIcon kind={item.kind} />
                                 <span className="text-base font-semibold text-[#1a1a1a] font-sans">{item.title}</span>
                               </Link>
@@ -323,7 +323,7 @@ const NavBar = () => {
                         const kind: SubjectKind = activePane === "courses" ? subjectKindFor(item) : item.kind;
                         const path = activePane === "courses" ? `/courses/category/${getCategoryStyle(item).slug}` : item.path;
                         return (
-                          <Link key={label} to={path} className="group flex items-center gap-3 px-3 py-4 bg-white border border-[#e8e8ec] rounded-xl hover:border-[#cdd0ff] hover:bg-[#fafaff] transition-all" onClick={() => setIsSheetOpen(false)}>
+                          <Link key={label} to={path} className="flex items-center gap-3 px-3 py-4 bg-white border border-[#e8e8ec] rounded-xl hover:border-[#b9bdf0] transition-colors" onClick={() => setIsSheetOpen(false)}>
                             <SubjectIcon kind={kind} />
                             <span className="text-[14px] font-semibold text-[#1a1a1a] leading-tight">{label}</span>
                           </Link>
