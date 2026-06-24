@@ -13,6 +13,7 @@ import InstallAppPrompt from "@/components/InstallAppPrompt";
 import PushOptInPrompt from "@/components/PushOptInPrompt";
 import ScanToInstall from "@/components/ScanToInstall";
 import ScrollPersistence from "@/components/ScrollPersistence";
+import ShareClickTracker from "@/components/ShareClickTracker";
 import { Suspense, lazy, ComponentType } from "react";
 
 // Helper to handle chunk loading errors with auto-reload
@@ -113,6 +114,7 @@ const App = () => (
           <BrowserRouter>
             <LoginModalProvider>
               <ScrollPersistence />
+              <ShareClickTracker />
               <GlobalLoginModal />
               <InstallAppPrompt />
               <PushOptInPrompt />

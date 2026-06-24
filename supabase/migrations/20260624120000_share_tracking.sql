@@ -103,6 +103,21 @@ end; $$;
 revoke all on function public.record_share(text,text,text,text,text,text) from public;
 grant execute on function public.record_share(text,text,text,text,text,text) to anon, authenticated;
 
+-- Logs a click when someone lands on a real URL carrying ?si=<token> (the
+-- YouTube-style share link). Called client-side by ShareClickTracker.
+create or replace function public.log_si_click(p_token text, p_ref text default null, p_ua text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v_share uuid;
+begin
+  if p_token is null or length(p_token) < 6 then return; end if;
+  select id into v_share from public.shares where token = p_token;
+  if v_share is null then return; end if;
+  insert into public.share_clicks (share_id, token, clicked_by_user_id, referrer, user_agent, is_bot)
+  values (v_share, p_token, auth.uid(), left(p_ref, 400), left(p_ua, 400), false);
+end; $$;
+revoke all on function public.log_si_click(text, text, text) from public;
+grant execute on function public.log_si_click(text, text, text) to anon, authenticated;
+
 -- Admin analytics aggregate (gated inside; powers the admin Shares tab).
 create or replace function public.get_share_analytics()
 returns jsonb language plpgsql security definer set search_path = public as $$

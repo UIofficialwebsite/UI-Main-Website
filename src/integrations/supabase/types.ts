@@ -1894,6 +1894,10 @@ export type Database = {
     }
     Functions: {
       get_share_analytics: { Args: never; Returns: Json }
+      log_si_click: {
+        Args: { p_token: string; p_ref?: string; p_ua?: string }
+        Returns: undefined
+      }
       record_share: {
         Args: {
           p_token: string

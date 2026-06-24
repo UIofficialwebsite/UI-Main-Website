@@ -75,8 +75,11 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     e.preventDefault();
 
     const token = newToken();
-    const shortUrl = `${SITE}/s/${token}`;
     const relPath = toRelativePath(url);
+    // YouTube-style: the REAL page URL + a ?si=<token> tracking code, so the link
+    // is trustworthy (students see the actual page, not an opaque redirect).
+    const sep = relPath.includes('?') ? '&' : '?';
+    const shareLink = `${SITE}${relPath}${sep}si=${token}`;
     const ctype = contentType ?? inferType(relPath);
     let channel = 'copy';
 
@@ -85,10 +88,10 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       if (navigator.share) {
         channel = 'webshare';
         navigator
-          .share({ title, text: description || `Check out: ${title}`, url: shortUrl })
+          .share({ title, text: description || `Check out: ${title}`, url: shareLink })
           .catch(() => {});
       } else {
-        await navigator.clipboard.writeText(shortUrl);
+        await navigator.clipboard.writeText(shareLink);
         setCopied(true);
         toast.success('Link copied to clipboard');
         setTimeout(() => setCopied(false), 2000);

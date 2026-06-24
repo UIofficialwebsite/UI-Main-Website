@@ -9,11 +9,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SITE = "https://unknowniitians.com";
 
-// OG image = a live screenshot of the actual page (renders the SPA, waits for JS),
-// so the preview shows the real page instead of a static logo. thum.io returns a
-// 1200x630 image at a clean URL; swap for a keyed screenshot API for higher volume.
+// OG image = a live screenshot of the actual page. WordPress mShots is free, has
+// no watermark and no API key, and is purpose-built for link-preview screenshots
+// (it generates on first request, then caches). For guaranteed first-hit quality
+// at scale, swap for a keyed API (ApiFlash/ScreenshotOne) via a secret.
 function pagePreview(pageUrl: string): string {
-  return `https://image.thum.io/get/width/1200/crop/630/wait/6/${pageUrl}`;
+  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(pageUrl)}?w=1200&h=630`;
 }
 
 // Social/preview crawlers that need OG HTML instead of a redirect.
@@ -56,6 +57,22 @@ function ogHtml(title: string, url: string): string {
 
 serve(async (req: Request) => {
   const url = new URL(req.url);
+
+  // Crawler-preview mode: a social bot fetched a real content URL (?si=… link)
+  // and Vercel routed it here with ?path=. Serve OG tags (title + page
+  // screenshot). The OG HTML's meta-refresh bounces any human misfire to the
+  // page, so this never breaks a real visitor.
+  const ogPath = url.searchParams.get("path");
+  if (ogPath) {
+    const safe = ogPath.startsWith("/") ? ogPath : `/${ogPath}`;
+    const targetUrl = `${SITE}${safe}`;
+    try { fetch(pagePreview(targetUrl)).catch(() => {}); } catch (_e) { /* ignore */ }
+    return new Response(ogHtml("Unknown IITians", targetUrl), {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300" },
+    });
+  }
+
   const token = (url.searchParams.get("token") || url.pathname.split("/").filter(Boolean).pop() || "").trim();
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -102,6 +119,9 @@ serve(async (req: Request) => {
   } catch (_e) { /* ignore logging errors */ }
 
   if (isBot) {
+    // Kick off the screenshot generation so it's cached by the time the crawler
+    // fetches og:image (fire-and-forget).
+    try { fetch(pagePreview(targetUrl)).catch(() => {}); } catch (_e) { /* ignore */ }
     return new Response(ogHtml(share.title ?? "", targetUrl), {
       status: 200,
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300" },

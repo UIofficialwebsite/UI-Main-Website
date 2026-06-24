@@ -5,6 +5,17 @@
       "destination": "https://qzrvctpwefhmcduariuw.supabase.co/functions/v1/share-redirect?token=:token"
     },
     {
+      "source": "/:path((?!api/|s/).*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(facebookexternalhit|WhatsApp/|TelegramBot|Twitterbot|LinkedInBot|Slackbot|Discordbot|Pinterest|redditbot|Embedly|vkShare|SkypeUriPreview).*"
+        }
+      ],
+      "destination": "https://qzrvctpwefhmcduariuw.supabase.co/functions/v1/share-redirect?path=/:path"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

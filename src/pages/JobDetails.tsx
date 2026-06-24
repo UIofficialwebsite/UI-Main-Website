@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { usePageSEO, getJobTitleSEO } from "@/utils/seoManager";
+import { supabase } from "@/integrations/supabase/client";
+
+const SITE = "https://unknowniitians.com";
 
 const JobDetails = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -55,13 +58,45 @@ const JobDetails = () => {
     };
   }, []);
 
+  // Mint a tracked link: the REAL job URL + ?si=<token> (records the share too).
+  const buildTrackedLink = (channel: string): string => {
+    const raw =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()}`;
+    const token = raw.replace(/[^a-z0-9]/gi, "").slice(0, 16);
+    const path = `/career/job/${job?.id ?? jobId}`;
+    supabase
+      .rpc("record_share", {
+        p_token: token,
+        p_content_type: "page",
+        p_content_id: job?.id ?? jobId ?? "",
+        p_title: job?.title ?? "Job",
+        p_target_url: path,
+        p_channel: channel,
+      })
+      .then(() => {}, () => {});
+    return `${SITE}${path}?si=${token}`;
+  };
+
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(currentUrl);
-    toast({
-      title: "Link Copied",
-      description: "Job link copied to clipboard!",
-      duration: 3000,
-    });
+    navigator.clipboard.writeText(buildTrackedLink("copy"));
+    toast({ title: "Link Copied", description: "Job link copied to clipboard!", duration: 3000 });
+  };
+
+  const openSocialShare = (e: React.MouseEvent, channel: string) => {
+    e.preventDefault();
+    const link = encodeURIComponent(buildTrackedLink(channel));
+    const text = encodeURIComponent(`Check out this ${job?.title ?? "job"} opportunity!`);
+    const map: Record<string, string> = {
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${link}`,
+      x: `https://twitter.com/intent/tweet?text=${text}&url=${link}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${link}`,
+      email: `mailto:?subject=${text}&body=${link}`,
+      whatsapp: `https://wa.me/?text=${text}%20${link}`,
+    };
+    if (channel === "email") window.location.href = map.email;
+    else window.open(map[channel], "_blank");
   };
 
   if (contentLoading) {
@@ -92,10 +127,6 @@ const JobDetails = () => {
     : 'Recently';
 
   const jobReference = `GB-${job.id.slice(0, 4).toUpperCase()}`;
-
-  // Share Data Construction
-  const shareText = encodeURIComponent(`Check out this ${job.title} opportunity!`);
-  const shareUrlEnc = encodeURIComponent(currentUrl);
 
   return (
     <div className="bg-[#f8fafc] min-h-screen font-['Manrope'] text-[#475569] leading-[1.6]">
@@ -238,10 +269,9 @@ const JobDetails = () => {
             
             <div className="flex gap-3 flex-wrap">
               {/* LinkedIn */}
-              <a 
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrlEnc}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <a
+                href="#"
+                onClick={(e) => openSocialShare(e, 'linkedin')}
                 title="Share on LinkedIn"
                 className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[#0a66c2] hover:text-white hover:-translate-y-[2px]"
               >
@@ -249,10 +279,9 @@ const JobDetails = () => {
               </a>
 
               {/* X (Twitter) */}
-              <a 
-                href={`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrlEnc}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <a
+                href="#"
+                onClick={(e) => openSocialShare(e, 'x')}
                 title="Share on X"
                 className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[#000000] hover:text-white hover:-translate-y-[2px]"
               >
@@ -262,10 +291,9 @@ const JobDetails = () => {
               </a>
 
               {/* Facebook */}
-              <a 
-                href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrlEnc}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <a
+                href="#"
+                onClick={(e) => openSocialShare(e, 'facebook')}
                 title="Share on Facebook"
                 className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[#1877f2] hover:text-white hover:-translate-y-[2px]"
               >
@@ -275,8 +303,9 @@ const JobDetails = () => {
               </a>
 
               {/* Email */}
-              <a 
-                href={`mailto:?subject=${shareText}&body=${shareUrlEnc}`}
+              <a
+                href="#"
+                onClick={(e) => openSocialShare(e, 'email')}
                 title="Share via Email"
                 className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[#ea4335] hover:text-white hover:-translate-y-[2px]"
               >
@@ -285,11 +314,10 @@ const JobDetails = () => {
                 </svg>
               </a>
 
-              {/* WhatsApp - Fixed Icon Path from user request */}
-              <a 
-                href={`https://wa.me/?text=${shareText}%20${shareUrlEnc}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* WhatsApp */}
+              <a
+                href="#"
+                onClick={(e) => openSocialShare(e, 'whatsapp')}
                 title="Share on WhatsApp"
                 className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[#25d366] hover:text-white hover:-translate-y-[2px]"
               >
