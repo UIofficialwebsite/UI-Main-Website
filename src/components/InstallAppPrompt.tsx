@@ -43,11 +43,10 @@ const MESSAGES: { title: string; subtitle: string }[] = [
   },
 ];
 
-// Rotating hero gradients (full class literals so Tailwind keeps them).
-const GRADIENTS = [
-  "bg-gradient-to-br from-rose-600 via-red-500 to-orange-500",
-  "bg-gradient-to-br from-emerald-600 via-green-500 to-teal-500",
-  "bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500",
+// Rotating hero images.
+const IMAGES = [
+  "https://res.cloudinary.com/dkywjijpv/image/upload/v1782276812/2026_3_mxl7hh.png",
+  "https://res.cloudinary.com/dkywjijpv/image/upload/v1782276800/2026_2_kgngrz.png",
 ];
 
 function isStandalone(): boolean {
@@ -68,7 +67,7 @@ const InstallAppPrompt = () => {
   const [visible, setVisible] = useState(false);
   const [showIosSteps, setShowIosSteps] = useState(false);
   const [msgIndex, setMsgIndex] = useState(0);
-  const [gradIndex, setGradIndex] = useState(0);
+  const [imgIndex, setImgIndex] = useState(0);
 
   // Did the QR / link explicitly ask us to show the install prompt?
   const forced =
@@ -124,7 +123,7 @@ const InstallAppPrompt = () => {
     if (!visible || showIosSteps) return;
     const id = setInterval(() => {
       setMsgIndex((i) => (i + 1) % MESSAGES.length);
-      setGradIndex((g) => (g + 1) % GRADIENTS.length);
+      setImgIndex((g) => (g + 1) % IMAGES.length);
     }, 3000);
     return () => clearInterval(id);
   }, [visible, showIosSteps]);
@@ -150,13 +149,16 @@ const InstallAppPrompt = () => {
     <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center lg:hidden font-['Inter',sans-serif]">
       {/* Square top edge (no rounded upper border), full-width sheet rising from below. No shadow. */}
       <div className="relative w-full overflow-hidden border-t border-slate-200 bg-white animate-in slide-in-from-bottom-6 duration-300">
-        {/* Hero — rotating gradient (crossfades through 3 looks) */}
-        <div className="relative h-56 w-full overflow-hidden">
-          {GRADIENTS.map((g, i) => (
-            <div
+        {/* Hero — rotating images (crossfade) */}
+        <div className="relative h-56 w-full overflow-hidden bg-slate-100">
+          {IMAGES.map((src, i) => (
+            <img
               key={i}
-              className={`absolute inset-0 ${g} transition-opacity duration-700 ${
-                i === gradIndex ? "opacity-100" : "opacity-0"
+              src={src}
+              alt="Unknown IITians app"
+              loading="lazy"
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                i === imgIndex ? "opacity-100" : "opacity-0"
               }`}
             />
           ))}
