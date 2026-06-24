@@ -8,7 +8,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SITE = "https://unknowniitians.com";
-const FALLBACK_OG_IMAGE = `${SITE}/web-uploads/UI_logo.png`;
+
+// OG image = a live screenshot of the actual page (renders the SPA, waits for JS),
+// so the preview shows the real page instead of a static logo. thum.io returns a
+// 1200x630 image at a clean URL; swap for a keyed screenshot API for higher volume.
+function pagePreview(pageUrl: string): string {
+  return `https://image.thum.io/get/width/1200/crop/630/wait/6/${pageUrl}`;
+}
 
 // Social/preview crawlers that need OG HTML instead of a redirect.
 const BOT_RE =
@@ -28,6 +34,7 @@ async function sha256(s: string): Promise<string> {
 function ogHtml(title: string, url: string): string {
   const t = esc(title || "Unknown IITians");
   const desc = "Free IITM BS notes, PYQs, tools & live batches — Unknown IITians.";
+  const img = esc(pagePreview(url)); // screenshot preview of the page itself
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8">
 <title>${t}</title>
@@ -35,12 +42,14 @@ function ogHtml(title: string, url: string): string {
 <meta property="og:site_name" content="Unknown IITians">
 <meta property="og:title" content="${t}">
 <meta property="og:description" content="${desc}">
-<meta property="og:image" content="${FALLBACK_OG_IMAGE}">
+<meta property="og:image" content="${img}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="${esc(url)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${t}">
 <meta name="twitter:description" content="${desc}">
-<meta name="twitter:image" content="${FALLBACK_OG_IMAGE}">
+<meta name="twitter:image" content="${img}">
 <meta http-equiv="refresh" content="0; url=${esc(url)}">
 </head><body>Redirecting to <a href="${esc(url)}">${t}</a>…</body></html>`;
 }

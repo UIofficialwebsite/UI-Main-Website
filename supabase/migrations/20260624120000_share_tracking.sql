@@ -86,6 +86,23 @@ $$;
 revoke all on function public.create_share(text, text, text, text, text) from public;
 grant execute on function public.create_share(text, text, text, text, text) to anon, authenticated;
 
+-- record_share: same as create_share but accepts a CLIENT-generated token, so the
+-- native share sheet can open synchronously on click (no lost user-gesture from
+-- awaiting the network). Used by the site-wide ShareButton.
+create or replace function public.record_share(
+  p_token text, p_content_type text, p_content_id text, p_title text, p_target_url text, p_channel text default null
+) returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_target_url is null or left(p_target_url, 1) <> '/' then return; end if;
+  if p_token is null or length(p_token) < 6 then return; end if;
+  insert into public.shares (token, sharer_user_id, content_type, content_id, title, target_url, channel)
+  values (p_token, auth.uid(), coalesce(nullif(p_content_type, ''), 'page'), nullif(p_content_id, ''),
+          left(p_title, 200), p_target_url, p_channel)
+  on conflict (token) do nothing;
+end; $$;
+revoke all on function public.record_share(text,text,text,text,text,text) from public;
+grant execute on function public.record_share(text,text,text,text,text,text) to anon, authenticated;
+
 -- Admin analytics aggregate (gated inside; powers the admin Shares tab).
 create or replace function public.get_share_analytics()
 returns jsonb language plpgsql security definer set search_path = public as $$

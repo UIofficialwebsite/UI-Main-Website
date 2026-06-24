@@ -1894,6 +1894,17 @@ export type Database = {
     }
     Functions: {
       get_share_analytics: { Args: never; Returns: Json }
+      record_share: {
+        Args: {
+          p_token: string
+          p_content_type: string
+          p_content_id: string
+          p_title: string
+          p_target_url: string
+          p_channel?: string
+        }
+        Returns: undefined
+      }
       create_share: {
         Args: {
           p_content_type: string
