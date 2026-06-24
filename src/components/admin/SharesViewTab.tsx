@@ -12,6 +12,14 @@ interface RecentShare {
   channel: string | null;
   created_at: string;
   clicks: number;
+  shared_by: string | null;
+}
+
+interface RecentClick {
+  created_at: string;
+  source: string;
+  clicked_by: string | null;
+  title: string | null;
 }
 
 interface Analytics {
@@ -19,7 +27,9 @@ interface Analytics {
   total_clicks: number;
   human_clicks: number;
   by_channel: Record<string, number>;
+  by_source: Record<string, number>;
   recent: RecentShare[];
+  recent_clicks: RecentClick[];
 }
 
 const channelTone = (c: string) => {
@@ -61,6 +71,7 @@ const SharesViewTab = () => {
 
   const ratio = data.total_shares > 0 ? (data.human_clicks / data.total_shares).toFixed(1) : "0";
   const channels = Object.entries(data.by_channel || {}).sort((a, b) => b[1] - a[1]);
+  const sources = Object.entries(data.by_source || {}).sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="space-y-6">
@@ -82,18 +93,34 @@ const SharesViewTab = () => {
         />
       </div>
 
-      {channels.length > 0 && (
-        <Card className="p-5">
-          <p className="text-sm font-semibold text-slate-700 mb-3">Shares by channel</p>
-          <div className="flex flex-wrap gap-2">
-            {channels.map(([c, n]) => (
-              <Badge key={c} variant="outline" className={channelTone(c)}>
-                {c} · {n}
-              </Badge>
-            ))}
-          </div>
-        </Card>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {channels.length > 0 && (
+          <Card className="p-5">
+            <p className="text-sm font-semibold text-slate-700 mb-1">Shares by channel</p>
+            <p className="text-xs text-slate-400 mb-3">How it was shared (native sheet = "webshare").</p>
+            <div className="flex flex-wrap gap-2">
+              {channels.map(([c, n]) => (
+                <Badge key={c} variant="outline" className={channelTone(c)}>
+                  {c} · {n}
+                </Badge>
+              ))}
+            </div>
+          </Card>
+        )}
+        {sources.length > 0 && (
+          <Card className="p-5">
+            <p className="text-sm font-semibold text-slate-700 mb-1">Clicks by source</p>
+            <p className="text-xs text-slate-400 mb-3">Where clicks came from (WhatsApp/Telegram strip referrer → "direct").</p>
+            <div className="flex flex-wrap gap-2">
+              {sources.map(([c, n]) => (
+                <Badge key={c} variant="outline" className={channelTone(c)}>
+                  {c} · {n}
+                </Badge>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
@@ -102,7 +129,7 @@ const SharesViewTab = () => {
               <tr>
                 <th className="text-left px-4 py-3 font-semibold">When</th>
                 <th className="text-left px-4 py-3 font-semibold">Title</th>
-                <th className="text-left px-4 py-3 font-semibold">Type</th>
+                <th className="text-left px-4 py-3 font-semibold">Shared by</th>
                 <th className="text-left px-4 py-3 font-semibold">Channel</th>
                 <th className="text-right px-4 py-3 font-semibold">Clicks</th>
               </tr>
@@ -122,16 +149,65 @@ const SharesViewTab = () => {
                         day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
                       })}
                     </td>
-                    <td className="px-4 py-3 max-w-[280px]">
+                    <td className="px-4 py-3 max-w-[240px]">
                       <p className="text-slate-900 truncate" title={s.title ?? ""}>{s.title ?? "—"}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-slate-400">{s.content_type}</p>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{s.content_type}</td>
+                    <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate" title={s.shared_by ?? ""}>
+                      {s.shared_by ?? "Anonymous"}
+                    </td>
                     <td className="px-4 py-3">
                       <Badge variant="outline" className={channelTone(s.channel ?? "unknown")}>
                         {s.channel ?? "—"}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">{s.clicks}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Who clicked */}
+      <Card className="overflow-hidden">
+        <div className="px-4 py-3 border-b bg-slate-50">
+          <p className="text-sm font-semibold text-slate-700">Recent clicks</p>
+          <p className="text-xs text-slate-400">Who opened a shared link (logged-in users are named; others are anonymous).</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+              <tr>
+                <th className="text-left px-4 py-3 font-semibold">When</th>
+                <th className="text-left px-4 py-3 font-semibold">Opened by</th>
+                <th className="text-left px-4 py-3 font-semibold">Source</th>
+                <th className="text-left px-4 py-3 font-semibold">Content</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {(data.recent_clicks || []).length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-10 text-center text-slate-500">No clicks yet.</td>
+                </tr>
+              ) : (
+                data.recent_clicks.map((c, i) => (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                      {new Date(c.created_at).toLocaleString("en-GB", {
+                        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700 max-w-[200px] truncate" title={c.clicked_by ?? ""}>
+                      {c.clicked_by ?? "Anonymous"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="outline" className={channelTone(c.source)}>{c.source}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 max-w-[240px] truncate" title={c.title ?? ""}>
+                      {c.title ?? "—"}
+                    </td>
                   </tr>
                 ))
               )}
