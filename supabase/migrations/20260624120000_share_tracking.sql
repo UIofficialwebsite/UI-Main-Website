@@ -107,11 +107,13 @@ grant execute on function public.record_share(text,text,text,text,text,text) to 
 -- YouTube-style share link). Called client-side by ShareClickTracker.
 create or replace function public.log_si_click(p_token text, p_ref text default null, p_ua text default null)
 returns void language plpgsql security definer set search_path = public as $$
-declare v_share uuid;
+declare v_share uuid; v_sharer uuid;
 begin
   if p_token is null or length(p_token) < 6 then return; end if;
-  select id into v_share from public.shares where token = p_token;
+  select id, sharer_user_id into v_share, v_sharer from public.shares where token = p_token;
   if v_share is null then return; end if;
+  -- Don't count the sharer opening their own link while logged in as the same account.
+  if v_sharer is not null and v_sharer = auth.uid() then return; end if;
   insert into public.share_clicks (share_id, token, clicked_by_user_id, referrer, user_agent, is_bot)
   values (v_share, p_token, auth.uid(), left(p_ref, 400), left(p_ua, 400), false);
 end; $$;
