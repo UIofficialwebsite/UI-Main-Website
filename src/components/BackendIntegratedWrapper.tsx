@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Course } from "@/components/admin/courses/types";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { useToast } from "@/components/ui/use-toast";
+import { cachedRead } from "@/utils/edgeCache";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 
@@ -205,14 +206,15 @@ export const BackendIntegratedWrapper: React.FC<{
     () =>
       runCached(
         "courses:public",
-        async () => {
-          const { data, error: e } = await supabase
-            .from("courses")
-            .select("*")
-            .eq("is_live", true);
-          if (e) throw e;
-          return (data ?? []) as unknown as Course[];
-        },
+        () =>
+          cachedRead<Course[]>("courses", async () => {
+            const { data, error: e } = await supabase
+              .from("courses")
+              .select("*")
+              .eq("is_live", true);
+            if (e) throw e;
+            return (data ?? []) as unknown as Course[];
+          }),
         (data) => setCourses((prev) => mergeById(prev, data))
       ),
     [runCached]
@@ -237,13 +239,18 @@ export const BackendIntegratedWrapper: React.FC<{
       const key = examType ? `notes:${examType}` : "notes:public";
       return runCached(
         key,
-        async () => {
-          let q = supabase.from("notes").select("*").eq("is_active", true);
-          if (examType) q = q.eq("exam_type", examType);
-          const { data, error: e } = await q;
-          if (e) throw e;
-          return (data ?? []) as Note[];
-        },
+        () =>
+          cachedRead<Note[]>(
+            "notes",
+            async () => {
+              let q = supabase.from("notes").select("*").eq("is_active", true);
+              if (examType) q = q.eq("exam_type", examType);
+              const { data, error: e } = await q;
+              if (e) throw e;
+              return (data ?? []) as Note[];
+            },
+            examType
+          ),
         (data) => setNotes((prev) => mergeById(prev, data))
       );
     },
@@ -269,13 +276,18 @@ export const BackendIntegratedWrapper: React.FC<{
       const key = examType ? `pyqs:${examType}` : "pyqs:public";
       return runCached(
         key,
-        async () => {
-          let q = supabase.from("pyqs").select("*").eq("is_active", true);
-          if (examType) q = q.eq("exam_type", examType);
-          const { data, error: e } = await q;
-          if (e) throw e;
-          return (data ?? []) as Pyq[];
-        },
+        () =>
+          cachedRead<Pyq[]>(
+            "pyqs",
+            async () => {
+              let q = supabase.from("pyqs").select("*").eq("is_active", true);
+              if (examType) q = q.eq("exam_type", examType);
+              const { data, error: e } = await q;
+              if (e) throw e;
+              return (data ?? []) as Pyq[];
+            },
+            examType
+          ),
         (data) => setPyqs((prev) => mergeById(prev, data))
       );
     },
