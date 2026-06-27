@@ -15,6 +15,7 @@ import ScanToInstall from "@/components/ScanToInstall";
 import ScrollPersistence from "@/components/ScrollPersistence";
 import ShareClickTracker from "@/components/ShareClickTracker";
 import { Suspense, lazy, ComponentType } from "react";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
 
 // Helper to handle chunk loading errors with auto-reload
 function lazyWithRetry<T extends ComponentType<any>>(
@@ -22,17 +23,26 @@ function lazyWithRetry<T extends ComponentType<any>>(
 ): React.LazyExoticComponent<T> {
   return lazy(() =>
     componentImport().catch((error) => {
-      // Check if it's a chunk loading error
+      // Check if it's a chunk loading error (usually a stale chunk hash after a
+      // new deploy).
       if (
         error.message?.includes('Failed to fetch dynamically imported module') ||
         error.message?.includes('Loading chunk') ||
         error.message?.includes('Loading CSS chunk')
       ) {
-        // Clear cache and reload
-        console.warn('Chunk loading failed, reloading page...', error);
-        window.location.reload();
-        // Return a never-resolving promise to prevent render during reload
-        return new Promise(() => {});
+        // Reload ONCE to pick up the new build — but never loop. If a reload in
+        // the last 10s already happened and the chunk still fails, surface the
+        // error instead of white-screening in an infinite reload.
+        const KEY = 'chunk-reload-at';
+        const last = Number(sessionStorage.getItem(KEY) || '0');
+        if (Date.now() - last > 10000) {
+          sessionStorage.setItem(KEY, String(Date.now()));
+          console.warn('Chunk loading failed, reloading once...', error);
+          window.location.reload();
+          // Return a never-resolving promise to prevent render during reload
+          return new Promise(() => {});
+        }
+        console.error('Chunk loading still failing after reload; not looping.', error);
       }
       throw error;
     })
@@ -120,6 +130,7 @@ const App = () => (
               <PushOptInPrompt />
               <ScanToInstall />
               
+              <RouteErrorBoundary>
               <Suspense fallback={
                 <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">
                   Loading...
@@ -190,6 +201,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              </RouteErrorBoundary>
             </LoginModalProvider>
           </BrowserRouter>
         </TooltipProvider>

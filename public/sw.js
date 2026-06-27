@@ -2,29 +2,41 @@
  * Intentionally conservative: this site handles live payments, so page
  * navigations are always network-first (online users get the freshest HTML
  * and the latest hashed JS bundles). Only Vite's content-hashed, immutable
- * static assets are cache-first. There is no aggressive offline caching of
- * API/payment responses. */
-const CACHE = 'ui-pwa-v1';
+ * static assets are cache-first.
+ *
+ * CRITICAL: Vercel's SPA catch-all rewrite serves index.html (HTTP 200) for any
+ * unmatched path — including a stale/missing hashed chunk. We must NEVER cache or
+ * serve that HTML under a .js/.css URL, or the app boots with HTML where script
+ * is expected and white-screens permanently. Hence the content-type guard below.
+ * The cache name is versioned so a new SW purges any previously poisoned cache. */
+const CACHE = 'ui-pwa-v2';
 const OFFLINE_URL = '/';
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
+  // Activate immediately; the offline shell is (re)populated on first navigation.
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE).then((cache) =>
-      cache.add(new Request(OFFLINE_URL, { cache: 'reload' }))
-    )
-  );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
+      // Drop every older cache (incl. any poisoned v1 entries).
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
       await self.clients.claim();
     })()
   );
 });
+
+// A response is safe to treat as a real same-origin asset only if it's a basic
+// 200 that is NOT the SPA's HTML fallback for a .js/.css request.
+function isUsableAsset(url, res) {
+  if (!res || !res.ok || res.type !== 'basic') return false;
+  const isScriptOrStyle = /\.(?:js|css)$/.test(url.pathname);
+  const ct = res.headers.get('content-type') || '';
+  if (isScriptOrStyle && ct.includes('text/html')) return false; // SPA fallback — reject
+  return true;
+}
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
@@ -34,23 +46,37 @@ self.addEventListener('fetch', (event) => {
   // Never intercept cross-origin requests (Cashfree, Google, Supabase, GA, etc.)
   if (url.origin !== self.location.origin) return;
 
-  // Page navigations: network-first, fall back to cached app shell when offline.
+  // Page navigations: network-first. Keep the LATEST good HTML as the offline
+  // shell so a fallback is never a months-old build referencing dead chunks.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req).catch(() => caches.match(OFFLINE_URL).then((r) => r || Response.error()))
+      (async () => {
+        try {
+          const res = await fetch(req);
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(OFFLINE_URL, copy)).catch(() => {});
+          }
+          return res;
+        } catch {
+          const cached = await caches.match(OFFLINE_URL);
+          return cached || Response.error();
+        }
+      })()
     );
     return;
   }
 
-  // Content-hashed, immutable static assets: cache-first.
+  // Content-hashed, immutable static assets: cache-first, but only ever cache or
+  // serve a genuine asset response (never the HTML catch-all — see guard above).
   if (/\.(?:js|css|woff2?|png|jpe?g|svg|webp|ico|gif)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(req).then((cached) => {
         if (cached) return cached;
         return fetch(req).then((res) => {
-          if (res && res.ok && res.type === 'basic') {
+          if (isUsableAsset(url, res)) {
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
           }
           return res;
         });
