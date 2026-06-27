@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedRead } from "@/utils/edgeCache";
 
 interface HeroCarouselProps {
   pagePath?: string;
@@ -32,19 +33,25 @@ const HeroCarousel = ({ pagePath = "/", fullWidth = false }: HeroCarouselProps) 
   useEffect(() => {
     const fetchBanners = async () => {
       try {
-        const { data, error } = await supabase
-          .from("page_banners")
-          .select("image_url")
-          .eq("page_path", pagePath)
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("Error fetching banners:", error);
-        } else if (data) {
-          setCarouselImages(
-            data.map((item) => ({ src: item.image_url, alt: "Banner Image" }))
-          );
-        }
+        // Served from the Vercel edge cache (api/cached-reads), falling back to a
+        // direct Supabase query if the cache route is unavailable.
+        const data = await cachedRead<{ image_url: string }[]>(
+          "page_banners",
+          async () => {
+            const { data, error } = await supabase
+              .from("page_banners")
+              .select("image_url")
+              .eq("page_path", pagePath)
+              .order("created_at", { ascending: false });
+            if (error) throw error;
+            return data ?? [];
+          },
+          undefined,
+          pagePath
+        );
+        setCarouselImages(
+          data.map((item) => ({ src: item.image_url, alt: "Banner Image" }))
+        );
       } catch (err) {
         console.error("Unexpected error:", err);
       } finally {

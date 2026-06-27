@@ -6,15 +6,29 @@
 
 type Fallback<T> = () => Promise<T>;
 
+export type CachedResource =
+  | "courses"
+  | "notes"
+  | "pyqs"
+  | "important_dates"
+  | "news_updates"
+  | "communities"
+  | "jobs"
+  | "iitm_branch_notes"
+  | "iitm_branch_pyqs"
+  | "page_banners";
+
 export async function cachedRead<T>(
-  resource: "courses" | "notes" | "pyqs",
+  resource: CachedResource,
   fallback: Fallback<T>,
-  exam?: string
+  exam?: string,
+  page?: string
 ): Promise<T> {
   try {
     const url =
       `/api/cached-reads?r=${encodeURIComponent(resource)}` +
-      (exam ? `&exam=${encodeURIComponent(exam)}` : "");
+      (exam ? `&exam=${encodeURIComponent(exam)}` : "") +
+      (page ? `&page=${encodeURIComponent(page)}` : "");
     const res = await fetch(url, { headers: { accept: "application/json" } });
     if (!res.ok) throw new Error(`edge ${resource} ${res.status}`);
     return (await res.json()) as T;

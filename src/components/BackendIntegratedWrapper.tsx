@@ -313,13 +313,18 @@ export const BackendIntegratedWrapper: React.FC<{
       const key = examType ? `important_dates:${examType}` : "important_dates:public";
       return runCached(
         key,
-        async () => {
-          let q = supabase.from("important_dates").select("*");
-          if (examType) q = q.eq("exam_type", examType);
-          const { data, error: e } = await q;
-          if (e) throw e;
-          return (data ?? []) as ImportantDate[];
-        },
+        () =>
+          cachedRead<ImportantDate[]>(
+            "important_dates",
+            async () => {
+              let q = supabase.from("important_dates").select("*");
+              if (examType) q = q.eq("exam_type", examType);
+              const { data, error: e } = await q;
+              if (e) throw e;
+              return (data ?? []) as ImportantDate[];
+            },
+            examType
+          ),
         (data) => setImportantDates((prev) => mergeById(prev, data))
       );
     },
@@ -331,13 +336,18 @@ export const BackendIntegratedWrapper: React.FC<{
       const key = examType ? `news_updates:${examType}` : "news_updates:public";
       return runCached(
         key,
-        async () => {
-          let q = supabase.from("news_updates").select("*");
-          if (examType) q = q.eq("exam_type", examType);
-          const { data, error: e } = await q;
-          if (e) throw e;
-          return (data ?? []) as NewsUpdate[];
-        },
+        () =>
+          cachedRead<NewsUpdate[]>(
+            "news_updates",
+            async () => {
+              let q = supabase.from("news_updates").select("*");
+              if (examType) q = q.eq("exam_type", examType);
+              const { data, error: e } = await q;
+              if (e) throw e;
+              return (data ?? []) as NewsUpdate[];
+            },
+            examType
+          ),
         (data) => setNewsUpdates((prev) => mergeById(prev, data))
       );
     },
@@ -349,13 +359,18 @@ export const BackendIntegratedWrapper: React.FC<{
       const key = examType ? `communities:${examType}` : "communities:public";
       return runCached(
         key,
-        async () => {
-          let q = supabase.from("communities").select("*");
-          if (examType) q = q.eq("exam_type", examType);
-          const { data, error: e } = await q;
-          if (e) throw e;
-          return (data ?? []) as Community[];
-        },
+        () =>
+          cachedRead<Community[]>(
+            "communities",
+            async () => {
+              let q = supabase.from("communities").select("*");
+              if (examType) q = q.eq("exam_type", examType);
+              const { data, error: e } = await q;
+              if (e) throw e;
+              return (data ?? []) as Community[];
+            },
+            examType
+          ),
         (data) => setCommunities((prev) => mergeById(prev, data))
       );
     },
@@ -366,14 +381,15 @@ export const BackendIntegratedWrapper: React.FC<{
     () =>
       runCached(
         "iitm_branch_notes:public",
-        async () => {
-          const { data, error: e } = await supabase
-            .from("iitm_branch_notes")
-            .select("*")
-            .eq("is_active", true);
-          if (e) throw e;
-          return (data ?? []) as IITMBranchNote[];
-        },
+        () =>
+          cachedRead<IITMBranchNote[]>("iitm_branch_notes", async () => {
+            const { data, error: e } = await supabase
+              .from("iitm_branch_notes")
+              .select("*")
+              .eq("is_active", true);
+            if (e) throw e;
+            return (data ?? []) as IITMBranchNote[];
+          }),
         (data) => setIitmBranchNotes(data)
       ),
     [runCached]
@@ -383,15 +399,16 @@ export const BackendIntegratedWrapper: React.FC<{
     () =>
       runCached(
         "iitm_branch_pyqs",
-        async () => {
-          const { data, error: e } = await supabase
-            .from("pyqs")
-            .select("*")
-            .eq("is_active", true)
-            .or("exam_type.eq.IITM_BS,exam_type.eq.IITM BS");
-          if (e) throw e;
-          return (data ?? []) as Pyq[];
-        },
+        () =>
+          cachedRead<Pyq[]>("iitm_branch_pyqs", async () => {
+            const { data, error: e } = await supabase
+              .from("pyqs")
+              .select("*")
+              .eq("is_active", true)
+              .or("exam_type.eq.IITM_BS,exam_type.eq.IITM BS");
+            if (e) throw e;
+            return (data ?? []) as Pyq[];
+          }),
         (data) => {
           setIitmBranchPyqs(data);
           setPyqs((prev) => mergeById(prev, data));
@@ -404,14 +421,15 @@ export const BackendIntegratedWrapper: React.FC<{
     () =>
       runCached(
         "jobs:public",
-        async () => {
-          const { data, error: e } = await supabase
-            .from("jobs")
-            .select("*")
-            .eq("is_active", true);
-          if (e) throw e;
-          return (data ?? []) as Job[];
-        },
+        () =>
+          cachedRead<Job[]>("jobs", async () => {
+            const { data, error: e } = await supabase
+              .from("jobs")
+              .select("*")
+              .eq("is_active", true);
+            if (e) throw e;
+            return (data ?? []) as Job[];
+          }),
         (data) => setJobs(data)
       ),
     [runCached]
