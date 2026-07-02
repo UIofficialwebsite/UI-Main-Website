@@ -219,6 +219,111 @@ const CATEGORY_MAP: Record<string, string> = {
   neet: "NEET",
 };
 
+// ---- E-E-A-T / LLMO structured data ---------------------------------------
+
+// A clear, credible entity is the core of E-E-A-T and helps AI models describe
+// who "Unknown IITians" is and what it's an authority on.
+const EDU_ORG = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: BRAND,
+  url: SITE,
+  logo: DEFAULT_OG,
+  description:
+    "Unknown IITians is an online education platform specialising in IIT Madras BS (IITM BS) Degree preparation — free notes, previous year questions, tools and live courses — alongside JEE and NEET study material.",
+  knowsAbout: [
+    "IIT Madras BS Degree",
+    "IITM BS Qualifier",
+    "IITM BS Data Science",
+    "IITM BS Electronic Systems",
+    "JEE",
+    "NEET",
+  ],
+  areaServed: "IN",
+  sameAs: [
+    "https://www.youtube.com/@UnknownIITians",
+    "https://www.instagram.com/unknown_iitians",
+  ],
+};
+
+const WEBSITE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: BRAND,
+  url: SITE,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${SITE}/courses?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
+
+type FAQ = { q: string; a: string };
+
+// FAQPage schema — extracted by Google (rich results) AND by LLMs (direct answers).
+function faqSchema(faqs: FAQ[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+}
+
+function faqBody(faqs: FAQ[]): string {
+  return (
+    `<h2>Frequently asked questions</h2>` +
+    faqs.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join("")
+  );
+}
+
+const HOME_FAQS: FAQ[] = [
+  {
+    q: "Is Unknown IITians free?",
+    a: "Yes. Unknown IITians provides free IITM BS, JEE and NEET notes, previous year questions (PYQs) and tools. Live courses for the IITM BS Qualifier and Foundation are paid.",
+  },
+  {
+    q: "What is the IIT Madras BS (IITM BS) degree?",
+    a: "The IIT Madras BS is an online 4-year Bachelor of Science degree from IIT Madras in Data Science & Applications and in Electronic Systems, with Qualifier, Foundation, Diploma and Degree levels. Anyone who has passed Class 12 can join through the Qualifier.",
+  },
+  {
+    q: "Does Unknown IITians cover both IITM BS branches?",
+    a: "Yes. It covers IITM BS Data Science and Electronic Systems across all levels — Qualifier, Foundation, Diploma and Degree — with subject-wise notes and PYQs.",
+  },
+  {
+    q: "Does Unknown IITians offer IITM BS Qualifier preparation?",
+    a: "Yes. Unknown IITians offers live IITM BS Qualifier and Foundation courses with lectures, practice and doubt-solving, plus free notes and PYQs.",
+  },
+  {
+    q: "Are there free IITM BS tools?",
+    a: "Yes. Unknown IITians offers a free IITM BS CGPA calculator, grade calculator and marks predictor.",
+  },
+];
+
+const NOTES_FAQS: FAQ[] = [
+  {
+    q: "Are IITM BS notes on Unknown IITians free?",
+    a: "Yes. All IITM BS notes on Unknown IITians are free to download as subject-wise PDFs.",
+  },
+  {
+    q: "Which IITM BS subjects have notes?",
+    a: "Notes are available for IITM BS Data Science and Electronic Systems subjects across Qualifier, Foundation, Diploma and Degree levels, organised by branch, level and subject.",
+  },
+  {
+    q: "Do the notes cover all weeks of a subject?",
+    a: "Yes. Notes are organised week by week for each subject so you can follow the full course.",
+  },
+];
+
+// Pages that get extra structured data + visible FAQ content.
+const PAGE_EXTRAS: Record<string, { schema: unknown; faqs?: FAQ[] }> = {
+  "/": { schema: [EDU_ORG, WEBSITE_SCHEMA, faqSchema(HOME_FAQS)], faqs: HOME_FAQS },
+  "/exam-preparation/iitm-bs/notes": { schema: [faqSchema(NOTES_FAQS)], faqs: NOTES_FAQS },
+};
+
 // ---- route handlers --------------------------------------------------------
 
 async function courseDoc(id: string): Promise<string> {
@@ -393,7 +498,12 @@ export default async function handler(req: Request): Promise<Response> {
   } else if (path === "/courses" || path.startsWith("/courses/category/")) {
     html = await listingDoc(path);
   } else if (PAGES[path]) {
-    html = render({ ...PAGES[path], path });
+    const meta = PAGES[path];
+    const extra = PAGE_EXTRAS[path];
+    const bodyHtml = extra?.faqs
+      ? `<h1>${esc(meta.title)}</h1>\n  <p>${esc(meta.description)}</p>\n  ${faqBody(extra.faqs)}`
+      : undefined;
+    html = render({ ...meta, path, jsonLd: extra?.schema, bodyHtml });
   } else {
     // Generic fallback: derive a sensible title from the path.
     html = render({
