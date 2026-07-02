@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { trackPurchase } from "@/utils/analytics";
 
 type Phase = "checking" | "pending" | "success" | "failed" | "timeout";
 
@@ -30,7 +31,7 @@ const PaymentProcessing = () => {
 
       const { data, error } = await supabase
         .from("enrollments")
-        .select("status")
+        .select("status, amount, course_id, subject_name, coupon_code")
         .eq("order_id", orderId)
         .limit(1)
         .maybeSingle();
@@ -44,6 +45,14 @@ const PaymentProcessing = () => {
       const status = data?.status?.toLowerCase() ?? null;
 
       if (status === "success" || status === "active" || status === "paid") {
+        // GA4 revenue event (deduped per order across refreshes).
+        trackPurchase({
+          orderId: orderId!,
+          value: data?.amount ?? undefined,
+          itemId: data?.course_id ?? undefined,
+          itemName: data?.subject_name ?? undefined,
+          coupon: data?.coupon_code ?? undefined,
+        });
         setPhase("success");
         setTimeout(() => navigate("/redirect-to-portal", { replace: true }), 1500);
         return;

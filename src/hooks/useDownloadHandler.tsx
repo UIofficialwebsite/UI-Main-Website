@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { track } from '@/utils/analytics';
 
 export const useDownloadHandler = () => {
   const { user } = useAuth();
@@ -94,6 +95,10 @@ export const useDownloadHandler = () => {
         // Optional: Success toast (can be removed if too noisy)
         // toast({ title: "Download Started", description: "File download tracked successfully." });
       }
+
+      // GA4: track study-material downloads (Enhanced Measurement misses these
+      // because the file opens via JS, not as a direct <a href> to the file).
+      track('file_download', { content_type: tableName, item_id: contentId });
 
       // Open file in new tab if URL provided
       if (fileUrl) {

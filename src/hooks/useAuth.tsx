@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { trackOnce } from '@/utils/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -128,6 +129,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+
+      // GA4: fire login / sign_up only on a genuine sign-in (not reload or token
+      // refresh). New vs returning inferred from account age; once per session.
+      if (_event === 'SIGNED_IN' && session?.user) {
+        const createdAt = session.user.created_at ? new Date(session.user.created_at).getTime() : 0;
+        const isNew = createdAt > 0 && Date.now() - createdAt < 120000; // < 2 min old
+        const method = session.user.app_metadata?.provider || 'unknown';
+        trackOnce(`auth:${session.user.id}`, isNew ? 'sign_up' : 'login', { method });
+      }
     });
 
     return () => subscription.unsubscribe();

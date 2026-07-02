@@ -4,6 +4,7 @@ import { Share, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { track } from '@/utils/analytics';
 
 const SITE = 'https://unknowniitians.com';
 
@@ -99,6 +100,9 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     } catch (error) {
       console.error('Error sharing:', error);
     }
+
+    // GA4 share event (method = channel used).
+    track('share', { method: channel, content_type: ctype, item_id: contentId ?? undefined });
 
     supabase
       .rpc('record_share', {
