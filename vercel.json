@@ -20,6 +20,17 @@
       "destination": "https://qzrvctpwefhmcduariuw.supabase.co/functions/v1/share-redirect?path=/:path"
     },
     {
+      "source": "/:path((?!api/|s/).*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(Googlebot|bingbot|Slurp|DuckDuckBot|Baiduspider|YandexBot|Applebot|Google-InspectionTool|GoogleOther).*"
+        }
+      ],
+      "destination": "/api/seo?path=/:path"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
