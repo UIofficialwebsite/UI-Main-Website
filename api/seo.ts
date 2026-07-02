@@ -51,6 +51,28 @@ async function fetchRows(query: string): Promise<Array<Record<string, unknown>>>
   }
 }
 
+// Must match src/utils/urlHelpers.ts slugify.
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+// Reverse the URL branch/level slug back to its DB form (mirrors
+// useIITMBranchNotes: "data-science" -> "Data Science", "foundation" -> "Foundation").
+function branchToDb(urlBranch: string): string {
+  return urlBranch
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+function levelToDb(urlLevel: string): string {
+  return urlLevel.charAt(0).toUpperCase() + urlLevel.slice(1);
+}
+
 interface Doc {
   title: string;
   description: string;
@@ -285,6 +307,47 @@ async function listingDoc(path: string): Promise<string> {
   return render({ ...meta, path, bodyHtml: body });
 }
 
+// Programmatic IITM BS notes-subject page:
+// /exam-preparation/iitm-bs/notes/{branch}/{level}/{subject-slug}
+async function notesSubjectDoc(path: string): Promise<string> {
+  const parts = path.split("/").filter(Boolean); // [exam-preparation, iitm-bs, notes, branch, level, subject]
+  const urlBranch = parts[3];
+  const urlLevel = parts[4];
+  const subjectSlug = parts[5];
+  const dbBranch = branchToDb(urlBranch);
+  const dbLevel = levelToDb(urlLevel);
+
+  const subjects = await fetchRows(
+    `iitm_bs_subjects?select=id,subject_name&branch=eq.${encodeURIComponent(dbBranch)}&level=eq.${encodeURIComponent(dbLevel)}`
+  );
+  const subject = subjects.find((s) => slugify(String(s.subject_name)) === subjectSlug);
+  if (!subject) {
+    return render({
+      title: `IITM BS ${dbLevel} Notes | ${BRAND}`,
+      description: `Free IITM BS ${dbLevel} notes and study material by ${BRAND}.`,
+      path,
+      index: false, // unknown subject — don't index a thin page
+    });
+  }
+
+  const subjectName = String(subject.subject_name);
+  const notes = await fetchRows(
+    `iitm_branch_notes?select=title,week_number&subject_id=eq.${subject.id}&is_active=eq.true&order=week_number.asc`
+  );
+  const title = `${subjectName} Notes — IITM BS ${dbLevel} (Free PDF) | ${BRAND}`;
+  const desc =
+    `Free IITM BS ${dbLevel} notes for ${subjectName} (${dbBranch}) — ` +
+    `${notes.length} downloadable PDF study notes covering all weeks, by ${BRAND}.`;
+  const items = notes
+    .map((n) => `<li>${esc(String(n.title))}</li>`)
+    .join("");
+  const body = `<h1>${esc(subjectName)} — IITM BS ${esc(dbLevel)} Notes</h1>
+  <p>${esc(desc)}</p>
+  ${items ? `<h2>Notes in this subject</h2><ul>${items}</ul>` : ""}`;
+
+  return render({ title, description: desc, path, bodyHtml: body });
+}
+
 function titleFromPath(path: string): string {
   const last = path.split("/").filter(Boolean).pop() || "";
   const words = last.replace(/[-_]/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -322,8 +385,11 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const courseMatch = path.match(/^\/courses\/([0-9a-fA-F-]{36})$/);
+  const notesSubjectMatch = /^\/exam-preparation\/iitm-bs\/notes\/[^/]+\/[^/]+\/[^/]+$/.test(path);
   if (courseMatch) {
     html = await courseDoc(courseMatch[1]);
+  } else if (notesSubjectMatch) {
+    html = await notesSubjectDoc(path);
   } else if (path === "/courses" || path.startsWith("/courses/category/")) {
     html = await listingDoc(path);
   } else if (PAGES[path]) {
