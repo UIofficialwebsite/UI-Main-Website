@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
       "source": "/s/:token",
       "destination": "https://qzrvctpwefhmcduariuw.supabase.co/functions/v1/share-redirect?token=:token"
     },
