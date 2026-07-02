@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { track } from '@/utils/analytics';
 
-const SITE = 'https://unknowniitians.com';
+const SITE = 'https://www.unknowniitians.com';
 
 type ContentType = 'note' | 'pyq' | 'iitm_note' | 'course' | 'tool' | 'page';
 

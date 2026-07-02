@@ -8,7 +8,7 @@
 
 export const config = { runtime: "edge" };
 
-const SITE = "https://unknowniitians.com";
+const SITE = "https://www.unknowniitians.com";
 const SUPABASE_URL = "https://qzrvctpwefhmcduariuw.supabase.co";
 const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6cnZjdHB3ZWZobWNkdWFyaXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MTAxNDYsImV4cCI6MjA2MjA4NjE0Nn0.VK1JfGf1zhXbiOc_1N03HQnA0xlpGoynjXRkb_k2NJ0";

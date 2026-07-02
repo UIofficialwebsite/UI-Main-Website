@@ -14,4 +14,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://unknowniitians.com/sitemap.xml
+Sitemap: https://www.unknowniitians.com/sitemap.xml
