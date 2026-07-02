@@ -291,12 +291,35 @@ function titleFromPath(path: string): string {
   return words ? `${words} | ${BRAND}` : BRAND;
 }
 
+// Paths that must never be indexed (compliance/internal pages). Matched
+// case-insensitively; also reinforced by an X-Robots-Tag header in vercel.json.
+const NOINDEX = new Set(["/merchantcontactanantya"]);
+
 export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   let path = (url.searchParams.get("path") || "/").split("?")[0];
   if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
 
   let html: string;
+
+  if (NOINDEX.has(path.toLowerCase())) {
+    return new Response(
+      render({
+        title: titleFromPath(path),
+        description: `${BRAND}`,
+        path,
+        index: false,
+      }),
+      {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex, nofollow",
+          "cache-control": "public, s-maxage=3600",
+        },
+      }
+    );
+  }
 
   const courseMatch = path.match(/^\/courses\/([0-9a-fA-F-]{36})$/);
   if (courseMatch) {
