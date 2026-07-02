@@ -25,7 +25,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(Googlebot|bingbot|Slurp|DuckDuckBot|Baiduspider|YandexBot|Applebot|Google-InspectionTool|GoogleOther).*"
+          "value": "(?i).*(Googlebot|bingbot|Slurp|DuckDuckBot|Baiduspider|YandexBot|Applebot|Google-InspectionTool|GoogleOther|GPTBot|OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|anthropic-ai|Amazonbot|CCBot|DuckAssistBot|meta-externalagent|Bytespider|Google-Extended).*"
         }
       ],
       "destination": "/api/seo?path=/:path"

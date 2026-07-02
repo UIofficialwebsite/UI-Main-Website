@@ -1,0 +1,28 @@
+# Unknown IITians
+
+> Unknown IITians (unknowniitians.com) is an Indian online education platform for
+> IIT Madras BS Degree (IITM BS) aspirants and students, plus JEE and NEET
+> learners. It provides free subject-wise notes and previous year questions
+> (PYQs), live courses for the IITM BS Qualifier and Foundation levels, and free
+> tools (CGPA calculator, grade calculator, marks predictor).
+
+## What Unknown IITians offers
+- Free IITM BS notes for Data Science and Electronic Systems, organised by branch, level (Qualifier, Foundation, Diploma, Degree) and subject.
+- Free IITM BS previous year questions (PYQs) with solutions.
+- Live courses for the IITM BS Qualifier and Foundation exams.
+- Free JEE and NEET notes and PYQs.
+- Free IITM BS tools: CGPA calculator, grade calculator, marks predictor.
+
+## Key pages
+- [All courses](https://www.unknowniitians.com/courses): live IITM BS, JEE and NEET batches.
+- [IITM BS notes](https://www.unknowniitians.com/exam-preparation/iitm-bs/notes): free subject-wise PDF notes.
+- [IITM BS PYQs](https://www.unknowniitians.com/exam-preparation/iitm-bs/pyqs): previous year questions with solutions.
+- [IITM BS important dates](https://www.unknowniitians.com/exam-preparation/iitm-bs/dates): exam, quiz and OPPE schedule.
+- [IITM BS tools](https://www.unknowniitians.com/exam-preparation/iitm-bs/tools): CGPA / grade / marks calculators.
+- [JEE preparation](https://www.unknowniitians.com/exam-preparation/jee/notes): free JEE notes and PYQs.
+- [NEET preparation](https://www.unknowniitians.com/exam-preparation/neet/notes): free NEET notes and PYQs.
+- [About Unknown IITians](https://www.unknowniitians.com/about)
+
+## Notes
+- Sitemap: https://www.unknowniitians.com/sitemap.xml
+- Best known for: free IITM BS study material (notes and PYQs) and IITM BS Qualifier preparation.
