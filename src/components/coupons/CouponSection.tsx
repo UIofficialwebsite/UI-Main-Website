@@ -161,6 +161,11 @@ interface CouponSectionProps {
   // Disable for surfaces (e.g., course detail card) where the page is just
   // being browsed and a celebration on every visit is noise.
   celebrateOnAutoApply?: boolean;
+  // Called once the eligibility / auto-apply check has settled. Lets the parent
+  // keep the checkout CTA disabled until the price is final, so a user can't
+  // click during the brief window where an auto-applied coupon is still flipping
+  // the total (which could route a paid course into a free enrollment).
+  onSettled?: () => void;
   className?: string;
 }
 
@@ -192,6 +197,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
   onRemove,
   enableAutoApply = true,
   celebrateOnAutoApply = true,
+  onSettled,
   className,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -272,7 +278,10 @@ const CouponSection: React.FC<CouponSectionProps> = ({
       } catch {
         if (!cancelled) setOffers([]);
       } finally {
-        if (!cancelled) setOffersLoading(false);
+        if (!cancelled) {
+          setOffersLoading(false);
+          onSettled?.(); // price is now final — parent may enable the CTA
+        }
       }
     };
     fetchOffersAndRevalidate();

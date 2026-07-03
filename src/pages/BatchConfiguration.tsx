@@ -186,6 +186,19 @@ const BatchConfiguration = () => {
     finalAmount: number;
   };
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  // True once the coupon eligibility/auto-apply check has settled, so the price
+  // shown is final. The enroll CTA stays disabled until then — this stops a user
+  // from clicking during the brief flash where an auto-applied coupon is still
+  // flipping the total (which was creating unintended free/no-subject enrollments).
+  const [couponSettled, setCouponSettled] = useState(false);
+
+  // Safety net: never leave the enroll CTA permanently disabled if the coupon
+  // eligibility check ever hangs — force-enable it a few seconds after load.
+  useEffect(() => {
+    if (loading) return;
+    const t = setTimeout(() => setCouponSettled(true), 5000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   // --- 1. Fetch Data & Check Enrollment ---
   useEffect(() => {
@@ -854,6 +867,7 @@ const BatchConfiguration = () => {
                 appliedCoupon={appliedCoupon}
                 onApply={setAppliedCoupon}
                 onRemove={() => setAppliedCoupon(null)}
+                onSettled={() => setCouponSettled(true)}
               />
             </div>
           </div>
@@ -907,6 +921,7 @@ const BatchConfiguration = () => {
                 appliedCoupon={appliedCoupon}
                 onApply={setAppliedCoupon}
                 onRemove={() => setAppliedCoupon(null)}
+                onSettled={() => setCouponSettled(true)}
                 className="mb-5"
               />
 
@@ -917,7 +932,7 @@ const BatchConfiguration = () => {
 
               <button 
                 onClick={handlePayment}
-                disabled={processing || !hasItemsToEnroll}
+                disabled={processing || !hasItemsToEnroll || !couponSettled}
                 className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-md"
               >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue to Payment"}
@@ -953,7 +968,7 @@ const BatchConfiguration = () => {
 
             <button 
                 onClick={handlePayment}
-                disabled={processing || !hasItemsToEnroll}
+                disabled={processing || !hasItemsToEnroll || !couponSettled}
                 className="bg-[#1a1f36] text-white px-6 h-11 rounded-md text-[14px] font-bold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[120px]"
             >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "PAY NOW"}
