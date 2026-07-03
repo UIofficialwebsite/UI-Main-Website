@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Clock, Tag } from "lucide-react";
+import { GraduationCap, Clock, Tag, Loader2 } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
 import EnrollButton from "@/components/EnrollButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const navigate = useNavigate();
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
+  // False until the add-on lookup has returned, so we never show the direct
+  // free-enroll button before we know whether this course actually has add-ons.
+  const [addonsChecked, setAddonsChecked] = useState(false);
   
   // Enrollment status check
   const { isFullyEnrolled, isMainCourseOwned, hasRemainingAddons } = useEnrollmentStatus(course.id);
@@ -76,8 +79,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         setHasAddons(false);
         setMinAddonPrice(null);
       }
+      setAddonsChecked(true);
     };
-    
+
     checkAddonsAndPrice();
   }, [course.id, course.price]);
 
@@ -143,8 +147,20 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       );
     }
 
-    // Logic 1: Free Batch (No Add-ons) -> Use EnrollButton for phone collection
+    // Logic 1: Free Batch (No Add-ons) -> Use EnrollButton for phone collection.
+    // Guard: only show the direct free-enroll button once the add-on lookup has
+    // returned. Otherwise a free-base course that actually HAS add-ons briefly
+    // renders this button (hasAddons is still false), and a fast click creates a
+    // base-only free enrollment with no subject. While checking, show a disabled
+    // placeholder so nothing can be clicked prematurely.
     if (isBaseFree && !hasAddons) {
+        if (!addonsChecked) {
+            return (
+                <button className={btnClass} disabled>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                </button>
+            );
+        }
         return (
             <EnrollButton
                 courseId={course.id}
