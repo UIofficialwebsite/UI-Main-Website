@@ -115,7 +115,11 @@ const Courses = () => {
         <div className="pb-24 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-10">
             {!contentLoading && availableBranches.map((branch) => {
-              const branchCourses = categoryCourses.filter(c => c.branch === branch).slice(0, 3);
+              const fullBranchCourses = categoryCourses.filter(c => c.branch === branch);
+              // Show up to 3 rows inline (the lg grid is 3-up → 9 cards); the
+              // "View all" button only appears when there's more than that.
+              const ROWS_LIMIT = 9;
+              const branchCourses = fullBranchCourses.slice(0, ROWS_LIMIT);
               if (branchCourses.length === 0) return null;
               return (
                 <div key={branch} className="mb-14 md:mb-16">
@@ -135,14 +139,16 @@ const Courses = () => {
                     ))}
                   </div>
 
-                  <div className="flex justify-center mt-6">
-                    <button 
-                      className="bg-[#EFF6FF] text-[#1E3A8A] font-normal font-['Inter',sans-serif] py-2.5 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex items-center gap-2 text-[13px] md:text-sm border border-blue-100 shadow-sm"
-                      onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
-                    >
-                      View all batches {">"}
-                    </button>
-                  </div>
+                  {fullBranchCourses.length > ROWS_LIMIT && (
+                    <div className="flex justify-center mt-6">
+                      <button
+                        className="bg-[#EFF6FF] text-[#1E3A8A] font-normal font-['Inter',sans-serif] py-2.5 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex items-center gap-2 text-[13px] md:text-sm border border-blue-100 shadow-sm"
+                        onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
+                      >
+                        View all batches {">"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
