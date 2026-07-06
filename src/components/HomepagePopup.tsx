@@ -93,7 +93,7 @@ const HomepagePopup: React.FC = () => {
       aria-modal="true"
     >
       <div
-        className="relative w-[92vw] max-w-[860px] sm:w-[70vw] h-[78vh] sm:h-[70vh] bg-white rounded-lg shadow-2xl flex flex-col p-3 sm:p-4 font-['Inter',sans-serif]"
+        className="relative w-[92vw] max-w-[860px] sm:w-[70vw] h-[78vh] sm:h-[70vh] bg-white rounded-lg shadow-2xl flex flex-col px-3 pb-3 pt-12 sm:px-4 sm:pb-4 sm:pt-12 font-['Inter',sans-serif]"
         onClick={(e) => e.stopPropagation()}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
