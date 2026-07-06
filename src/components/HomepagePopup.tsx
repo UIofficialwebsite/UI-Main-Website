@@ -87,13 +87,13 @@ const HomepagePopup: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6"
+      className="fixed inset-0 z-[60000] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6"
       onClick={() => setOpen(false)}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="relative w-[92vw] max-w-[860px] sm:w-[70vw] h-[78vh] sm:h-[70vh] bg-white rounded-lg overflow-hidden shadow-2xl flex flex-col font-['Inter',sans-serif]"
+        className="relative w-[92vw] max-w-[860px] sm:w-[70vw] h-[78vh] sm:h-[70vh] bg-white rounded-lg shadow-2xl flex flex-col p-3 sm:p-4 font-['Inter',sans-serif]"
         onClick={(e) => e.stopPropagation()}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
@@ -107,8 +107,8 @@ const HomepagePopup: React.FC = () => {
           <X className="h-4 w-4" />
         </button>
 
-        {/* Poster / video area */}
-        <div className="flex-1 min-h-0 bg-neutral-950 flex items-center justify-center">
+        {/* Poster / video area — inner padded frame */}
+        <div className="flex-1 min-h-0 rounded-md border border-neutral-200 bg-neutral-950 overflow-hidden flex items-center justify-center">
           {current.image_url ? (
             <a href={current.link_url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
               <img
@@ -138,13 +138,13 @@ const HomepagePopup: React.FC = () => {
           )}
         </div>
 
-        {/* Button */}
-        <div className="shrink-0 p-4 bg-white flex flex-col items-center gap-3">
+        {/* Button — small, sized to its text */}
+        <div className="shrink-0 pt-3 flex flex-col items-center gap-2.5">
           <a
             href={current.link_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center w-full max-w-[420px] bg-[#1E3A8A] text-white font-normal text-sm py-3 rounded-md hover:bg-[#152a63] transition-colors font-['Inter',sans-serif]"
+            className="inline-flex items-center justify-center bg-[#1E3A8A] text-white font-normal text-sm px-6 py-2 rounded-md hover:bg-[#152a63] transition-colors font-['Inter',sans-serif]"
           >
             {current.button_text}
           </a>
