@@ -27,7 +27,7 @@ const toYouTubeEmbed = (url: string): string | null => {
   }
 };
 
-const SESSION_KEY = "ui-homepage-popup-seen";
+const STORAGE_KEY = "ui-homepage-popup-seen";
 
 const HomepagePopup: React.FC = () => {
   const [popups, setPopups] = useState<Popup[]>([]);
@@ -36,26 +36,31 @@ const HomepagePopup: React.FC = () => {
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    // Once per browser session so it isn't annoying on every navigation.
-    try {
-      if (sessionStorage.getItem(SESSION_KEY)) return;
-    } catch {
-      /* storage blocked — still show */
-    }
-
     let cancelled = false;
     (async () => {
       // homepage_popups is newer than the generated types — cast the client.
       const { data, error } = await (supabase as any)
         .from("homepage_popups")
-        .select("id, image_url, link_url, button_text")
+        .select("id, image_url, link_url, button_text, created_at")
         .eq("is_active", true)
         .order("created_at", { ascending: false }); // newest first
       if (cancelled || error || !data || data.length === 0) return;
+
+      // Show once per person (localStorage), but re-show whenever a NEWER popup
+      // is inserted: the newest row's created_at is the "version" we remember.
+      const newest = String(data[0].created_at);
+      let seen: string | null = null;
+      try {
+        seen = localStorage.getItem(STORAGE_KEY);
+      } catch {
+        /* storage blocked — still show */
+      }
+      if (seen === newest) return; // already saw the latest — nothing new
+
       setPopups(data as Popup[]);
       setOpen(true);
       try {
-        sessionStorage.setItem(SESSION_KEY, "1");
+        localStorage.setItem(STORAGE_KEY, newest);
       } catch {
         /* ignore */
       }
