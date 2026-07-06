@@ -98,7 +98,7 @@ const HomepagePopup: React.FC = () => {
       aria-modal="true"
     >
       <div
-        className="relative w-[92vw] max-w-[860px] sm:w-[70vw] h-[78vh] sm:h-[70vh] bg-white rounded-lg shadow-2xl flex flex-col px-5 pb-5 pt-12 sm:px-6 sm:pb-6 sm:pt-14 font-['Inter',sans-serif]"
+        className="relative w-[92vw] max-w-[860px] sm:w-[70vw] max-h-[92vh] sm:h-[70vh] bg-white rounded-lg shadow-2xl flex flex-col px-5 pb-5 pt-12 sm:px-6 sm:pb-6 sm:pt-14 font-['Inter',sans-serif]"
         onClick={(e) => e.stopPropagation()}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
@@ -112,8 +112,10 @@ const HomepagePopup: React.FC = () => {
           <X className="h-4 w-4" />
         </button>
 
-        {/* Poster / video area — inner padded frame */}
-        <div className="flex-1 min-h-0 rounded-md border border-neutral-200 bg-neutral-950 overflow-hidden flex items-center justify-center">
+        {/* Poster / video area — inner padded frame.
+            Mobile: fixed 16:9 rectangle so landscape thumbnails/videos fit the
+            width cleanly. Desktop: fills the tall modal. */}
+        <div className="w-full aspect-video sm:aspect-auto sm:flex-1 min-h-0 rounded-md border border-neutral-200 bg-neutral-950 overflow-hidden flex items-center justify-center">
           {current.image_url ? (
             <a href={current.link_url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
               <img
