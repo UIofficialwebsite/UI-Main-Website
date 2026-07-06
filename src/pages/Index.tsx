@@ -7,7 +7,7 @@ import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
 import Footer from "@/components/Footer";
-import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle";
+import HomepagePopup from "@/components/HomepagePopup";
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const Index = () => {
@@ -24,7 +24,7 @@ const Index = () => {
       <TestimonialsSection />
       <ResourceHubSection />
       <Footer />
-      <FloatingAnnouncementToggle />
+      <HomepagePopup />
     </>
   );
 };

@@ -23,6 +23,7 @@ import {
   MailWarning,
   FileDown,
   Share2,
+  Megaphone,
   LucideIcon,
 } from "lucide-react";
 
@@ -76,6 +77,7 @@ const groups: MenuGroup[] = [
       { id: "jobs", label: "Jobs", icon: Briefcase },
       { id: "push-notifications", label: "Push Notifications", icon: Bell },
       { id: "cart-recovery", label: "Cart Recovery", icon: MailWarning },
+      { id: "popups", label: "Homepage Popup", icon: Megaphone },
     ],
   },
   {
