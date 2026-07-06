@@ -37,15 +37,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let admin = false;
     let superAdmin = false;
+    let rpcOk = false;
 
     try {
-      const { data: rpcAdmin } = await supabase.rpc('is_current_user_admin');
-      if (rpcAdmin) admin = true;
+      const { data: rpcAdmin, error } = await supabase.rpc('is_current_user_admin');
+      if (!error) {
+        rpcOk = true;
+        if (rpcAdmin) admin = true;
+      }
     } catch (err) {
       console.warn('useAuth: is_current_user_admin RPC unavailable:', err);
     }
 
-    if (!admin) {
+    // Only fall back to a direct admin_users read if the RPC was UNAVAILABLE
+    // (not merely returned false) — a redundant query on every login otherwise.
+    if (!admin && !rpcOk) {
       try {
         const { data: adminRow } = await supabase
           .from('admin_users')
