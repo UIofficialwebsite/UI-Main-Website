@@ -152,9 +152,9 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card className="group bg-white border-slate-200 rounded-lg p-4 flex gap-4 transition-all hover:shadow-md min-h-[160px] h-full cursor-default overflow-hidden">
-            {/* Thumbnail: brand logo centered on a soft grey background */}
-            <div className="w-[80px] sm:w-[95px] aspect-[2/3] bg-slate-100 rounded flex-shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
-                <img src="/web-uploads/UI_logo.png" alt="" className="w-1/2 h-auto object-contain opacity-80" />
+            {/* Thumbnail: brand logo centered on a deep grey background */}
+            <div className="w-[80px] sm:w-[95px] aspect-[2/3] bg-slate-400 rounded flex-shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
+                <img src="/web-uploads/UI_logo.png" alt="" className="w-2/5 h-auto object-contain opacity-90" />
             </div>
             <div className="flex flex-col flex-1 min-w-0">
                 <div className="mb-2">
