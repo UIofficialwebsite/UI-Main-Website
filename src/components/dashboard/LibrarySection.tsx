@@ -26,6 +26,20 @@ const contentCategories = [
     'UI ki Padhai',
 ];
 
+// Google Drive/Docs "/view"/"/edit" links refuse to be embedded in an iframe;
+// their "/preview" form is embeddable. Convert so the in-app viewer works.
+const toEmbeddableUrl = (raw?: string | null): string => {
+    if (!raw) return '';
+    const url = raw.trim();
+    let m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if (m) return `https://drive.google.com/file/d/${m[1]}/preview`;
+    m = url.match(/drive\.google\.com\/(?:open|uc)\?[^]*?id=([^&]+)/);
+    if (m) return `https://drive.google.com/file/d/${m[1]}/preview`;
+    m = url.match(/docs\.google\.com\/(document|spreadsheets|presentation)\/d\/([^/]+)/);
+    if (m) return `https://docs.google.com/${m[1]}/d/${m[2]}/preview`;
+    return url;
+};
+
 interface ContentItem {
   id: string | number;
   title: string;
@@ -394,7 +408,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                    </div>
                 ) : (
                    <div className="w-full bg-slate-50 rounded-lg border h-[80vh] overflow-hidden shadow-sm">
-                        <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
+                        <iframe src={toEmbeddableUrl(viewingItem.url)} className="w-full h-full border-0" title="Viewer" allow="autoplay" />
                    </div>
                 )}
             </div>
