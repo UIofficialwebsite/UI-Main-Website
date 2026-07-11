@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, ChevronRight, Play, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
-import VideoPlayer from "../VideoPlayer"; 
+import VideoPlayer from "../VideoPlayer";
+import { ShareButton } from "@/components/ShareButton";
 
 const contentCategories = [
     'PYQs (Previous Year Questions)',
@@ -36,6 +37,7 @@ interface ContentItem {
   shift?: string | null;
   week_number?: number | null;
   level?: string | null;
+  source?: string; // source table, for building the shareable deep link
 }
 
 interface YouTubeVideo {
@@ -135,8 +137,14 @@ const PlaylistRow: React.FC<{
   );
 };
 
+const SOURCE_TO_CONTENT_TYPE: Record<string, 'note' | 'pyq' | 'iitm_note'> = {
+    pyqs: 'pyq',
+    notes: 'note',
+    iitm_branch_notes: 'iitm_note',
+    study_materials: 'note',
+};
+
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void; isIITM: boolean }> = ({ item, handleOpen, isIITM }) => {
-    const thumbnailUrl = `https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=200&q=80`;
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (item.url) window.open(item.url, '_blank');
@@ -144,8 +152,9 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card className="group bg-white border-slate-200 rounded-lg p-4 flex gap-4 transition-all hover:shadow-md min-h-[160px] h-full cursor-default overflow-hidden">
-            <div className="w-[80px] sm:w-[95px] aspect-[2/3] bg-slate-800 rounded flex-shrink-0 overflow-hidden shadow-sm">
-                <img src={thumbnailUrl} alt={item.title} className="w-full h-full object-cover opacity-90" />
+            {/* Thumbnail: brand logo centered on a soft grey background */}
+            <div className="w-[80px] sm:w-[95px] aspect-[2/3] bg-slate-100 rounded flex-shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
+                <img src="/web-uploads/UI_logo.png" alt="" className="w-1/2 h-auto object-contain opacity-80" />
             </div>
             <div className="flex flex-col flex-1 min-w-0">
                 <div className="mb-2">
@@ -164,6 +173,13 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                 </div>
                 <div className="flex gap-2 w-full mt-auto">
                     <Button variant="outline" onClick={() => handleOpen(item)} className="flex-1 h-8 text-xs font-normal text-slate-700 border-slate-200 hover:bg-slate-50 rounded-md">View</Button>
+                    <ShareButton
+                        url={`/dashboard/library?open=${item.id}&t=${item.source ?? ''}`}
+                        title={item.title}
+                        contentType={SOURCE_TO_CONTENT_TYPE[item.source ?? ''] ?? 'note'}
+                        contentId={String(item.id)}
+                        className="!h-8 !w-8 !px-0 border-slate-200 shrink-0"
+                    />
                     <button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-md flex items-center justify-center shrink-0">
                         <Download className="h-4 w-4 text-white" />
                     </button>
@@ -192,6 +208,35 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
   
   const viewingItem = persistedVideo;
   const setViewingItem = (item: ContentItem | null) => onVideoChange(item);
+
+  // Shared deep link: /dashboard/library?open=<id>&t=<table> opens that file.
+  // Works regardless of the viewer's focus area (fetches the item directly).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLinkHandled = useRef(false);
+  useEffect(() => {
+    const open = searchParams.get('open');
+    const t = searchParams.get('t');
+    const ALLOWED = ['pyqs', 'notes', 'iitm_branch_notes', 'study_materials'];
+    if (!open || !t || !ALLOWED.includes(t) || deepLinkHandled.current) return;
+    deepLinkHandled.current = true;
+    (async () => {
+      try {
+        const { data } = await (supabase as any).from(t).select('*').eq('id', open).maybeSingle();
+        if (data) {
+          const url = data.file_link || data.content_url || data.file_url || null;
+          setViewingItem({ id: data.id, title: data.title || 'Shared file', url, category: 'Shared', subject: data.subject });
+        }
+      } catch (e) {
+        console.error('Failed to open shared file:', e);
+      }
+      // Tidy the URL (drop the deep-link params; the ?si click tracker already ran).
+      const next = new URLSearchParams(searchParams);
+      next.delete('open');
+      next.delete('t');
+      setSearchParams(next, { replace: true });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("none");
@@ -226,13 +271,13 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
         const { data: iitmData } = isIITM ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) : { data: [] };
 
         const combined: ContentItem[] = [
-          ...(pyqData || []).map(p => ({ 
-            id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url, 
-            category: 'PYQs (Previous Year Questions)', year: p.year, level: p.level || p.class_level, 
-            session: p.session, shift: p.shift 
+          ...(pyqData || []).map(p => ({
+            id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url,
+            category: 'PYQs (Previous Year Questions)', year: p.year, level: p.level || p.class_level,
+            session: p.session, shift: p.shift, source: 'pyqs'
           })),
-          ...(notesData || []).map(n => ({ id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, category: 'Short Notes and Mindmaps', level: n.class_level })),
-          ...(iitmData || []).map(i => ({ id: i.id, title: i.title, subject: i.subject, url: i.file_link, category: 'Short Notes and Mindmaps', week_number: i.week_number, level: i.level }))
+          ...(notesData || []).map(n => ({ id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, category: 'Short Notes and Mindmaps', level: n.class_level, source: 'notes' })),
+          ...(iitmData || []).map(i => ({ id: i.id, title: i.title, subject: i.subject, url: i.file_link, category: 'Short Notes and Mindmaps', week_number: i.week_number, level: i.level, source: 'iitm_branch_notes' }))
         ];
         setDbMaterials(combined);
       } catch (err) { console.error("Library sync error:", err); } finally { setLoading(false); }
@@ -265,7 +310,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
             else if (materialType === 'note' || materialType === 'mindmap') cat = 'Short Notes and Mindmaps';
             else if (materialType === 'question_bank') cat = 'Free Question Bank';
             else if (titleLower.includes('lecture')) cat = 'Free Lectures';
-            return { id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, category: cat, level: m.level || m.class_level, year: m.year, week_number: m.week_number };
+            return { id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, category: cat, level: m.level || m.class_level, year: m.year, week_number: m.week_number, source: 'study_materials' };
         });
     return [...dbMaterials, ...studyMapped];
   }, [dbMaterials, studyMaterials, focusArea]);

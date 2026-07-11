@@ -84,7 +84,9 @@ const OptimizedAuthWrapper: React.FC<OptimizedAuthWrapperProps> = ({
           <Button 
             className="w-full bg-royal hover:bg-royal-dark"
             onClick={() => {
-              localStorage.setItem('authRedirectUrl', window.location.pathname);
+              // Preserve the full URL (incl. query like ?open=…&t=…) under the
+              // key Auth.tsx actually reads, so shared deep links survive login.
+              localStorage.setItem('auth_return_url', window.location.pathname + window.location.search);
               window.location.href = '/auth';
             }}
           >
