@@ -167,7 +167,7 @@ export function MobileEnrollmentBar({
   return (
     <div 
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-in-out px-5 py-3 md:hidden flex items-center justify-between min-w-[320px]",
+        "fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-in-out px-5 py-3 lg:hidden flex items-center justify-between min-w-[320px]",
         isVisible ? "translate-y-0" : "translate-y-[110%]"
       )}
     >
