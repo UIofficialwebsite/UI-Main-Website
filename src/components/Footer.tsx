@@ -336,17 +336,17 @@ const Footer = () => {
               <h4 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">IITM Tools</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="/iitm-tools/cgpa-calculator" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/exam-preparation/iitm-bs/tools/data-science/foundation/cgpa-calculator" className="text-gray-400 hover:text-white transition-colors text-sm">
                     CGPA Calculator
                   </a>
                 </li>
                 <li>
-                  <a href="/iitm-tools/grade-calculator/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/exam-preparation/iitm-bs/tools/data-science/foundation/grade-calculator" className="text-gray-400 hover:text-white transition-colors text-sm">
                     Grade Calculator
                   </a>
                 </li>
                 <li>
-                  <a href="/iitm-tools/marks-predictor/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/exam-preparation/iitm-bs/tools/data-science/foundation/marks-predictor" className="text-gray-400 hover:text-white transition-colors text-sm">
                     Marks Predictor
                   </a>
                 </li>

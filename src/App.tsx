@@ -81,7 +81,6 @@ const EmployeeVerification = lazyWithRetry(() => import("./pages/EmployeeVerific
 const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazyWithRetry(() => import("./pages/TermsOfService"));
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"));
-const IITMCalculators = lazyWithRetry(() => import("./pages/IITMCalculators"));
 const NewsDetail = lazyWithRetry(() => import("./pages/NewsDetail"));
 const RedirectToPortal = lazyWithRetry(() => import("./pages/RedirectToPortal"));
 const PaymentProcessing = lazyWithRetry(() => import("./pages/PaymentProcessing"));
@@ -163,7 +162,6 @@ const App = () => (
                   <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
                   <Route path="/news/:newsId" element={<NewsDetail />} />
                   
-                  <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
                   
                   {/* CAREER ROUTES */}
                   <Route path="/career" element={<Career />} />
