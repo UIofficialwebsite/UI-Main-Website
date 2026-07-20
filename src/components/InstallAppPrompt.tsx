@@ -5,8 +5,8 @@ import { Share, Plus } from "lucide-react";
  * Auto-showing "Install this app" invitation.
  *
  * Mobile (< lg): a full-width bottom sheet styled like a native app promo —
- * square top edge, hero image, and a headline/description pair that auto-rotates
- * through four messages.
+ * square top edge and a headline/description pair that auto-rotates through
+ * four messages.
  *
  * - Android / desktop Chrome: captures the `beforeinstallprompt` event. Tapping
  *   "Install App" fires Chrome's native install dialog.
@@ -43,12 +43,6 @@ const MESSAGES: { title: string; subtitle: string }[] = [
   },
 ];
 
-// Rotating hero images.
-const IMAGES = [
-  "https://res.cloudinary.com/dkywjijpv/image/upload/v1782276812/2026_3_mxl7hh.png",
-  "https://res.cloudinary.com/dkywjijpv/image/upload/v1782276800/2026_2_kgngrz.png",
-];
-
 function isStandalone(): boolean {
   return (
     window.matchMedia?.("(display-mode: standalone)").matches ||
@@ -67,7 +61,6 @@ const InstallAppPrompt = () => {
   const [visible, setVisible] = useState(false);
   const [showIosSteps, setShowIosSteps] = useState(false);
   const [msgIndex, setMsgIndex] = useState(0);
-  const [imgIndex, setImgIndex] = useState(0);
 
   // Did the QR / link explicitly ask us to show the install prompt?
   const forced =
@@ -123,7 +116,6 @@ const InstallAppPrompt = () => {
     if (!visible || showIosSteps) return;
     const id = setInterval(() => {
       setMsgIndex((i) => (i + 1) % MESSAGES.length);
-      setImgIndex((g) => (g + 1) % IMAGES.length);
     }, 3000);
     return () => clearInterval(id);
   }, [visible, showIosSteps]);
@@ -149,41 +141,26 @@ const InstallAppPrompt = () => {
     <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center lg:hidden font-['Inter',sans-serif]">
       {/* Square top edge (no rounded upper border), full-width sheet rising from below. No shadow. */}
       <div className="relative w-full overflow-hidden border-t border-slate-200 bg-white animate-in slide-in-from-bottom-6 duration-300">
-        {/* Hero — rotating images (crossfade) */}
-        <div className="relative h-56 w-full overflow-hidden bg-slate-100">
-          {IMAGES.map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt="Unknown IITians app"
-              loading="lazy"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-                i === imgIndex ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          ))}
-        </div>
-
         <div className="px-6 pb-7 pt-6 text-center">
-          <p className="text-[13px] font-medium text-slate-400">
+          <p className="text-[13px] font-normal text-slate-400">
             Get the Unknown IITians App for
           </p>
 
           {showIosSteps ? (
             <div className="mx-auto mt-3 max-w-sm text-left">
-              <p className="mb-2 text-center text-sm font-bold text-slate-800">
+              <p className="mb-2 text-center text-sm font-semibold text-slate-800">
                 Install on iPhone / iPad
               </p>
               <ol className="space-y-2 text-sm text-slate-600">
                 <li className="flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-normal text-white">
                     1
                   </span>
                   Tap the <Share className="mx-0.5 inline h-4 w-4" /> Share
                   button in Safari.
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-normal text-white">
                     2
                   </span>
                   Choose <Plus className="mx-0.5 inline h-4 w-4" /> "Add to Home
@@ -194,7 +171,7 @@ const InstallAppPrompt = () => {
           ) : (
             // Rotating headline + description (re-mounts each cycle for a fade-in)
             <div key={msgIndex} className="animate-in fade-in duration-500">
-              <h2 className="mt-2 text-[26px] font-extrabold leading-tight tracking-tight text-slate-900">
+              <h2 className="mt-2 text-[26px] font-semibold leading-tight tracking-tight text-slate-900">
                 {msg.title}
               </h2>
               <p className="mt-2 text-[15px] text-slate-500">{msg.subtitle}</p>
@@ -203,14 +180,14 @@ const InstallAppPrompt = () => {
 
           <button
             onClick={handleInstall}
-            className="mt-6 w-full rounded-xl bg-blue-800 px-4 py-4 font-['Inter',sans-serif] text-base font-bold text-white transition-colors active:bg-blue-900"
+            className="mt-6 w-full rounded-xl bg-blue-800 px-4 py-4 font-['Inter',sans-serif] text-base font-normal text-white transition-colors active:bg-blue-900"
           >
             Install App
           </button>
 
           <button
             onClick={dismiss}
-            className="mt-1.5 w-full rounded-xl py-4 font-['Inter',sans-serif] text-[15px] font-semibold text-blue-800 transition-colors active:bg-slate-50"
+            className="mt-1.5 w-full rounded-xl py-4 font-['Inter',sans-serif] text-[15px] font-normal text-blue-800 transition-colors active:bg-slate-50"
           >
             Continue in Web
           </button>

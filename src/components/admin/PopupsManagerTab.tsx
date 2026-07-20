@@ -10,7 +10,7 @@ interface Popup {
   id: string;
   image_url: string | null;
   link_url: string;
-  button_text: string;
+  button_text: string | null;
   is_active: boolean;
   created_at: string;
 }
@@ -20,7 +20,7 @@ const PopupsManagerTab: React.FC = () => {
   const [rows, setRows] = useState<Popup[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ image_url: "", link_url: "", button_text: "Watch Now" });
+  const [form, setForm] = useState({ image_url: "", link_url: "", button_text: "" });
 
   const load = async () => {
     setLoading(true);
@@ -46,14 +46,14 @@ const PopupsManagerTab: React.FC = () => {
     const { error } = await sb.from("homepage_popups").insert({
       image_url: form.image_url.trim() || null,
       link_url: form.link_url.trim(),
-      button_text: form.button_text.trim() || "Watch Now",
+      button_text: form.button_text.trim() || null, // empty => no button
     });
     setSaving(false);
     if (error) {
       toast({ title: "Failed to add", description: error.message, variant: "destructive" });
       return;
     }
-    setForm({ image_url: "", link_url: "", button_text: "Watch Now" });
+    setForm({ image_url: "", link_url: "", button_text: "" });
     toast({ title: "Popup added" });
     load();
   };
@@ -82,7 +82,7 @@ const PopupsManagerTab: React.FC = () => {
         <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Homepage Popup</h2>
         <p className="text-sm text-slate-500 mt-1">
           Shown once per visitor session on the homepage. Newest first; multiple active popups auto-scroll.
-          Leave the poster image empty to embed the link as a YouTube video.
+          Leave the poster image empty to embed the link as a YouTube video. Leave the button text empty to hide the button — the poster itself opens the link.
         </p>
       </header>
 
@@ -108,11 +108,11 @@ const PopupsManagerTab: React.FC = () => {
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-600">Button text</label>
+            <label className="text-xs font-semibold text-slate-600">Button text (optional)</label>
             <input
               value={form.button_text}
               onChange={(e) => setForm((f) => ({ ...f, button_text: e.target.value }))}
-              placeholder="Watch Now"
+              placeholder="Leave empty for no button"
               className="mt-1 w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
             />
           </div>
@@ -153,7 +153,7 @@ const PopupsManagerTab: React.FC = () => {
                   <span className="truncate">{row.link_url}</span>
                   <ExternalLink className="w-3 h-3 shrink-0 text-slate-400" />
                 </a>
-                <p className="text-xs text-slate-500 mt-0.5">Button: “{row.button_text}”</p>
+                <p className="text-xs text-slate-500 mt-0.5">{row.button_text?.trim() ? `Button: “${row.button_text}”` : "No button — poster opens the link"}</p>
               </div>
               <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
                 <input type="checkbox" checked={row.is_active} onChange={() => toggle(row)} />

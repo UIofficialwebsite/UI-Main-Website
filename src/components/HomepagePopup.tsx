@@ -6,7 +6,8 @@ interface Popup {
   id: string;
   image_url: string | null;
   link_url: string;
-  button_text: string;
+  /** Optional — when empty no button is shown and the poster itself is the link. */
+  button_text: string | null;
 }
 
 // Convert a normal YouTube link into an embeddable URL (used when a popup has no
@@ -145,16 +146,19 @@ const HomepagePopup: React.FC = () => {
           )}
         </div>
 
-        {/* Button — small, sized to its text */}
+        {/* Button — small, sized to its text. Hidden when no label is set;
+            the poster above stays clickable and opens the same link. */}
         <div className="shrink-0 pt-3 flex flex-col items-center gap-2.5">
-          <a
-            href={current.link_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center bg-[#1E3A8A] text-white font-normal text-sm px-6 py-2 rounded-md hover:bg-[#152a63] transition-colors font-['Inter',sans-serif]"
-          >
-            {current.button_text}
-          </a>
+          {current.button_text?.trim() && (
+            <a
+              href={current.link_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center bg-[#1E3A8A] text-white font-normal text-sm px-6 py-2 rounded-md hover:bg-[#152a63] transition-colors font-['Inter',sans-serif]"
+            >
+              {current.button_text.trim()}
+            </a>
+          )}
 
           {/* Dots */}
           {popups.length > 1 && (
