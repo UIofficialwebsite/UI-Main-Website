@@ -69,6 +69,15 @@ serve(async (req: Request) => {
           priority: c.display_priority,
         });
       } else if (c.visibility === "public") {
+        // Never advertise an offer that is over — expired, or fully claimed.
+        // (Ineligible-but-still-running offers ARE shown greyed-out, so users
+        // know they exist and what unlocks them.)
+        const now = Date.now();
+        const isOver =
+          (c.valid_until !== null && new Date(c.valid_until).getTime() < now) ||
+          (c.max_total_uses !== null && c.current_uses >= c.max_total_uses);
+        if (isOver) continue;
+
         // Show greyed-out so the user knows the offer exists.
         offers.push({
           code: c.code,
