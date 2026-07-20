@@ -168,7 +168,9 @@ export async function evaluateCoupon(
       .map((e) => e.toLowerCase().trim())
       .filter(Boolean);
     if (!userEmail || !allowed.includes(userEmail)) {
-      return { valid: false, reason: "This code isn't valid for this account." };
+      // Shown greyed-out on public offers, so keep it explanatory rather than
+      // sounding like an error.
+      return { valid: false, reason: "Only for selected students from our earlier batches." };
     }
   }
 
