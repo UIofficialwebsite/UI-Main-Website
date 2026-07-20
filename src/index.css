@@ -75,28 +75,40 @@ img {
 
 @layer base {
   :root {
+    /* ============================================================
+       UNKNOWN IITIANS — CUSTOM BRAND PALETTE (not shadcn defaults)
+       Base tokens: your ink / royal / blue on blue-tinted neutrals
+       ============================================================ */
+    --brand-ink: 222 47% 11%;        /* #0f172a  headers, headings, text  */
+    --brand-royal: 224 64% 33%;      /* #1e3a8a  primary brand accent      */
+    --brand-royal-dark: 226 71% 40%; /* #1e40af  hover/active              */
+    --brand-blue: 221 83% 53%;       /* #2563eb  interactive / CTA         */
+    --brand-sky: 214 95% 93%;        /* soft blue wash for tints           */
+    --brand-cloud: 220 33% 97%;      /* section background tint            */
+
+    /* Neutrals — tinted toward the brand hue instead of flat slate grey */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: var(--brand-ink);
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: var(--brand-ink);
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    --popover-foreground: var(--brand-ink);
+    --primary: var(--brand-ink);
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --secondary: 220 33% 96%;
+    --secondary-foreground: var(--brand-ink);
+    --muted: 220 33% 96%;
+    --muted-foreground: 220 14% 46%;
+    --accent: var(--brand-sky);
+    --accent-foreground: var(--brand-royal);
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
+    --border: 220 24% 91%;
+    --input: 220 24% 91%;
+    --ring: var(--brand-royal);
+    --chart-1: 221 83% 53%;
+    --chart-2: 224 64% 33%;
+    --chart-3: 197 37% 34%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
@@ -137,6 +149,21 @@ img {
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  /* Professional Inter typography: tighten tracking on large text,
+     let regular/medium weights breathe on body copy. */
+  h1, h2, h3, h4, h5 {
+    letter-spacing: -0.019em;
+  }
+  h1 {
+    letter-spacing: -0.025em;
+  }
+  /* Buttons: keep labels at Inter medium (override per-button semibold/bold) */
+  button {
+    font-weight: 500 !important;
   }
 }
 

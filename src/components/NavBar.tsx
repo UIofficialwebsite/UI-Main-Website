@@ -199,7 +199,7 @@ const NavBar = () => {
             <NavigationMenu className="static">
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
+                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-royal text-base font-medium h-auto p-0 transition-colors font-sans">
                     Courses
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[10001] !mt-0 bg-transparent border-none shadow-none p-0">
@@ -226,7 +226,7 @@ const NavBar = () => {
             <NavigationMenu className="static">
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
+                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-royal text-base font-medium h-auto p-0 transition-colors font-sans">
                     Exam Prep
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[10001] !mt-0 bg-transparent border-none shadow-none p-0">
