@@ -15,6 +15,11 @@ export type Coupon = {
   code: string;
   discount_type: "percent" | "flat";
   discount_value: number;
+  // Optional second tier: when the cart total is strictly ABOVE
+  // tier2_above_amount, tier2_discount_value replaces discount_value.
+  // e.g. 5% up to ₹399, 10% above ₹399 under a single code.
+  tier2_above_amount: number | null;
+  tier2_discount_value: number | null;
   max_discount: number | null;
   min_order_amount: number;
   valid_from: string | null;
@@ -224,15 +229,25 @@ export async function evaluateCoupon(
     return { valid: false, reason: "This offer is fully claimed." };
   }
 
-  // All rules passed — compute discount
+  // All rules passed — compute discount.
+  // Tiered coupons: above `tier2_above_amount` the tier-2 value applies.
+  const rate =
+    coupon.tier2_above_amount !== null &&
+    coupon.tier2_above_amount !== undefined &&
+    coupon.tier2_discount_value !== null &&
+    coupon.tier2_discount_value !== undefined &&
+    ctx.cartAmount > Number(coupon.tier2_above_amount)
+      ? Number(coupon.tier2_discount_value)
+      : Number(coupon.discount_value);
+
   let discount = 0;
   if (coupon.discount_type === "percent") {
-    discount = (ctx.cartAmount * coupon.discount_value) / 100;
+    discount = (ctx.cartAmount * rate) / 100;
     if (coupon.max_discount !== null) {
       discount = Math.min(discount, coupon.max_discount);
     }
   } else {
-    discount = coupon.discount_value;
+    discount = rate;
   }
   discount = round2(Math.min(discount, ctx.cartAmount));
   const finalAmount = round2(ctx.cartAmount - discount);
