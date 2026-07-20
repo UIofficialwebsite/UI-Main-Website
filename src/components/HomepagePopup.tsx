@@ -99,7 +99,13 @@ const HomepagePopup: React.FC = () => {
       aria-modal="true"
     >
       <div
-        className="relative w-[92vw] max-w-[860px] sm:w-[70vw] max-h-[92vh] sm:h-[70vh] bg-white rounded-lg shadow-2xl flex flex-col px-5 pb-5 pt-12 sm:px-6 sm:pb-6 sm:pt-14 font-['Inter',sans-serif]"
+        className={`relative bg-white rounded-lg shadow-2xl flex flex-col px-5 pb-5 pt-12 sm:px-6 sm:pb-6 sm:pt-14 font-['Inter',sans-serif] max-h-[92vh] ${
+          current.image_url
+            ? // Poster: card hugs the image's own aspect ratio (no letterboxing).
+              "max-w-[92vw] sm:max-w-[70vw]"
+            : // Video/link: keep a stable 16:9 stage.
+              "w-[92vw] max-w-[860px] sm:w-[70vw]"
+        }`}
         onClick={(e) => e.stopPropagation()}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
@@ -113,16 +119,20 @@ const HomepagePopup: React.FC = () => {
           <X className="h-4 w-4" />
         </button>
 
-        {/* Poster / video area — inner padded frame.
-            Mobile: fixed 16:9 rectangle so landscape thumbnails/videos fit the
-            width cleanly. Desktop: fills the tall modal. */}
-        <div className="w-full aspect-video sm:aspect-auto sm:flex-1 min-h-0 rounded-md border border-neutral-200 bg-neutral-950 overflow-hidden flex items-center justify-center">
+        {/* Poster / video area — inner padded frame. A poster sizes the frame to
+            its own proportions (portrait or landscape) so there are no empty
+            bars; a video keeps a 16:9 stage. */}
+        <div
+          className={`min-h-0 rounded-md border border-neutral-200 overflow-hidden flex items-center justify-center ${
+            current.image_url ? "bg-white" : "w-full aspect-video bg-neutral-950"
+          }`}
+        >
           {current.image_url ? (
-            <a href={current.link_url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+            <a href={current.link_url} target="_blank" rel="noopener noreferrer" className="block">
               <img
                 src={current.image_url}
                 alt="Announcement"
-                className="w-full h-full object-contain"
+                className="block max-h-[68vh] max-w-full w-auto h-auto object-contain"
                 loading="eager"
               />
             </a>
