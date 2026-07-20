@@ -17,6 +17,7 @@ interface Coupon {
   code: string;
   discount_type: "percent" | "flat";
   discount_value: number;
+  tiers?: { above: number; value: number }[] | null;
   max_discount: number | null;
   min_order_amount: number;
   valid_from: string | null;
@@ -43,6 +44,7 @@ type FormState = {
   code: string;
   discount_type: "percent" | "flat";
   discount_value: string;
+  tiers: { above: string; value: string }[];
   max_discount: string;
   min_order_amount: string;
   valid_from: string;
@@ -65,6 +67,7 @@ const emptyForm: FormState = {
   code: "",
   discount_type: "percent",
   discount_value: "",
+  tiers: [],
   max_discount: "",
   min_order_amount: "0",
   valid_from: "",
@@ -222,6 +225,10 @@ const CouponsManagerTab: React.FC = () => {
       code: c.code,
       discount_type: c.discount_type,
       discount_value: String(c.discount_value),
+      tiers: (Array.isArray(c.tiers) ? c.tiers : []).map((t) => ({
+        above: String(t?.above ?? ""),
+        value: String(t?.value ?? ""),
+      })),
       max_discount: c.max_discount?.toString() ?? "",
       min_order_amount: c.min_order_amount?.toString() ?? "0",
       valid_from: c.valid_from ? c.valid_from.slice(0, 16) : "",
@@ -292,6 +299,10 @@ const CouponsManagerTab: React.FC = () => {
       code: form.code.trim(),
       discount_type: form.discount_type,
       discount_value: Number(form.discount_value),
+      tiers: form.tiers
+        .map((t) => ({ above: Number(t.above), value: Number(t.value) }))
+        .filter((t) => Number.isFinite(t.above) && Number.isFinite(t.value) && t.above > 0)
+        .sort((a, b) => a.above - b.above),
       max_discount: form.max_discount ? Number(form.max_discount) : null,
       min_order_amount: form.min_order_amount ? Number(form.min_order_amount) : 0,
       valid_from: form.valid_from ? new Date(form.valid_from).toISOString() : null,
@@ -526,6 +537,75 @@ const CouponsManagerTab: React.FC = () => {
                   : "Rupees to subtract from the order. Example: 500 means ₹500 off."}
               </p>
             </div>
+            {/* Optional amount-based tiers. Base "Discount value" applies below
+                the first threshold; the highest threshold the cart exceeds wins. */}
+            <div className="md:col-span-2 rounded-md border border-slate-200 p-3">
+              <div className="flex items-center justify-between">
+                <Label className="mb-0">Extra tiers by order amount (optional)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setForm({ ...form, tiers: [...form.tiers, { above: "", value: "" }] })
+                  }
+                >
+                  + Add tier
+                </Button>
+              </div>
+              <p className="text-[11px] text-gray-500 mt-1">
+                Leave empty for a single flat rate. Otherwise the base “Discount value” applies below
+                the first threshold, and the highest threshold the order exceeds wins. Example: base 5,
+                tier “above 399 → 10” = 5% up to ₹399 and 10% above ₹399.
+              </p>
+
+              {form.tiers.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {form.tiers.map((t, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 shrink-0">Above ₹</span>
+                      <Input
+                        type="number"
+                        value={t.above}
+                        placeholder="399"
+                        className="w-28"
+                        onChange={(e) => {
+                          const tiers = [...form.tiers];
+                          tiers[i] = { ...tiers[i], above: e.target.value };
+                          setForm({ ...form, tiers });
+                        }}
+                      />
+                      <span className="text-xs text-gray-500 shrink-0">
+                        → {form.discount_type === "percent" ? "% off" : "₹ off"}
+                      </span>
+                      <Input
+                        type="number"
+                        value={t.value}
+                        placeholder="10"
+                        className="w-28"
+                        onChange={(e) => {
+                          const tiers = [...form.tiers];
+                          tiers[i] = { ...tiers[i], value: e.target.value };
+                          setForm({ ...form, tiers });
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600"
+                        onClick={() =>
+                          setForm({ ...form, tiers: form.tiers.filter((_, x) => x !== i) })
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {form.discount_type === "percent" && (
               <div className="md:col-span-2">
                 <Label>Max discount (₹) <span className="text-red-600">*</span></Label>

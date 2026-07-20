@@ -15,9 +15,11 @@ export type Coupon = {
   code: string;
   discount_type: "percent" | "flat";
   discount_value: number;
-  // Optional second tier: when the cart total is strictly ABOVE
-  // tier2_above_amount, tier2_discount_value replaces discount_value.
-  // e.g. 5% up to ₹399, 10% above ₹399 under a single code.
+  // Optional extra tiers, highest matching threshold wins:
+  //   [{ above: 399, value: 10 }, { above: 999, value: 15 }]
+  // Below every threshold, discount_value (the base rate) applies.
+  tiers?: Array<{ above: number | string; value: number | string }> | null;
+  // Legacy single second tier (superseded by `tiers`; kept as a fallback).
   tier2_above_amount: number | null;
   tier2_discount_value: number | null;
   max_discount: number | null;
@@ -230,15 +232,27 @@ export async function evaluateCoupon(
   }
 
   // All rules passed — compute discount.
-  // Tiered coupons: above `tier2_above_amount` the tier-2 value applies.
-  const rate =
+  // Tiered coupons: of every tier whose threshold the cart exceeds, the highest
+  // one wins. Below all thresholds the base discount_value applies.
+  let rate = Number(coupon.discount_value);
+  const matched = (Array.isArray(coupon.tiers) ? coupon.tiers : [])
+    .map((t) => ({ above: Number(t?.above), value: Number(t?.value) }))
+    .filter(
+      (t) => Number.isFinite(t.above) && Number.isFinite(t.value) && ctx.cartAmount > t.above,
+    )
+    .sort((a, b) => b.above - a.above)[0];
+
+  if (matched) {
+    rate = matched.value;
+  } else if (
     coupon.tier2_above_amount !== null &&
     coupon.tier2_above_amount !== undefined &&
     coupon.tier2_discount_value !== null &&
     coupon.tier2_discount_value !== undefined &&
     ctx.cartAmount > Number(coupon.tier2_above_amount)
-      ? Number(coupon.tier2_discount_value)
-      : Number(coupon.discount_value);
+  ) {
+    rate = Number(coupon.tier2_discount_value); // legacy fallback
+  }
 
   let discount = 0;
   if (coupon.discount_type === "percent") {
