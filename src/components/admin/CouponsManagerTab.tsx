@@ -17,7 +17,7 @@ interface Coupon {
   code: string;
   discount_type: "percent" | "flat";
   discount_value: number;
-  tiers?: { above: number; value: number }[] | null;
+  tiers?: { above: number; value: number; cap?: number | null }[] | null;
   max_discount: number | null;
   min_order_amount: number;
   valid_from: string | null;
@@ -44,7 +44,7 @@ type FormState = {
   code: string;
   discount_type: "percent" | "flat";
   discount_value: string;
-  tiers: { above: string; value: string }[];
+  tiers: { above: string; value: string; cap: string }[];
   max_discount: string;
   min_order_amount: string;
   valid_from: string;
@@ -228,6 +228,7 @@ const CouponsManagerTab: React.FC = () => {
       tiers: (Array.isArray(c.tiers) ? c.tiers : []).map((t) => ({
         above: String(t?.above ?? ""),
         value: String(t?.value ?? ""),
+        cap: t?.cap === null || t?.cap === undefined ? "" : String(t.cap),
       })),
       max_discount: c.max_discount?.toString() ?? "",
       min_order_amount: c.min_order_amount?.toString() ?? "0",
@@ -300,7 +301,11 @@ const CouponsManagerTab: React.FC = () => {
       discount_type: form.discount_type,
       discount_value: Number(form.discount_value),
       tiers: form.tiers
-        .map((t) => ({ above: Number(t.above), value: Number(t.value) }))
+        .map((t) => ({
+          above: Number(t.above),
+          value: Number(t.value),
+          ...(t.cap.trim() ? { cap: Number(t.cap) } : {}),
+        }))
         .filter((t) => Number.isFinite(t.above) && Number.isFinite(t.value) && t.above > 0)
         .sort((a, b) => a.above - b.above),
       max_discount: form.max_discount ? Number(form.max_discount) : null,
@@ -547,7 +552,7 @@ const CouponsManagerTab: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    setForm({ ...form, tiers: [...form.tiers, { above: "", value: "" }] })
+                    setForm({ ...form, tiers: [...form.tiers, { above: "", value: "", cap: "" }] })
                   }
                 >
                   + Add tier
@@ -556,7 +561,7 @@ const CouponsManagerTab: React.FC = () => {
               <p className="text-[11px] text-gray-500 mt-1">
                 Leave empty for a single flat rate. Otherwise the base “Discount value” applies below
                 the first threshold, and the highest threshold the order exceeds wins. Example: base 5,
-                tier “above 399 → 10” = 5% up to ₹399 and 10% above ₹399.
+                tier “above 399 → 10” = 5% up to ₹399 and 10% above ₹399. The optional per-tier “max ₹” caps that tier (leave blank to use the coupon’s overall max discount) — useful to keep a big headline % while paying out more only on larger orders.
               </p>
 
               {form.tiers.length > 0 && (
@@ -586,6 +591,18 @@ const CouponsManagerTab: React.FC = () => {
                         onChange={(e) => {
                           const tiers = [...form.tiers];
                           tiers[i] = { ...tiers[i], value: e.target.value };
+                          setForm({ ...form, tiers });
+                        }}
+                      />
+                      <span className="text-xs text-gray-500 shrink-0">max ₹</span>
+                      <Input
+                        type="number"
+                        value={t.cap}
+                        placeholder="cap"
+                        className="w-24"
+                        onChange={(e) => {
+                          const tiers = [...form.tiers];
+                          tiers[i] = { ...tiers[i], cap: e.target.value };
                           setForm({ ...form, tiers });
                         }}
                       />

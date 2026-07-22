@@ -16,9 +16,12 @@ export type Coupon = {
   discount_type: "percent" | "flat";
   discount_value: number;
   // Optional extra tiers, highest matching threshold wins:
-  //   [{ above: 399, value: 10 }, { above: 999, value: 15 }]
+  //   [{ above: 399, value: 10 }, { above: 999, value: 15, cap: 80 }]
   // Below every threshold, discount_value (the base rate) applies.
-  tiers?: Array<{ above: number | string; value: number | string }> | null;
+  // `cap` is an optional PER-TIER max discount; when absent max_discount is used.
+  // A per-tier cap lets a big headline % pay out more on larger carts without
+  // over-discounting small ones.
+  tiers?: Array<{ above: number | string; value: number | string; cap?: number | string | null }> | null;
   // Legacy single second tier (superseded by `tiers`; kept as a fallback).
   tier2_above_amount: number | null;
   tier2_discount_value: number | null;
@@ -117,6 +120,34 @@ export async function fetchCouponByCode(
   return (data as Coupon) ?? null;
 }
 
+/**
+ * SINGLE SOURCE OF TRUTH for "has this student actually bought something?".
+ *
+ * FREE enrollments (amount 0 or NULL — YouTube series, free batches) must NEVER
+ * count as a purchase. Most of the audience has free enrollments, so any rule
+ * that forgets this silently locks out ~1000 legitimate students.
+ *
+ * ANY new rule about prior purchases MUST call this instead of querying
+ * `enrollments` directly.
+ */
+async function countPaidEnrollments(
+  supabase: SupabaseClient,
+  userId: string,
+  withinDays?: number | null,
+): Promise<number> {
+  let q = supabase
+    .from("enrollments")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gt("amount", 0) // <- paid only
+    .in("status", ["active", "paid", "success"]);
+  if (withinDays) {
+    q = q.gte("created_at", new Date(Date.now() - withinDays * 86400000).toISOString());
+  }
+  const { count } = await q;
+  return count ?? 0;
+}
+
 // Run rules in the order documented in the plan.
 // Returns finalAmount and discountAmount on success; a human reason on failure.
 export async function evaluateCoupon(
@@ -175,29 +206,16 @@ export async function evaluateCoupon(
   }
 
   if (coupon.is_first_purchase_only && ctx.userId) {
-    const { count } = await supabase
-      .from("enrollments")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", ctx.userId)
-      .in("status", ["active", "paid", "success"]);
-    if ((count ?? 0) > 0) {
+    const count = await countPaidEnrollments(supabase, ctx.userId);
+    if (count > 0) {
       return { valid: false, reason: "This offer is for first-time students only." };
     }
   }
 
   if (coupon.user_segment === "prev_enrolled" && ctx.userId) {
-    let q = supabase
-      .from("enrollments")
-      .select("id, created_at", { count: "exact" })
-      .eq("user_id", ctx.userId)
-      .in("status", ["active", "paid", "success"]);
-    if (coupon.prev_enrolled_within_days) {
-      const cutoff = new Date(Date.now() - coupon.prev_enrolled_within_days * 86400000).toISOString();
-      q = q.gte("created_at", cutoff);
-    }
-    const { count } = await q;
+    const count = await countPaidEnrollments(supabase, ctx.userId, coupon.prev_enrolled_within_days);
     const need = coupon.min_prev_enrollments ?? 1;
-    if ((count ?? 0) < need) {
+    if (count < need) {
       return {
         valid: false,
         reason: "This offer is for returning students. Enroll in any batch to unlock it next time!",
@@ -208,12 +226,8 @@ export async function evaluateCoupon(
   }
 
   if (coupon.user_segment === "new" && ctx.userId) {
-    const { count } = await supabase
-      .from("enrollments")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", ctx.userId)
-      .in("status", ["active", "paid", "success"]);
-    if ((count ?? 0) > 0) {
+    const count = await countPaidEnrollments(supabase, ctx.userId);
+    if (count > 0) {
       return { valid: false, reason: "This offer is for new students only." };
     }
   }
@@ -237,8 +251,13 @@ export async function evaluateCoupon(
   // Tiered coupons: of every tier whose threshold the cart exceeds, the highest
   // one wins. Below all thresholds the base discount_value applies.
   let rate = Number(coupon.discount_value);
+  let cap = coupon.max_discount; // per-tier cap overrides this when present
   const matched = (Array.isArray(coupon.tiers) ? coupon.tiers : [])
-    .map((t) => ({ above: Number(t?.above), value: Number(t?.value) }))
+    .map((t) => ({
+      above: Number(t?.above),
+      value: Number(t?.value),
+      cap: t?.cap === null || t?.cap === undefined || t?.cap === "" ? null : Number(t.cap),
+    }))
     .filter(
       (t) => Number.isFinite(t.above) && Number.isFinite(t.value) && ctx.cartAmount > t.above,
     )
@@ -246,6 +265,7 @@ export async function evaluateCoupon(
 
   if (matched) {
     rate = matched.value;
+    if (matched.cap !== null && Number.isFinite(matched.cap)) cap = matched.cap;
   } else if (
     coupon.tier2_above_amount !== null &&
     coupon.tier2_above_amount !== undefined &&
@@ -259,8 +279,8 @@ export async function evaluateCoupon(
   let discount = 0;
   if (coupon.discount_type === "percent") {
     discount = (ctx.cartAmount * rate) / 100;
-    if (coupon.max_discount !== null) {
-      discount = Math.min(discount, coupon.max_discount);
+    if (cap !== null && cap !== undefined) {
+      discount = Math.min(discount, Number(cap));
     }
   } else {
     discount = rate;
