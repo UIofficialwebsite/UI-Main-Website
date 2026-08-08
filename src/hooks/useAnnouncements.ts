@@ -75,20 +75,15 @@ export const useAnnouncements = () => {
   useEffect(() => {
     fetchAnnouncements();
 
-    // Set up real-time subscriptions
+    // Realtime on courses only. Jobs change rarely, so streaming their WAL to
+    // every visitor was wasteful egress — dropped; jobs refresh on next load.
     const coursesChannel = supabase
       .channel('courses-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, fetchAnnouncements)
       .subscribe();
 
-    const jobsChannel = supabase
-      .channel('jobs-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, fetchAnnouncements)
-      .subscribe();
-
     return () => {
       supabase.removeChannel(coursesChannel);
-      supabase.removeChannel(jobsChannel);
     };
   }, []);
 
