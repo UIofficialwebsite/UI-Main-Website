@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
 import VideoPlayer from "../VideoPlayer";
 import { ShareButton } from "@/components/ShareButton";
+import { cachedRead } from "@/utils/edgeCache";
 
 const contentCategories = [
     'PYQs (Previous Year Questions)',
@@ -280,9 +281,26 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
     const fetchTables = async () => {
       setLoading(true);
       try {
-        const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
-        const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
-        const { data: iitmData } = isIITM ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) : { data: [] };
+        // These are the SAME for every student in a cohort (exam_type), so they
+        // go through the shared edge cache (keyed by exam_type) instead of a
+        // per-user Supabase read — big DB-egress cut. Falls back to a direct
+        // query if the cache route is unavailable.
+        const [pyqData, notesData, iitmData] = await Promise.all([
+          cachedRead<any[]>('pyqs', async () => {
+            const { data } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
+            return data ?? [];
+          }, focusArea),
+          cachedRead<any[]>('notes', async () => {
+            const { data } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
+            return data ?? [];
+          }, focusArea),
+          isIITM
+            ? cachedRead<any[]>('iitm_branch_notes', async () => {
+                const { data } = await supabase.from('iitm_branch_notes').select('*').eq('is_active', true);
+                return data ?? [];
+              })
+            : Promise.resolve([] as any[]),
+        ]);
 
         const combined: ContentItem[] = [
           ...(pyqData || []).map(p => ({

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { track } from '@/utils/analytics';
+import { cachedRead } from '@/utils/edgeCache';
 
 export const useDownloadHandler = () => {
   const { user } = useAuth();
@@ -14,27 +15,23 @@ export const useDownloadHandler = () => {
   useEffect(() => {
     const loadDownloadCounts = async () => {
       try {
-        // 1. Load generic notes download counts
-        const { data: notesData, error: notesError } = await supabase
-          .from('notes')
-          .select('id, download_count')
-          .eq('is_active', true);
-
-        // 2. Load PYQs download counts  
-        const { data: pyqsData, error: pyqsError } = await supabase
-          .from('pyqs')
-          .select('id, download_count')
-          .eq('is_active', true);
-
-        // 3. Load IITM Branch Notes download counts (The fix for your specific issue)
-        const { data: iitmNotesData, error: iitmNotesError } = await supabase
-          .from('iitm_branch_notes')
-          .select('id, download_count')
-          .eq('is_active', true);
-
-        if (notesError) console.error('Error loading notes download counts:', notesError);
-        if (pyqsError) console.error('Error loading pyqs download counts:', pyqsError);
-        if (iitmNotesError) console.error('Error loading iitm_branch_notes download counts:', iitmNotesError);
+        // Download counts are public/common to all users, so read them through
+        // the shared edge cache (once per window globally) rather than a direct
+        // full-table read on every mount. Falls back to a direct query.
+        const [notesData, pyqsData, iitmNotesData] = await Promise.all([
+          cachedRead<any[]>('notes', async () => {
+            const { data } = await supabase.from('notes').select('id, download_count').eq('is_active', true);
+            return data ?? [];
+          }),
+          cachedRead<any[]>('pyqs', async () => {
+            const { data } = await supabase.from('pyqs').select('id, download_count').eq('is_active', true);
+            return data ?? [];
+          }),
+          cachedRead<any[]>('iitm_branch_notes', async () => {
+            const { data } = await supabase.from('iitm_branch_notes').select('id, download_count').eq('is_active', true);
+            return data ?? [];
+          }),
+        ]);
 
         // Combine all download counts into one dictionary
         const combinedCounts: Record<string, number> = {};
