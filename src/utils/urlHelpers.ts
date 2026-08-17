@@ -73,6 +73,8 @@ export const parseIITMBSUrl = (pathname: string): {
   // Map slugs back to display values
   const branchMap: Record<string, string> = {
     'data-science': 'Data Science',
+    'management-data-science': 'Management and Data Science',
+    'aeronautics-space-technology': 'Aeronautics and Space Technology',
     'electronic-systems': 'Electronic Systems'
   };
   

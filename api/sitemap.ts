@@ -121,6 +121,21 @@ export default async function handler(): Promise<Response> {
     if (!n.id) continue;
     parts.push(urlTag(`/news/${n.id}`, "monthly", "0.5", (n.updated_at as string) || today));
   }
+  // Per-branch calculator pages: one indexable URL per (tool × branch) so each
+  // branch ranks separately, e.g. /iitm-tools/grade-calculator/aeronautics-space-technology.
+  const TOOL_SLUGS = ["grade-calculator", "cgpa-calculator", "marks-predictor"];
+  const BRANCH_SLUGS = [
+    "data-science",
+    "management-data-science",
+    "aeronautics-space-technology",
+    "electronic-systems",
+  ];
+  for (const t of TOOL_SLUGS) {
+    for (const b of BRANCH_SLUGS) {
+      parts.push(urlTag(`/iitm-tools/${t}/${b}`, "monthly", "0.6", today));
+    }
+  }
+
   // Programmatic IITM BS notes-subject pages (one per subject that has notes).
   for (const s of subjects) {
     const branch = s.branch as string;

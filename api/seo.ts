@@ -507,6 +507,48 @@ async function notesSubjectDoc(path: string): Promise<string> {
   return render({ title, description: desc, path, bodyHtml: body });
 }
 
+// Per-branch calculator pages: /iitm-tools/<tool>/<branch>. One indexable page
+// per (tool × branch) so each ranks for its own query, e.g. "IITM BS grade
+// calculator aeronautics". Branch slugs match the ProgrammeId slugs used by the
+// tools tab so the human redirect preselects the right branch.
+const TOOL_META: Record<string, { name: string; verb: string }> = {
+  "grade-calculator": { name: "Grade Calculator", verb: "estimate your subject grade from quiz, assignment and end-term scores" },
+  "cgpa-calculator": { name: "CGPA Calculator", verb: "compute your CGPA across levels and subjects" },
+  "marks-predictor": { name: "Marks Predictor", verb: "find the end-term score you need to reach your target grade" },
+};
+
+const TOOL_BRANCH_LABELS: Record<string, string> = {
+  "data-science": "Data Science and Applications",
+  "management-data-science": "Management and Data Science",
+  "aeronautics-space-technology": "Aeronautics and Space Technology",
+  "electronic-systems": "Electronic Systems",
+};
+
+function toolBranchDoc(path: string): string {
+  const parts = path.split("/").filter(Boolean); // [iitm-tools, <tool>, <branch>]
+  const tool = TOOL_META[parts[1]];
+  const branchLabel = TOOL_BRANCH_LABELS[parts[2]];
+  if (!tool || !branchLabel) {
+    // Unknown tool/branch — render a thin, non-indexed fallback.
+    return render({ title: titleFromPath(path), description: BRAND, path, index: false });
+  }
+  const toolLower = tool.name.toLowerCase();
+  const title = `IITM BS ${tool.name} — ${branchLabel} (Free) | ${BRAND}`;
+  const desc = `Free IITM BS ${toolLower} for the ${branchLabel} branch — ${tool.verb}, using the official published grading formula for each ${branchLabel} course.`;
+  const faqs: FAQ[] = [
+    {
+      q: `Does the ${toolLower} support IITM BS ${branchLabel}?`,
+      a: `Yes. This ${toolLower} covers the IITM BS ${branchLabel} branch and applies its official course grading formulas across the Foundation, Diploma and Degree levels.`,
+    },
+    {
+      q: `Is the IITM BS ${branchLabel} ${toolLower} free?`,
+      a: `Yes. The IITM BS ${toolLower} for ${branchLabel} is completely free to use on Unknown IITians.`,
+    },
+  ];
+  const body = `<h1>IITM BS ${esc(tool.name)} — ${esc(branchLabel)}</h1>\n  <p>${esc(desc)}</p>\n  ${faqBody(faqs)}`;
+  return render({ title, description: desc, path, jsonLd: faqSchema(faqs), bodyHtml: body });
+}
+
 function titleFromPath(path: string): string {
   const last = path.split("/").filter(Boolean).pop() || "";
   const words = last.replace(/[-_]/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -545,10 +587,13 @@ export default async function handler(req: Request): Promise<Response> {
 
   const courseMatch = path.match(/^\/courses\/([0-9a-fA-F-]{36})$/);
   const notesSubjectMatch = /^\/exam-preparation\/iitm-bs\/notes\/[^/]+\/[^/]+\/[^/]+$/.test(path);
+  const toolBranchMatch = /^\/iitm-tools\/[^/]+\/[^/]+$/.test(path);
   if (courseMatch) {
     html = await courseDoc(courseMatch[1]);
   } else if (notesSubjectMatch) {
     html = await notesSubjectDoc(path);
+  } else if (toolBranchMatch) {
+    html = toolBranchDoc(path);
   } else if (path === "/courses" || path.startsWith("/courses/category/")) {
     html = await listingDoc(path);
   } else if (PAGES[path]) {

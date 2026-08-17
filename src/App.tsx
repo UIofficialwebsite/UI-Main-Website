@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
 import { LoginModalProvider } from "@/context/LoginModalContext";
@@ -85,6 +85,14 @@ const NewsDetail = lazyWithRetry(() => import("./pages/NewsDetail"));
 const RedirectToPortal = lazyWithRetry(() => import("./pages/RedirectToPortal"));
 const PaymentProcessing = lazyWithRetry(() => import("./pages/PaymentProcessing"));
 
+// Per-branch tool SEO URLs (/iitm-tools/<tool>/<branch>) are in the sitemap and
+// prerendered for bots; send real users to the working tools tab with that
+// branch + tool preselected.
+const IITMToolBranchRedirect = () => {
+  const { tool, branch } = useParams();
+  return <Navigate to={`/exam-preparation/iitm-bs/tools/${branch}/foundation/${tool}`} replace />;
+};
+
 const TEN_MINUTES = 1000 * 60 * 10;
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
@@ -163,6 +171,8 @@ const App = () => (
                   <Route path="/iitm-tools/cgpa-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/cgpa-calculator" replace />} />
                   <Route path="/iitm-tools/grade-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/grade-calculator" replace />} />
                   <Route path="/iitm-tools/marks-predictor" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/marks-predictor" replace />} />
+                  {/* Per-branch tool URLs (/iitm-tools/<tool>/<branch>) — one indexable page per branch. */}
+                  <Route path="/iitm-tools/:tool/:branch" element={<IITMToolBranchRedirect />} />
                   <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
                   <Route path="/news/:newsId" element={<NewsDetail />} />
                   
