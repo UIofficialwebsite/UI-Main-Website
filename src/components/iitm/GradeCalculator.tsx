@@ -112,11 +112,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   return (
     <div className="w-full bg-white font-sans text-gray-900">
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
-        <p className="mb-8 text-xs text-gray-500">
-          Rules follow the current published May 2026 grading document for {PROGRAMMES[programme].label}.{' '}
-          <a href={PROGRAMMES[programme].source} target="_blank" rel="noreferrer" className="underline hover:text-black">View source</a>
-        </p>
-        
         <div className="mb-10 w-full max-w-3xl relative z-50">
           <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
             01. Select Course
