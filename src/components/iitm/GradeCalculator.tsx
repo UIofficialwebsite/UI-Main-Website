@@ -111,9 +111,9 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
 
   return (
     <div className="w-full bg-white font-sans text-gray-900">
-      <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
+      <div className="w-full py-8">
         <div className="mb-10 w-full max-w-3xl relative z-50">
-          <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
+          <Label className="text-sm font-medium text-black font-sans mb-3 block">
             01. Select Course
           </Label>
           

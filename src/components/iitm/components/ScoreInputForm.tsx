@@ -47,7 +47,7 @@ export default function ScoreInputForm({
     <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-['Inter']">
       
       <div className="flex justify-between items-end pb-2 border-b border-gray-200 mb-6">
-         <Label className="text-xs font-bold uppercase tracking-wide text-gray-500 font-['Inter']">
+         <Label className="text-sm font-medium text-black font-['Inter']">
            02. Enter Scores
          </Label>
       </div>
