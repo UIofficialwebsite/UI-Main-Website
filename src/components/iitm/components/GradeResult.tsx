@@ -3,8 +3,7 @@ import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
 import { getGradeFormula } from "../utils/gradeCalculations";
 import { checkEligibilityIssues } from "../utils/predictorLogic";
-import { ALL_SUBJECTS } from "../data/subjectsData";
-import { Subject } from '../types/gradeTypes';
+import { getCalculatorSubject } from "../data/curriculumConfig";
 
 interface GradeResultProps {
   result: {
@@ -21,15 +20,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
   const resultRef = useRef<HTMLDivElement>(null);
   const formula = getGradeFormula(subjectKey);
 
-  const getSubjectDetails = (): Subject | undefined => {
-    for (const level in ALL_SUBJECTS) {
-      const found = ALL_SUBJECTS[level].find((s) => s.key === subjectKey);
-      if (found) return found;
-    }
-    return undefined;
-  };
-
-  const subjectDetails = getSubjectDetails();
+  const subjectDetails = getCalculatorSubject(subjectKey);
   const eligibilityWarning = checkEligibilityIssues(subjectKey, inputValues as any);
 
   const getLabelForKey = (key: string) => {

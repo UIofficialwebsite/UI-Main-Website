@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ALL_SUBJECTS } from "./data/subjectsData";
+import { getCalculatorSubjects, normaliseLevel, normaliseProgramme, PROGRAMMES } from "./data/curriculumConfig";
 import { calculateGradeByLevel, getGradeLetter, getGradePoints } from "./utils/gradeCalculations";
 import { Level } from "./types/gradeTypes";
 import ScoreInputForm from "./components/ScoreInputForm";
@@ -11,7 +11,7 @@ import { logToolUsage } from "@/utils/toolLogger";
 
 interface GradeCalculatorProps {
   level: string; // Changed to string to safely accept "Foundation" etc.
-  branch: "data-science" | "electronic-systems" | string;
+  branch: string;
 }
 
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
@@ -20,25 +20,10 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
+  const programme = normaliseProgramme(branch);
 
   const filteredSubjects = useMemo(() => {
-    // FIX: Normalize inputs to lowercase to ensure they match data keys
-    const safeLevel = level?.toLowerCase() || "foundation";
-    const safeBranch = branch?.toLowerCase().replace(" ", "-") || "data-science";
-
-    const getSubjectsKey = () => {
-      if (safeBranch === "electronic-systems") {
-        if (safeLevel === "foundation") return "foundation-electronic-systems";
-        if (safeLevel === "diploma") return "diploma-electronic-systems";
-        if (safeLevel === "degree") return "degree-electronic-systems";
-      }
-      return safeLevel;
-    };
-    
-    // Debugging log if needed
-    // console.log("Looking for subjects with key:", getSubjectsKey());
-    
-    return ALL_SUBJECTS[getSubjectsKey()] || [];
+    return getCalculatorSubjects(normaliseProgramme(branch), normaliseLevel(level));
   }, [branch, level]);
 
   const urlSubjectKey = searchParams.get("subject");
@@ -89,7 +74,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     });
 
     // Pass safe level to calculation function
-    const safeLevel = (level?.toLowerCase() || "foundation") as Level;
+    const safeLevel = normaliseLevel(level) as Level;
     const score = calculateGradeByLevel(safeLevel, currentSubject.key, numericValues);
     
     const resultData = {
@@ -127,6 +112,10 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   return (
     <div className="w-full bg-white font-sans text-gray-900">
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
+        <p className="mb-8 text-xs text-gray-500">
+          Rules follow the current published May 2026 grading document for {PROGRAMMES[programme].label}.{' '}
+          <a href={PROGRAMMES[programme].source} target="_blank" rel="noreferrer" className="underline hover:text-black">View source</a>
+        </p>
         
         <div className="mb-10 w-full max-w-3xl relative z-50">
           <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
@@ -154,7 +143,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
                 ))
               ) : (
                 <div className="p-4 text-sm text-gray-500 text-center font-sans">
-                  No subjects found for {level} ({branch})
+                  No published course-level grading formula is available for this programme and level in the current document. The CGPA tool still includes its published course catalogue.
                 </div>
               )}
             </SelectContent>

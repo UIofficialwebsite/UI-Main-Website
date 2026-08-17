@@ -1,8 +1,9 @@
 import React from "react";
 import CGPACalculator from "./CGPACalculator";
 import GradeCalculator from "./GradeCalculator";
-import FoundationMarksPredictor from "./FoundationMarksPredictor";
+import MarksPredictor from "./MarksPredictor";
 import { Level } from "./types/gradeTypes";
+import { normaliseLevel, normaliseProgramme } from "./data/curriculumConfig";
 
 interface IITMToolsTabProps {
   selectedTool?: string;
@@ -17,20 +18,20 @@ const IITMToolsTab = ({
 }: IITMToolsTabProps) => {
 
   // Convert branch format for calculator components
-  const branchForCalc = branch === "Data Science" ? "data-science" : "electronic-systems";
-  const levelForCalc = level.toLowerCase() as Level;
+  const branchForCalc = normaliseProgramme(branch);
+  const levelForCalc = normaliseLevel(level) as Level;
 
   // Render the selected tool directly
   const renderTool = () => {
     switch (selectedTool) {
       case "cgpa-calculator":
-        return <CGPACalculator />;
+        return <CGPACalculator branch={branchForCalc} level={levelForCalc} />;
       case "grade-calculator":
         return <GradeCalculator level={levelForCalc} branch={branchForCalc} />;
       case "marks-predictor":
-        return <FoundationMarksPredictor branch={branchForCalc} level={levelForCalc} />;
+        return <MarksPredictor branch={branchForCalc} level={levelForCalc} />;
       default:
-        return <CGPACalculator />;
+        return <CGPACalculator branch={branchForCalc} level={levelForCalc} />;
     }
   };
 

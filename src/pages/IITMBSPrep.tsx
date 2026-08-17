@@ -27,6 +27,7 @@ import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 import MarksPredictor from "@/components/iitm/MarksPredictor";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
 import CGPACalculator from "@/components/iitm/CGPACalculator";
+import { PROGRAMMES, getAvailableCalculatorLevels, normaliseProgramme } from "@/components/iitm/data/curriculumConfig";
 
 /**
  * Custom Filled Arrow Component
@@ -105,11 +106,7 @@ const IITMBSPrep = () => {
   const [syllabusSubjectIds, setSyllabusSubjectIds] = useState<string[]>([]);
 
   // Tools State
-  const [toolsBranch, setToolsBranch] = useState<"data-science" | "electronic-systems">(
-    (initialUrlState.branch === "electronic-systems" || initialUrlState.branch === "Electronic Systems") 
-      ? "electronic-systems" 
-      : "data-science"
-  );
+  const [toolsBranch, setToolsBranch] = useState<string>(normaliseProgramme(initialUrlState.branch));
   const [toolsLevel, setToolsLevel] = useState(initialUrlState.level || "Foundation");
   const [selectedTool, setSelectedTool] = useState(initialUrlState.tool || "cgpa-calculator");
 
@@ -122,7 +119,7 @@ const IITMBSPrep = () => {
   // --- DYNAMIC DATA DERIVATION ---
   
   // Active Context
-  const activeBranch = activeTab === 'pyqs' ? pyqBranch : activeTab === 'notes' ? notesBranch : activeTab === 'courses' ? courseBranch : activeTab === 'syllabus' ? syllabusBranch : (toolsBranch === "electronic-systems" ? "Electronic Systems" : "Data Science");
+  const activeBranch = activeTab === 'pyqs' ? pyqBranch : activeTab === 'notes' ? notesBranch : activeTab === 'courses' ? courseBranch : activeTab === 'syllabus' ? syllabusBranch : PROGRAMMES[normaliseProgramme(toolsBranch)].label;
   const activeLevel = activeTab === 'pyqs' ? pyqLevel : activeTab === 'notes' ? notesLevel : activeTab === 'courses' ? courseLevel : activeTab === 'syllabus' ? syllabusLevel : toolsLevel;
 
   const branchSlug = useMemo(() => activeBranch.toLowerCase().replace(/\s+/g, '-'), [activeBranch]);
@@ -271,7 +268,7 @@ const IITMBSPrep = () => {
         setTempBranch(courseBranch); 
         setTempCourseLevels(selectedCourseLevels); setTempCourseSubjects(selectedCourseSubjects); setTempCoursePrice(coursePriceRange);
     } else if (activeTab === 'tools') {
-        setTempBranch(toolsBranch === "electronic-systems" ? "Electronic Systems" : "Data Science"); 
+        setTempBranch(PROGRAMMES[normaliseProgramme(toolsBranch)].label);
         setTempLevel(toolsLevel);
     }
     
@@ -321,11 +318,7 @@ const IITMBSPrep = () => {
       if (urlState.level) setSyllabusLevel(urlState.level as CourseLevel);
     } else if (urlState.tab === 'tools') {
       if (urlState.branch) {
-        setToolsBranch(
-          (urlState.branch === "electronic-systems" || urlState.branch === "Electronic Systems") 
-            ? "electronic-systems" 
-            : "data-science"
-        );
+        setToolsBranch(normaliseProgramme(urlState.branch));
       }
       if (urlState.level) setToolsLevel(urlState.level);
       if (urlState.tool) setSelectedTool(urlState.tool);
@@ -403,14 +396,21 @@ const IITMBSPrep = () => {
         navigate(buildCurrentUrl('courses', { branch: type === 'branch' ? tempBranch : courseBranch }), { replace: true });
     } else if (activeTab === 'tools') {
         if (type === 'branch') { 
-          const b = (tempBranch === "Electronic Systems" || tempBranch === "electronic-systems") ? "electronic-systems" : "data-science";
+          const b = normaliseProgramme(tempBranch);
+          const availableLevels = getAvailableCalculatorLevels(b);
+          const currentLevel = toolsLevel.toLowerCase();
+          const nextLevel = availableLevels.includes(currentLevel as any)
+            ? toolsLevel
+            : `${availableLevels[0]?.charAt(0).toUpperCase()}${availableLevels[0]?.slice(1)}`;
           setToolsBranch(b); 
+          setToolsLevel(nextLevel);
           newBranch = b; 
+          newLevel = nextLevel;
         }
         if (type === 'level') { setToolsLevel(tempLevel); newLevel = tempLevel; }
         navigate(buildCurrentUrl('tools', { 
-          branch: type === 'branch' ? ((tempBranch === "Electronic Systems" || tempBranch === "electronic-systems") ? "electronic-systems" : "data-science") : toolsBranch, 
-          level: type === 'level' ? tempLevel : toolsLevel, 
+          branch: type === 'branch' ? normaliseProgramme(tempBranch) : toolsBranch,
+          level: type === 'branch' ? newLevel : type === 'level' ? tempLevel : toolsLevel,
           tool: selectedTool 
         }), { replace: true });
     }
@@ -455,7 +455,7 @@ const IITMBSPrep = () => {
         items.push(syllabusLevel);
         if (syllabusSubjectIds.length > 0) items.push(`${syllabusSubjectIds.length} Subjects`);
     } else if (activeTab === 'tools') {
-        items.push(toolsBranch === "electronic-systems" ? "Electronic Systems" : "Data Science");
+        items.push(PROGRAMMES[normaliseProgramme(toolsBranch)].label);
         const toolName = selectedTool.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         items.push(toolName);
     } else if (['dates', 'news'].includes(activeTab)) {
@@ -498,7 +498,7 @@ const IITMBSPrep = () => {
             currentSelection = tempBranch; 
             setSelection = setTempBranch;
         } else if (activeTab === 'tools') {
-            items = ['Data Science', 'Electronic Systems'];
+            items = Object.values(PROGRAMMES).map((programme) => programme.label);
             isCheckbox = false;
             currentSelection = tempBranch;
             setSelection = setTempBranch;
@@ -512,7 +512,10 @@ const IITMBSPrep = () => {
     }
     else if (type === 'level') {
         if (activeTab === 'syllabus') items = ["Qualifier", "Foundation", "Diploma", "Degree"];
-        else if (activeTab === 'tools') items = ["Foundation", "Diploma", "Degree"];
+        else if (activeTab === 'tools') {
+          items = getAvailableCalculatorLevels(normaliseProgramme(tempBranch))
+            .map((level) => level.charAt(0).toUpperCase() + level.slice(1));
+        }
         else if (activeTab === 'notes') items = notesLevels;   // levels that actually have notes
         else if (activeTab === 'pyqs') items = pyqLevels;      // levels that actually have PYQs
         else items = levels;
@@ -814,7 +817,7 @@ const IITMBSPrep = () => {
             {/* UPDATED TOOLS SECTION */}
             {activeTab === "tools" && (
                 <div className="animate-in fade-in duration-300">
-                    {selectedTool === 'cgpa-calculator' && <CGPACalculator />}
+                    {selectedTool === 'cgpa-calculator' && <CGPACalculator branch={toolsBranch} level={toolsLevel} />}
                     {selectedTool === 'grade-calculator' && <GradeCalculator branch={toolsBranch} level={toolsLevel as any} />}
                     {selectedTool === 'marks-predictor' && <MarksPredictor branch={toolsBranch} level={toolsLevel as any} />}
                 </div>

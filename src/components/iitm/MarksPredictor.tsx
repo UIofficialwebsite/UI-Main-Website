@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ALL_SUBJECTS } from "./data/subjectsData";
+import { getCalculatorSubjects, normaliseLevel, normaliseProgramme } from "./data/curriculumConfig";
 import { predictRequiredMarks, PredictionResult } from "./utils/predictorLogic";
 import { Level } from "./types/gradeTypes";
 import PredictorInputForm from "./components/PredictorInputForm";
@@ -15,7 +15,7 @@ import Autoplay from "embla-carousel-autoplay";
 
 interface MarksPredictorProps {
   level: string; 
-  branch: "data-science" | "electronic-systems" | string;
+  branch: string;
 }
 
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
@@ -47,18 +47,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   }, [courses, branch, level]);
 
   const filteredSubjects = useMemo(() => {
-    const getSubjectsKey = () => {
-      const normalizedLevel = level?.toLowerCase() || "foundation";
-      const normalizedBranch = branch?.toLowerCase().replace(/\s+/g, "-") || "data-science";
-
-      if (normalizedBranch === "electronic-systems") {
-        if (normalizedLevel === "foundation") return "foundation-electronic-systems";
-        if (normalizedLevel === "diploma") return "diploma-electronic-systems";
-        if (normalizedLevel === "degree") return "degree-electronic-systems";
-      }
-      return normalizedLevel;
-    };
-    return ALL_SUBJECTS[getSubjectsKey()] || [];
+    return getCalculatorSubjects(normaliseProgramme(branch), normaliseLevel(level));
   }, [branch, level]);
 
   const currentSubject = useMemo(() => 
@@ -91,7 +80,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       numericValues[key] = parseFloat(inputValues[key]) || 0;
     });
 
-    const safeLevel = (level?.toLowerCase() || "foundation") as Level;
+    const safeLevel = normaliseLevel(level) as Level;
     const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
     const newResults: Record<string, PredictionResult> = {};
 

@@ -15,8 +15,9 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { getCatalogueCourses, normaliseLevel, normaliseProgramme } from "./data/curriculumConfig";
 
-type Grade = "10" | "9" | "8" | "7" | "6" | "5" | "4" | "0";
+type Grade = "10" | "9" | "8" | "7" | "6" | "4" | "0";
 
 interface Course {
   id: string;
@@ -34,6 +35,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   branch = "Data Science", 
   level = "Foundation" 
 }) => {
+  const catalogueCourses = getCatalogueCourses(normaliseProgramme(branch), normaliseLevel(level));
   // Input States
   const [currentCGPA, setCurrentCGPA] = useState("");
   const [creditsCompleted, setCreditsCompleted] = useState("");
@@ -68,8 +70,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     { value: "8", label: "B (8)", point: 8 },
     { value: "7", label: "C (7)", point: 7 },
     { value: "6", label: "D (6)", point: 6 },
-    { value: "5", label: "E (5)", point: 5 },
-    { value: "4", label: "U (4)", point: 0 },
+    { value: "4", label: "E (4)", point: 4 },
+    { value: "0", label: "U / WA / WQ (0)", point: 0 },
   ];
 
   const getPoint = (g: Grade) => parseInt(g);
@@ -130,6 +132,18 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   const updateCourse = (index: number, field: keyof Course, value: string) => {
     const newCourses = [...courses];
     newCourses[index] = { ...newCourses[index], [field]: value };
+    setCourses(newCourses);
+  };
+
+  const selectCatalogueCourse = (index: number, name: string) => {
+    if (name === "__custom") {
+      updateCourse(index, "name", "");
+      return;
+    }
+    const selected = catalogueCourses.find((course) => course.name === name);
+    if (!selected) return;
+    const newCourses = [...courses];
+    newCourses[index] = { ...newCourses[index], name: selected.name, credits: String(selected.credits) };
     setCourses(newCourses);
   };
 
@@ -381,12 +395,27 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             {courses.map((course, index) => (
               <div key={course.id} className="grid grid-cols-12 gap-4 items-center group w-full">
                 <div className="col-span-6 md:col-span-7">
-                  <Input
-                    placeholder="Subject Name"
-                    value={course.name}
-                    onChange={(e) => updateCourse(index, "name", e.target.value)}
-                    className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
-                  />
+                  <Select value={course.name || "__custom"} onValueChange={(value) => selectCatalogueCourse(index, value)}>
+                    <SelectTrigger className="h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans font-normal">
+                      <SelectValue placeholder="Select course" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[9999] max-h-[300px] bg-white">
+                      <SelectItem value="__custom">Custom course</SelectItem>
+                      {catalogueCourses.map((catalogueCourse) => (
+                        <SelectItem key={catalogueCourse.key} value={catalogueCourse.name}>
+                          {catalogueCourse.name} ({catalogueCourse.credits} credits)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!course.name && (
+                    <Input
+                      placeholder="Custom course name"
+                      value={course.name}
+                      onChange={(e) => updateCourse(index, "name", e.target.value)}
+                      className="mt-2 bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
+                    />
+                  )}
                 </div>
                 <div className="col-span-2 md:col-span-2">
                     <Input
