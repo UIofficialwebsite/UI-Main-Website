@@ -11,7 +11,7 @@ import ImportantDatesTab from "@/components/iitm/ImportantDatesTab";
 import SyllabusTab, { SYLLABUS_DATA, CourseLevel } from "@/components/iitm/SyllabusTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { buildExamUrl, getTabFromUrl, parseIITMBSUrl, slugify } from "@/utils/urlHelpers";
-import { X, Home, ChevronRight, RotateCcw } from "lucide-react";
+import { X, Home, ChevronRight, RotateCcw, Check } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import {
   Breadcrumb,
@@ -559,22 +559,27 @@ const IITMBSPrep = () => {
           {items.map(item => {
             const label = typeof item === 'object' ? item.name : item;
             const value = typeof item === 'object' ? item.id : item;
+            const isSelected = isCheckbox ? selectionArray.includes(value) : currentSelection === value;
             return (
-                <label key={value} className="flex items-center gap-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer text-xs text-gray-700 font-sans font-medium">
-                <input 
-                    type={isCheckbox ? "checkbox" : "radio"} 
-                    checked={
-                    isCheckbox 
-                        ? selectionArray.includes(value)
-                        : currentSelection === value
-                    } 
+                <label
+                    key={value}
+                    className={`flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs font-sans transition-colors ${
+                      isSelected
+                        ? 'bg-[#eef2ff] text-[#6366f1] font-semibold'
+                        : 'text-gray-700 font-medium hover:bg-slate-50'
+                    }`}
+                >
+                <input
+                    type={isCheckbox ? "checkbox" : "radio"}
+                    checked={isSelected}
                     onChange={() => {
                     if (isCheckbox) toggleTempItem(value, currentSelection, setSelection);
                     else setSelection(value);
-                    }} 
-                    className="accent-[#6366f1]" 
-                /> 
-                <span className={type === 'examType' ? 'uppercase' : ''}>{label}</span>
+                    }}
+                    className="accent-[#6366f1]"
+                />
+                <span className={`flex-1 ${type === 'examType' ? 'uppercase' : ''}`}>{label}</span>
+                {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-[#6366f1]" />}
                 </label>
             );
           })}
@@ -644,16 +649,20 @@ const IITMBSPrep = () => {
                 {activeTab === 'tools' && (
                   <>
                     <div className="flex-shrink-0">
-                        <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                        <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#6366f1] rounded-[30px] text-[12px] flex items-center gap-2 bg-[#eef2ff] font-sans text-[#374151]">
+                        <span className="text-[#6b7280]">Branch:</span>
+                        <span className="font-semibold text-[#111827]">{activeBranch}</span>
+                        <FilledArrow isOpen={openDropdown === 'branch'} />
                         </button>
                     </div>
                     <div className="flex-shrink-0">
-                        <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Level <FilledArrow isOpen={openDropdown === 'level'} />
+                        <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#6366f1] rounded-[30px] text-[12px] flex items-center gap-2 bg-[#eef2ff] font-sans text-[#374151]">
+                        <span className="text-[#6b7280]">Level:</span>
+                        <span className="font-semibold text-[#111827]">{activeLevel}</span>
+                        <FilledArrow isOpen={openDropdown === 'level'} />
                         </button>
                     </div>
-                    
+
                     {/* Direct Tool Selection Buttons */}
                      <button 
                       onClick={() => handleToolSelect('cgpa-calculator')} 
@@ -680,13 +689,17 @@ const IITMBSPrep = () => {
                 {activeTab === 'syllabus' && (
                     <>
                         <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                            <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#6366f1] rounded-[30px] text-[12px] flex items-center gap-2 bg-[#eef2ff] font-sans text-[#374151]">
+                            <span className="text-[#6b7280]">Branch:</span>
+                            <span className="font-semibold text-[#111827]">{activeBranch}</span>
+                            <FilledArrow isOpen={openDropdown === 'branch'} />
                             </button>
                         </div>
                         <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            Level <FilledArrow isOpen={openDropdown === 'level'} />
+                            <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#6366f1] rounded-[30px] text-[12px] flex items-center gap-2 bg-[#eef2ff] font-sans text-[#374151]">
+                            <span className="text-[#6b7280]">Level:</span>
+                            <span className="font-semibold text-[#111827]">{activeLevel}</span>
+                            <FilledArrow isOpen={openDropdown === 'level'} />
                             </button>
                         </div>
                         <div className="flex-shrink-0">
