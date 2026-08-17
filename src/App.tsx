@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
 import { LoginModalProvider } from "@/context/LoginModalContext";
@@ -159,6 +159,10 @@ const App = () => (
                   
                   {/* IITM BS ROUTES */}
                   <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
+                  {/* Short SEO tool URLs (in sitemap + prerendered) — send real users to the working tools tab. */}
+                  <Route path="/iitm-tools/cgpa-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/cgpa-calculator" replace />} />
+                  <Route path="/iitm-tools/grade-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/grade-calculator" replace />} />
+                  <Route path="/iitm-tools/marks-predictor" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/marks-predictor" replace />} />
                   <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
                   <Route path="/news/:newsId" element={<NewsDetail />} />
                   

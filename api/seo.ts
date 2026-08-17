@@ -180,16 +180,16 @@ const PAGES: Record<string, { title: string; description: string }> = {
     description: "Free NEET previous year question papers with solutions — download and practice.",
   },
   "/iitm-tools/cgpa-calculator": {
-    title: `IITM BS CGPA Calculator (Free) | ${BRAND}`,
-    description: "Free IITM BS CGPA calculator — compute your CGPA across levels and subjects instantly.",
+    title: `IITM BS CGPA Calculator — All Branches (Free) | ${BRAND}`,
+    description: "Free IITM BS CGPA calculator for all four branches — Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems — across Foundation, Diploma and Degree levels.",
   },
   "/iitm-tools/grade-calculator": {
-    title: `IITM BS Grade Calculator (Free) | ${BRAND}`,
-    description: "Free IITM BS grade calculator — estimate your subject grade from quiz, assignment and end-term scores.",
+    title: `IITM BS Grade Calculator — All Branches (Free) | ${BRAND}`,
+    description: "Free IITM BS grade calculator for all four branches (Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, Electronic Systems) — estimate your subject grade from quiz, assignment and end-term scores using the official grading formula.",
   },
   "/iitm-tools/marks-predictor": {
-    title: `IITM BS Marks Predictor (Free) | ${BRAND}`,
-    description: "Free IITM BS marks predictor — predict the score you need to hit your target grade.",
+    title: `IITM BS Marks Predictor — All Branches (Free) | ${BRAND}`,
+    description: "Free IITM BS marks predictor for all four branches — Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems — find the end-term score you need to reach your target grade.",
   },
   "/career": {
     title: `Careers at ${BRAND} — Jobs & Internships`,
@@ -318,10 +318,64 @@ const NOTES_FAQS: FAQ[] = [
   },
 ];
 
+// The four IITM BS branches the calculators now support. Kept in one place so
+// every tool FAQ names the same set (Management and Aeronautics are the newer
+// additions alongside the original Data Science and Electronic Systems).
+const TOOL_BRANCHES =
+  "Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems";
+
+const GRADE_TOOL_FAQS: FAQ[] = [
+  {
+    q: "Which IITM BS branches does the grade calculator support?",
+    a: `All four IITM BS branches — ${TOOL_BRANCHES} — across the Foundation, Diploma and Degree levels.`,
+  },
+  {
+    q: "How does the IITM BS grade calculator work?",
+    a: "Pick your branch, level and course, then enter your assignment eligibility average, quiz and end-term scores. It applies the official published grading formula for that course to estimate your final score and letter grade.",
+  },
+  {
+    q: "Is the IITM BS grade calculator free?",
+    a: "Yes. The IITM BS grade calculator on Unknown IITians is completely free to use.",
+  },
+];
+
+const CGPA_TOOL_FAQS: FAQ[] = [
+  {
+    q: "Which IITM BS branches does the CGPA calculator cover?",
+    a: `All four IITM BS branches — ${TOOL_BRANCHES}.`,
+  },
+  {
+    q: "How do I calculate my IITM BS CGPA?",
+    a: "Enter your current CGPA and completed credits, then add your semester subjects with their expected grades. The calculator weights each course by its credits to give your updated CGPA.",
+  },
+  {
+    q: "Is the IITM BS CGPA calculator free?",
+    a: "Yes. The IITM BS CGPA calculator is completely free.",
+  },
+];
+
+const MARKS_TOOL_FAQS: FAQ[] = [
+  {
+    q: "Which IITM BS branches does the marks predictor support?",
+    a: `All four IITM BS branches — ${TOOL_BRANCHES}.`,
+  },
+  {
+    q: "What does the IITM BS marks predictor do?",
+    a: "Enter the internal scores you already have and your target grade, and it works out the end-term score you need to reach that grade using the course's official grading formula.",
+  },
+  {
+    q: "Is the IITM BS marks predictor free?",
+    a: "Yes. The IITM BS marks predictor is completely free.",
+  },
+];
+
 // Pages that get extra structured data + visible FAQ content.
 const PAGE_EXTRAS: Record<string, { schema: unknown; faqs?: FAQ[] }> = {
   "/": { schema: [EDU_ORG, WEBSITE_SCHEMA, faqSchema(HOME_FAQS)], faqs: HOME_FAQS },
   "/exam-preparation/iitm-bs/notes": { schema: [faqSchema(NOTES_FAQS)], faqs: NOTES_FAQS },
+  "/iitm-tools/grade-calculator": { schema: [faqSchema(GRADE_TOOL_FAQS)], faqs: GRADE_TOOL_FAQS },
+  "/iitm-tools/cgpa-calculator": { schema: [faqSchema(CGPA_TOOL_FAQS)], faqs: CGPA_TOOL_FAQS },
+  "/iitm-tools/marks-predictor": { schema: [faqSchema(MARKS_TOOL_FAQS)], faqs: MARKS_TOOL_FAQS },
 };
 
 // ---- route handlers --------------------------------------------------------
