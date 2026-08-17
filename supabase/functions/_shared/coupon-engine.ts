@@ -237,9 +237,10 @@ export async function evaluateCoupon(
       .from("coupon_redemptions")
       .select("id", { count: "exact", head: true })
       .eq("coupon_id", coupon.id)
-      .eq("user_id", ctx.userId);
+      .eq("user_id", ctx.userId)
+      .eq("course_id", ctx.courseId);
     if ((count ?? 0) >= (coupon.max_uses_per_user ?? 1)) {
-      return { valid: false, reason: "You've already used this offer." };
+      return { valid: false, reason: "You've already used this offer for this batch." };
     }
   }
 

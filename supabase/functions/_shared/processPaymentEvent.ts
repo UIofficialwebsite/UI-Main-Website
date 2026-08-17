@@ -351,6 +351,7 @@ export async function processPaymentEvent(
     const { data: redeemed, error: redeemErr } = await supabase.rpc("redeem_coupon", {
       p_coupon_id: couponEngineId,
       p_user_id: userId,
+      p_course_id: (enrollments?.[0] as any)?.course_id,
       p_enrollment_id: enrollmentRowId,
       p_order_id: orderId,
       p_discount: couponEngineDiscount,

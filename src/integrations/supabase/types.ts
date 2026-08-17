@@ -262,6 +262,7 @@ export type Database = {
       coupon_redemptions: {
         Row: {
           coupon_id: string
+          course_id: string
           discount_amount: number
           enrollment_id: string | null
           final_amount: number
@@ -272,6 +273,7 @@ export type Database = {
         }
         Insert: {
           coupon_id: string
+          course_id: string
           discount_amount: number
           enrollment_id?: string | null
           final_amount: number
@@ -282,6 +284,7 @@ export type Database = {
         }
         Update: {
           coupon_id?: string
+          course_id?: string
           discount_amount?: number
           enrollment_id?: string | null
           final_amount?: number
@@ -2005,6 +2008,7 @@ export type Database = {
       redeem_coupon: {
         Args: {
           p_coupon_id: string
+          p_course_id: string
           p_discount: number
           p_enrollment_id: string
           p_final: number
