@@ -49,7 +49,7 @@ export default function PredictorInputForm({
     <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-['Inter']">
       
       <div className="flex justify-between items-end pb-2 border-b border-gray-200 mb-6">
-         <Label className="text-xs font-bold uppercase tracking-wide text-gray-500 font-['Inter']">
+         <Label className="text-sm font-medium text-black font-['Inter']">
            02. Enter Internal Scores
          </Label>
       </div>
@@ -64,7 +64,7 @@ export default function PredictorInputForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-8">
         {inputFields.map((field) => (
           <div key={field.id} className="space-y-3">
-            <Label htmlFor={field.id} className="text-xs font-bold uppercase tracking-wide text-gray-600 font-['Inter']">
+            <Label htmlFor={field.id} className="text-sm font-medium text-black font-['Inter']">
               {field.label}
             </Label>
             <Input

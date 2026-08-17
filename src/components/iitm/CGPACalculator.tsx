@@ -346,12 +346,12 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       )}
 
       {/* 2. MAIN INPUTS */}
-      <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 mb-20 screen-only">
+      <div className="w-full mb-20 screen-only">
         
         {/* Academic Status */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 w-full">
           <div className="space-y-3 w-full">
-            <Label htmlFor="current-cgpa" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Current CGPA</Label>
+            <Label htmlFor="current-cgpa" className="text-sm font-medium text-black font-sans">Current CGPA</Label>
             <Input
               id="current-cgpa"
               type="number"
@@ -362,7 +362,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             />
           </div>
           <div className="space-y-3 w-full">
-            <Label htmlFor="credits-completed" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Credits Earned</Label>
+            <Label htmlFor="credits-completed" className="text-sm font-medium text-black font-sans">Credits Earned</Label>
             <Input
               id="credits-completed"
               type="number"
@@ -373,7 +373,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             />
           </div>
           <div className="space-y-3 w-full">
-            <Label htmlFor="subjects-completed" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Subjects Completed</Label>
+            <Label htmlFor="subjects-completed" className="text-sm font-medium text-black font-sans">Subjects Completed</Label>
             <Input
               id="subjects-completed"
               type="number"
@@ -388,7 +388,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         {/* Course Inputs */}
         <div className="space-y-5 w-full">
           <div className="flex justify-between items-end pb-2 border-b border-gray-200">
-             <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500 font-sans">Semester Subjects</Label>
+             <Label className="text-sm font-medium text-black font-sans">Semester Subjects</Label>
           </div>
 
           <div className="space-y-3 w-full">

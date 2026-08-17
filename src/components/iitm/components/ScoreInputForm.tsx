@@ -62,9 +62,9 @@ export default function ScoreInputForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-8">
         {subject.fields.map((field) => (
           <div key={field.id} className="space-y-3">
-            <Label 
-              htmlFor={field.id} 
-              className="text-xs font-bold uppercase tracking-wide text-gray-600 font-['Inter']"
+            <Label
+              htmlFor={field.id}
+              className="text-sm font-medium text-black font-['Inter']"
             >
               {field.label}
             </Label>

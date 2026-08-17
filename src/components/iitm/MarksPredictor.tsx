@@ -156,11 +156,11 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       )}
 
       {/* Adjust top padding if the banner is showing so it doesn't look cramped */}
-      <div className={`w-full max-w-[1600px] mx-auto px-6 md:px-10 ${results && matchingCourses.length > 0 ? 'pb-8' : 'py-8'}`}>
-        
+      <div className={`w-full ${results && matchingCourses.length > 0 ? 'pb-8' : 'py-8'}`}>
+
         {/* 01. Select Course */}
         <div className="mb-10 w-full max-w-3xl relative z-50">
-          <Label className="text-xs font-bold uppercase tracking-wide text-gray-600 font-['Inter'] mb-3 block">
+          <Label className="text-sm font-medium text-black font-['Inter'] mb-3 block">
             01. Select Course
           </Label>
           
