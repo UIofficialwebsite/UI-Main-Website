@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getCalculatorSubjects, normaliseLevel, normaliseProgramme } from "./data/curriculumConfig";
 import { predictRequiredMarks, PredictionResult } from "./utils/predictorLogic";
@@ -12,11 +12,31 @@ import { logToolUsage } from "@/utils/toolLogger";
 import { useCoursesManager } from "@/hooks/useCoursesManager";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { ArrowUpRight } from "lucide-react";
+import { Course } from "@/components/admin/courses/types";
 
 interface MarksPredictorProps {
   level: string; 
   branch: string;
 }
+
+const normaliseMatchValue = (value: string | null | undefined) =>
+  (value || "").replace(/[^a-zA-Z]/g, "").toLowerCase();
+
+const isLiveAndAvailable = (course: Course) => {
+  if (course.is_live !== true) return false;
+
+  // `valid_till` is the enrollment deadline. Older records may only have an
+  // end date, so use that as the fallback instead of ever promoting a closed batch.
+  const cutoff = course.valid_till || course.end_date;
+  if (!cutoff) return true;
+
+  const cutoffDate = new Date(cutoff);
+  if (Number.isNaN(cutoffDate.getTime())) return false;
+
+  return cutoffDate.getTime() >= new Date().setHours(0, 0, 0, 0);
+};
 
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,20 +51,35 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
+  const [showBatchPrompt, setShowBatchPrompt] = useState(false);
+  const [dismissedBatchPrompt, setDismissedBatchPrompt] = useState(false);
 
-  // Exact letter matching for course availability (ignores spaces/cases/hyphens)
-  const matchingCourses = useMemo(() => {
+  // Promote only a live, purchasable batch for the exact programme and level.
+  // This prevents a Foundation prediction from showing a Diploma batch, or any old batch.
+  const matchingCourses = useMemo<Course[]>(() => {
     if (!courses || courses.length === 0) return [];
-    const normalize = (str: string) => (str || "").replace(/[^a-zA-Z]/g, "").toLowerCase();
-    const targetBranch = normalize(branch);
-    const targetLevel = normalize(level);
+    const targetBranch = normaliseMatchValue(branch);
+    const targetLevel = normaliseMatchValue(level);
 
-    return courses.filter(c => {
-      const cBranch = normalize(c.branch || "");
-      const cLevel = normalize(c.level || "");
-      return cBranch === targetBranch && cLevel === targetLevel;
-    });
+    return courses
+      .filter((course) => (
+        normaliseMatchValue(course.branch) === targetBranch &&
+        normaliseMatchValue(course.level) === targetLevel &&
+        isLiveAndAvailable(course)
+      ))
+      .sort((first, second) => {
+        const firstStart = first.start_date ? new Date(first.start_date).getTime() : Number.MAX_SAFE_INTEGER;
+        const secondStart = second.start_date ? new Date(second.start_date).getTime() : Number.MAX_SAFE_INTEGER;
+        return firstStart - secondStart;
+      });
   }, [courses, branch, level]);
+
+  const featuredBatch = matchingCourses[0];
+
+  useEffect(() => {
+    if (!results || !featuredBatch || dismissedBatchPrompt) return;
+    setShowBatchPrompt(true);
+  }, [results, featuredBatch, dismissedBatchPrompt]);
 
   const filteredSubjects = useMemo(() => {
     return getCalculatorSubjects(normaliseProgramme(branch), normaliseLevel(level));
@@ -64,6 +99,8 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     });
     setInputValues({});
     setResults(null);
+    setShowBatchPrompt(false);
+    setDismissedBatchPrompt(false);
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
@@ -105,18 +142,33 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       });
     } catch (e) { /* silent */ }
 
+    setDismissedBatchPrompt(false);
     setResults(newResults);
   };
 
   const handleReset = () => {
     setInputValues({});
     setResults(null);
+    setShowBatchPrompt(false);
+    setDismissedBatchPrompt(false);
+  };
+
+  const dismissBatchPrompt = () => {
+    setShowBatchPrompt(false);
+    setDismissedBatchPrompt(true);
+  };
+
+  const exploreFeaturedBatch = () => {
+    if (!featuredBatch) return;
+    setShowBatchPrompt(false);
+    setDismissedBatchPrompt(true);
+    navigate(`/courses/${featuredBatch.id}`);
   };
 
   return (
     <div className="w-full bg-white font-['Inter'] text-gray-900">
       
-      {/* TOP ROW: COURSE TICKER (Shows ONLY if results exist and courses match) */}
+      {/* Moving reminder stays available after the student dismisses the purchase prompt. */}
       {results && !coursesLoading && matchingCourses.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only animate-in fade-in slide-in-from-top-4 duration-500">
           <Carousel
@@ -135,7 +187,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
                         OPEN NOW
                       </span>
                       <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
-                        {course.title} batches are live
+                        {course.title} is live for {level}
                       </span>
                     </div>
                     
@@ -206,6 +258,61 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
           </div>
         )}
       </div>
+
+      {featuredBatch && (
+        <Dialog
+          open={showBatchPrompt}
+          onOpenChange={(open) => {
+            if (!open) dismissBatchPrompt();
+          }}
+        >
+          <DialogContent className="!w-[calc(100%-1.5rem)] max-w-[560px] !rounded-2xl border-0 bg-white p-0 shadow-2xl [&>button]:hidden">
+            <div className="bg-white p-4 sm:p-5">
+              <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-950 shadow-sm">
+                {featuredBatch.image_url ? (
+                  <img
+                    src={featuredBatch.image_url}
+                    alt={`${featuredBatch.title} batch banner`}
+                    className="block aspect-[16/8] w-full object-cover"
+                  />
+                ) : (
+                  <div
+                    role="img"
+                    aria-label={`${featuredBatch.title} batch banner`}
+                    className="aspect-[16/8] w-full bg-[radial-gradient(circle_at_top_right,_#93c5fd,_transparent_35%),linear-gradient(135deg,_#0b215e,_#0f2f85_58%,_#1d4ed8)]"
+                  />
+                )}
+              </div>
+
+              <div className="px-1 pb-1 pt-5 sm:px-2">
+                <DialogTitle className="font-['Inter'] text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
+                  {featuredBatch.title}
+                </DialogTitle>
+                <DialogDescription className="mt-2 font-['Inter'] text-sm leading-6 text-slate-600">
+                  Continue your preparation with the live batch matched to this Marks Predictor result.
+                </DialogDescription>
+
+                <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={dismissBatchPrompt}
+                    className="h-11 rounded-md border border-black bg-white px-4 font-['Inter'] text-sm font-normal text-slate-900 outline-none transition-colors hover:bg-slate-100 focus:outline-none"
+                  >
+                    Check Later
+                  </button>
+                  <Button
+                    type="button"
+                    onClick={exploreFeaturedBatch}
+                    className="h-11 bg-[#1d4ed8] px-5 font-['Inter'] text-sm font-medium text-white hover:bg-[#1e40af]"
+                  >
+                    Explore Batch <ArrowUpRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

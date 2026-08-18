@@ -3,8 +3,6 @@ import { Subject } from '../types/gradeTypes';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import { useLoginModal } from "@/context/LoginModalContext";
 
 interface PredictorInputFormProps {
   subject: Subject;
@@ -19,13 +17,6 @@ export default function PredictorInputForm({
   onInputChange, 
   onCalculate
 }: PredictorInputFormProps) {
-  const { user } = useAuth();
-  const { openLogin } = useLoginModal();
-  const handleCalculateClick = () => {
-    if (!user) { openLogin(); return; }
-    onCalculate();
-  };
-  
   const inputFields = subject.fields.filter(f => f.id !== 'F' && !f.label.toLowerCase().includes('bonus'));
 
   const handleValueChange = (fieldId: string, value: string, max: number) => {
@@ -82,7 +73,7 @@ export default function PredictorInputForm({
 
       <div className="flex justify-start">
         <Button 
-          onClick={handleCalculateClick}
+          onClick={onCalculate}
           className="h-12 px-8 bg-blue-800 text-white hover:bg-blue-900 rounded-sm font-semibold text-base font-['Inter'] transition-all shadow-sm"
         >
           Calculate Required Scores
