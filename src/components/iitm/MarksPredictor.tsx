@@ -85,7 +85,12 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
 
   useEffect(() => {
     if (!results || !featuredBatch || dismissedBatchPrompt) return;
-    setShowBatchPrompt(true);
+
+    const promptTimer = window.setTimeout(() => {
+      setShowBatchPrompt(true);
+    }, 3000);
+
+    return () => window.clearTimeout(promptTimer);
   }, [results, featuredBatch, dismissedBatchPrompt]);
 
   const filteredSubjects = useMemo(() => {
