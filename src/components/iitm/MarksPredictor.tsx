@@ -38,6 +38,8 @@ const isLiveAndAvailable = (course: Course) => {
   return cutoffDate.getTime() >= new Date().setHours(0, 0, 0, 0);
 };
 
+const isPaidCourse = (course: Course) => Number(course.discounted_price ?? course.price) > 0;
+
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
@@ -73,6 +75,11 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
         return firstStart - secondStart;
       });
   }, [courses, branch, level]);
+
+  const paidMatchingCourses = useMemo(
+    () => matchingCourses.filter(isPaidCourse),
+    [matchingCourses]
+  );
 
   const featuredBatch = matchingCourses[0];
 
@@ -169,7 +176,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     <div className="w-full bg-white font-['Inter'] text-gray-900">
       
       {/* Moving reminder stays available after the student dismisses the purchase prompt. */}
-      {results && !coursesLoading && matchingCourses.length > 0 && (
+      {results && !coursesLoading && paidMatchingCourses.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only animate-in fade-in slide-in-from-top-4 duration-500">
           <Carousel
             plugins={[plugin.current as any]}
@@ -179,7 +186,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
             opts={{ align: "start", loop: true }}
           >
             <CarouselContent>
-              {matchingCourses.map((course) => (
+              {paidMatchingCourses.map((course) => (
                 <CarouselItem key={course.id} className="basis-full">
                   <div className="flex items-center justify-between gap-4 h-9 w-full max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-4 overflow-hidden">
@@ -208,7 +215,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       )}
 
       {/* Adjust top padding if the banner is showing so it doesn't look cramped */}
-      <div className={`w-full ${results && matchingCourses.length > 0 ? 'pb-8' : 'py-8'}`}>
+      <div className={`w-full ${results && paidMatchingCourses.length > 0 ? 'pb-8' : 'py-8'}`}>
 
         {/* 01. Select Course */}
         <div className="mb-10 w-full max-w-3xl relative z-50">
