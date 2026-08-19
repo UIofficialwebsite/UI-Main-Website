@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedRead } from "@/utils/edgeCache";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Note {
@@ -58,16 +59,25 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
         return;
       }
 
-      // 2. Fetch Notes using the Subject IDs
+      // 2. Notes come from the shared edge cache (all active IITM branch notes,
+      // served ~once per window globally at the CDN) and are filtered here by
+      // subject ID. This used to be an uncached select('*') on iitm_branch_notes
+      // on every visit — the single biggest Supabase egress source, since it's
+      // by far the largest table. Falls back to a slim direct query on a miss.
       const subjectIds = subjectsData.map(s => s.id);
-      const { data: notesData, error: notesError } = await supabase
-        .from('iitm_branch_notes')
-        .select('*')
-        .in('subject_id', subjectIds) // Filter by IDs for 100% accuracy
-        .eq('is_active', true)
-        .order('week_number', { ascending: true });
-
-      if (notesError) throw notesError;
+      const subjectIdSet = new Set(subjectIds);
+      const allNotes = await cachedRead<any[]>('iitm_branch_notes', async () => {
+        const { data } = await supabase
+          .from('iitm_branch_notes')
+          .select('id, title, description, file_link, download_count, subject, subject_id, week_number, diploma_specialization, is_active')
+          .in('subject_id', subjectIds)
+          .eq('is_active', true)
+          .order('week_number', { ascending: true });
+        return data ?? [];
+      });
+      const notesData = (allNotes || [])
+        .filter((n: any) => n.is_active !== false && subjectIdSet.has(n.subject_id))
+        .sort((a: any, b: any) => (a.week_number ?? 0) - (b.week_number ?? 0));
 
       // 3. Group Notes into Subjects
       const finalGroupedData: GroupedData[] = subjectsData.map((subject) => ({

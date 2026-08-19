@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedRead } from "@/utils/edgeCache";
 
 export interface IITMPYQ {
   id: string;
@@ -36,41 +37,40 @@ export function useIITMBranchPyqs(branch: string, level: string, examType?: stri
     setLoading(true);
     (async () => {
       try {
-        let query = supabase
-          .from("pyqs")
-          .select("*")
-          .eq("is_active", true)
-          .eq("exam_type", "IITM_BS")
-          .eq("branch", branch)
-          .eq("level", level);
+        // IITM PYQs come from the shared edge cache (all active IITM_BS PYQs,
+        // served ~once per window globally) and are filtered here by branch and
+        // level. Previously this was an uncached select('*') on every visit plus
+        // a pyqs realtime channel opened for every viewer — both wasteful
+        // Supabase egress. Falls back to a slim direct query on a cache miss.
+        const rows = await cachedRead<any[]>("iitm_branch_pyqs", async () => {
+          const { data } = await supabase
+            .from("pyqs")
+            .select("id, title, description, year, download_count, subject, branch, level, exam_type, session, shift, file_link, content_url, is_active")
+            .eq("is_active", true)
+            .eq("exam_type", "IITM_BS")
+            .eq("branch", branch)
+            .eq("level", level);
+          return data ?? [];
+        });
 
-        // Add exam type filter if provided (for non-qualifier levels)
-        if (level !== 'qualifier' && examType) {
-          // For IITM BS, we might use a different field structure
-          // Adjust this based on how exam types are stored for IITM BS
-        }
-
-        const { data, error } = await query.order("year", { ascending: false });
-
-        if (error) {
-          throw error;
-        }
-
-        const mappedPyqs: IITMPYQ[] = (data || []).map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          description: p.description || "",
-          year: p.year || new Date().getFullYear(),
-          downloads: p.download_count ?? 0,
-          subject: p.subject || null,
-          branch: p.branch || null,
-          level: p.level || null,
-          exam_type: p.exam_type || null,
-          session: p.session || null,
-          shift: p.shift || null,
-          file_link: p.file_link || null,
-          content_url: p.content_url || null,
-        }));
+        const mappedPyqs: IITMPYQ[] = (rows || [])
+          .filter((p: any) => p.is_active !== false && p.branch === branch && p.level === level)
+          .map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            description: p.description || "",
+            year: p.year || new Date().getFullYear(),
+            downloads: p.download_count ?? 0,
+            subject: p.subject || null,
+            branch: p.branch || null,
+            level: p.level || null,
+            exam_type: p.exam_type || null,
+            session: p.session || null,
+            shift: p.shift || null,
+            file_link: p.file_link || null,
+            content_url: p.content_url || null,
+          }))
+          .sort((a, b) => (b.year || 0) - (a.year || 0));
         setPyqs(mappedPyqs);
       } catch (error) {
         console.error("Error fetching IITM PYQs:", error);
@@ -80,24 +80,6 @@ export function useIITMBranchPyqs(branch: string, level: string, examType?: stri
       }
     })();
   }, [branch, level, examType, reloadFlag]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('public:pyqs')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pyqs' },
-        (payload) => {
-          console.log('Real-time change detected in pyqs (IITM hook):', payload);
-          reloadPyqs();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [reloadPyqs]);
 
   const getAvailableSpecializations = () => {
     if (level !== 'diploma') return [];

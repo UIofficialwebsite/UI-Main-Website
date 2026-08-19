@@ -5,7 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
-import { useJobsManager } from "@/hooks/useJobsManager";
+import { cachedRead } from "@/utils/edgeCache";
+import { supabase } from "@/integrations/supabase/client";
+import { Job } from "@/types/job";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { logToolUsage } from "@/utils/toolLogger";
@@ -53,7 +55,32 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   const [gradeDistribution, setGradeDistribution] = useState<Record<string, number>>({});
   
   // Jobs Data Integration
-  const { jobs, isLoading: jobsLoading } = useJobsManager();
+  // The jobs ticker only needs ACTIVE jobs and a few columns. Previously this
+  // used the admin useJobsManager hook, which ran `select('*')` over the whole
+  // jobs table on every visit with no caching (egress). Route it through the
+  // shared edge cache and fall back to a slim active-only query.
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const rows = await cachedRead<Job[]>("jobs", async () => {
+        const { data } = await supabase
+          .from("jobs")
+          .select("id, title, application_url, description, is_active")
+          .eq("is_active", true);
+        return (data || []) as unknown as Job[];
+      });
+      if (active) {
+        setJobs(rows || []);
+        setJobsLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
   const { user } = useAuth();
   const { openLogin } = useLoginModal();
   

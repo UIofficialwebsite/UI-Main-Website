@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { logToolUsage } from "@/utils/toolLogger";
-import { useCoursesManager } from "@/hooks/useCoursesManager";
+import { cachedRead } from "@/utils/edgeCache";
+import { supabase } from "@/integrations/supabase/client";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -49,7 +50,34 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     Autoplay({ delay: 3500, stopOnInteraction: false })
   );
 
-  const { courses, isLoading: coursesLoading } = useCoursesManager();
+  // The batch-promo ticker only needs LIVE courses, and only a handful of
+  // columns. Previously this used the admin useCoursesManager hook, which ran
+  // `select('*')` over the entire courses table on every single visit with no
+  // caching — a major Supabase egress source. Route it through the shared edge
+  // cache (served ~once per window globally, already warmed by the course list)
+  // and fall back to a slim live-only query if the cache is unavailable.
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const rows = await cachedRead<Course[]>("courses", async () => {
+        const { data } = await supabase
+          .from("courses")
+          .select("id, title, branch, level, is_live, valid_till, end_date, start_date, price, discounted_price, image_url")
+          .eq("is_live", true);
+        return (data || []) as unknown as Course[];
+      });
+      if (active) {
+        setCourses(rows || []);
+        setCoursesLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
