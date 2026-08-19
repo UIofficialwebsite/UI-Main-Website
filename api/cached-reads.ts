@@ -20,24 +20,30 @@ const SUPABASE_URL = "https://qzrvctpwefhmcduariuw.supabase.co";
 const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6cnZjdHB3ZWZobWNkdWFyaXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MTAxNDYsImV4cCI6MjA2MjA4NjE0Nn0.VK1JfGf1zhXbiOc_1N03HQnA0xlpGoynjXRkb_k2NJ0";
 
-// Allowlist: resource -> { query, exam, page }.
+// Allowlist: resource -> { query, exam, page, ttl }.
 //   query — the fixed PostgREST query string (table + filters).
 //   exam  — whether an optional &exam_type=eq.<exam> filter may be appended.
 //   page  — whether a &page_path=eq.<page> filter may be appended (banners).
+//   ttl   — edge revalidation window in seconds (default 600). Big, rarely-
+//           changing content (notes/pyqs) gets a long window so Supabase is
+//           read only ~48x/day instead of ~288x; time-sensitive lists
+//           (courses/jobs/news) stay shorter. A deploy purges the cache, so
+//           admin edits still show promptly after a redeploy either way.
 // Nothing outside this map is reachable.
-const RESOURCES: Record<string, { query: string; exam?: boolean; page?: boolean }> = {
-  courses: { query: "courses?select=*&is_live=eq.true" },
-  notes: { query: "notes?select=*&is_active=eq.true", exam: true },
-  pyqs: { query: "pyqs?select=*&is_active=eq.true", exam: true },
-  important_dates: { query: "important_dates?select=*", exam: true },
-  news_updates: { query: "news_updates?select=*", exam: true },
-  communities: { query: "communities?select=*", exam: true },
-  jobs: { query: "jobs?select=*&is_active=eq.true" },
-  iitm_branch_notes: { query: "iitm_branch_notes?select=*&is_active=eq.true" },
+const RESOURCES: Record<string, { query: string; exam?: boolean; page?: boolean; ttl?: number }> = {
+  courses: { query: "courses?select=*&is_live=eq.true", ttl: 600 },
+  notes: { query: "notes?select=*&is_active=eq.true", exam: true, ttl: 1800 },
+  pyqs: { query: "pyqs?select=*&is_active=eq.true", exam: true, ttl: 1800 },
+  important_dates: { query: "important_dates?select=*", exam: true, ttl: 1800 },
+  news_updates: { query: "news_updates?select=*", exam: true, ttl: 600 },
+  communities: { query: "communities?select=*", exam: true, ttl: 1800 },
+  jobs: { query: "jobs?select=*&is_active=eq.true", ttl: 600 },
+  iitm_branch_notes: { query: "iitm_branch_notes?select=*&is_active=eq.true", ttl: 1800 },
   iitm_branch_pyqs: {
     query: "pyqs?select=*&is_active=eq.true&or=(exam_type.eq.IITM_BS,exam_type.eq.IITM%20BS)",
+    ttl: 1800,
   },
-  page_banners: { query: "page_banners?select=image_url&order=created_at.desc", page: true },
+  page_banners: { query: "page_banners?select=image_url&order=created_at.desc", page: true, ttl: 600 },
 };
 
 const EXAM_RE = /^[a-z0-9_ -]{1,32}$/i; // guard the optional exam_type filter
@@ -70,13 +76,16 @@ export default async function handler(req: Request): Promise<Response> {
       return json({ error: "upstream", status: upstream.status }, 502, "no-store");
     }
     const body = await upstream.text();
-    // Cache at the edge for 5 min; serve stale (and revalidate in the background)
-    // for up to an hour after that. Admin edits propagate within ~5 min.
+    // Cache at the edge for this resource's window; serve stale (and revalidate
+    // in the background) for up to a day after that so a Supabase blip never
+    // breaks reads. Admin edits propagate within the window (or instantly on
+    // the next deploy, which purges the cache).
+    const ttl = def.ttl ?? 600;
     return new Response(body, {
       status: 200,
       headers: {
         "content-type": "application/json; charset=utf-8",
-        "cache-control": "public, s-maxage=300, stale-while-revalidate=3600",
+        "cache-control": `public, s-maxage=${ttl}, stale-while-revalidate=86400`,
       },
     });
   } catch {
