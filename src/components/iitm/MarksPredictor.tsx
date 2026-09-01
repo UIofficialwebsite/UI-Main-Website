@@ -16,6 +16,8 @@ import Autoplay from "embla-carousel-autoplay";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ArrowUpRight } from "lucide-react";
 import { Course } from "@/components/admin/courses/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface MarksPredictorProps {
   level: string; 
@@ -45,6 +47,8 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
   
   const plugin = useRef(
     Autoplay({ delay: 3500, stopOnInteraction: false })
@@ -151,6 +155,9 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
 
   const handleCalculate = () => {
     if (!currentSubject) return;
+    // Login is mandatory to view results — same gate as the Grade and CGPA
+    // calculators, applied uniformly to every branch, level and subject.
+    if (!user) { openLogin(); return; }
 
     const numericValues: Record<string, number> = {};
     Object.keys(inputValues).forEach(key => {
