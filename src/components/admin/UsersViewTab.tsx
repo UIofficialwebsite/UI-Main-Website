@@ -167,10 +167,10 @@ const UsersViewTab = () => {
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
-            Users
+            Readers
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Everyone who has signed up — profiles from{" "}
+            General site users — everyone who has signed up. Staff are in the Employees tab. Profiles from{" "}
             <code className="px-1 py-0.5 bg-slate-100 rounded text-[12px]">profiles</code>.
           </p>
         </div>
