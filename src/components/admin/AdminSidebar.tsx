@@ -83,7 +83,7 @@ const groups: MenuGroup[] = [
   {
     label: "Reports",
     items: [
-      { id: "users", label: "Readers", icon: Users },
+      { id: "users", label: "Users", icon: Users },
       { id: "enrollments", label: "Enrollments", icon: ClipboardList },
       { id: "payments", label: "Payments", icon: CreditCard },
       { id: "coupon-redemptions", label: "Coupon Redemptions", icon: Receipt },
