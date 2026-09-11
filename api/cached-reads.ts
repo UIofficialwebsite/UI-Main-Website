@@ -69,19 +69,35 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    const upstream = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
-      headers: { apikey: ANON_KEY, authorization: `Bearer ${ANON_KEY}` },
-    });
-    if (!upstream.ok) {
-      return json({ error: "upstream", status: upstream.status }, 502, "no-store");
+    // PostgREST caps a single response at 1000 rows, so a table with more than
+    // that (iitm_branch_notes has ~1.4k) would silently lose everything past
+    // row 1000 — making those notes invisible on the site. Page through with
+    // limit/offset and concatenate so the cached payload is always complete.
+    const PAGE = 1000;
+    const MAX_ROWS = 20000; // safety ceiling
+    const rows: unknown[] = [];
+    for (let offset = 0; offset < MAX_ROWS; offset += PAGE) {
+      const upstream = await fetch(
+        `${SUPABASE_URL}/rest/v1/${query}&limit=${PAGE}&offset=${offset}`,
+        { headers: { apikey: ANON_KEY, authorization: `Bearer ${ANON_KEY}` } }
+      );
+      if (!upstream.ok) {
+        return json({ error: "upstream", status: upstream.status }, 502, "no-store");
+      }
+      const chunk = await upstream.json();
+      if (!Array.isArray(chunk)) {
+        // Non-array (shouldn't happen for these list endpoints) — return as-is.
+        return json(chunk, 200, `public, s-maxage=${def.ttl ?? 600}, stale-while-revalidate=86400`);
+      }
+      rows.push(...chunk);
+      if (chunk.length < PAGE) break; // last page reached
     }
-    const body = await upstream.text();
     // Cache at the edge for this resource's window; serve stale (and revalidate
     // in the background) for up to a day after that so a Supabase blip never
     // breaks reads. Admin edits propagate within the window (or instantly on
     // the next deploy, which purges the cache).
     const ttl = def.ttl ?? 600;
-    return new Response(body, {
+    return new Response(JSON.stringify(rows), {
       status: 200,
       headers: {
         "content-type": "application/json; charset=utf-8",
