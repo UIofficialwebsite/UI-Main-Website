@@ -42,6 +42,10 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
     lowestGradeResult?.message && 
     !lowestGradeResult.message.includes("mathematically unreachable");
 
+  // An OPPE shortfall does not make a grade unreachable - it withholds the grade
+  // as I_OP (incomplete). Surface it as advice, not as a failure.
+  const incompleteNote = grades.map((grade) => results[grade]?.note).find(Boolean);
+
   return (
     <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700">
       
@@ -74,6 +78,15 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
           </div>
         )}
         
+        {incompleteNote && (
+          <div className="mb-[25px] border border-[#e6a700] bg-[#fff8e1] p-[15px]">
+            <h3 className="text-[14px] font-bold text-[#8a6100] uppercase tracking-[0.05em] mb-[8px] m-0">
+              Incomplete (I_OP) — not a fail
+            </h3>
+            <p className="text-[13px] text-[#6b4d00] m-0 leading-[1.5]">{incompleteNote}</p>
+          </div>
+        )}
+
         {/* TABLE */}
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse border border-black mb-[25px]">

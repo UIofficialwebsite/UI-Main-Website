@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
 import { getGradeFormula } from "../utils/gradeCalculations";
-import { checkEligibilityIssues } from "../utils/predictorLogic";
+import { getEligibilityIssue } from "../utils/gradingRules";
 import { getCalculatorSubject } from "../data/curriculumConfig";
 
 interface GradeResultProps {
@@ -21,7 +21,12 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
   const formula = getGradeFormula(subjectKey);
 
   const subjectDetails = getCalculatorSubject(subjectKey);
-  const eligibilityWarning = checkEligibilityIssues(subjectKey, inputValues as any);
+  // A blocking issue means no grade this term (repeat the course). An OPPE
+  // shortfall is I_OP - an incomplete, where the score still stands - so the two
+  // must not look the same.
+  const issue = getEligibilityIssue(subjectKey, inputValues as any);
+  const eligibilityWarning = issue?.message ?? null;
+  const isBlocking = issue?.severity === "blocking";
 
   const getLabelForKey = (key: string) => {
     const field = subjectDetails?.fields.find((f) => f.id === key);
@@ -103,10 +108,15 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
         
         {/* ELIGIBILITY WARNING */}
         {eligibilityWarning && (
-          <div className="mb-8 w-full p-4 border border-[#d32f2f] bg-[#fffbfb]">
-            <span className="block text-[14px] font-bold text-[#d32f2f] mb-1">Eligibility Requirements Not Met</span>
+          <div className={`mb-8 w-full p-4 border ${isBlocking ? "border-[#d32f2f] bg-[#fffbfb]" : "border-[#e6a700] bg-[#fff8e1]"}`}>
+            <span className={`block text-[14px] font-bold mb-1 ${isBlocking ? "text-[#d32f2f]" : "text-[#8a6100]"}`}>
+              {isBlocking ? "Eligibility Requirements Not Met" : "Incomplete (I_OP) — not a fail"}
+            </span>
             <span className="text-[13px] text-[#333333]">
-              <strong className="text-[#d32f2f]">Reason:</strong> {eligibilityWarning}
+              <strong className={isBlocking ? "text-[#d32f2f]" : "text-[#8a6100]"}>
+                {isBlocking ? "Reason:" : "Note:"}
+              </strong>{" "}
+              {eligibilityWarning}
             </span>
           </div>
         )}
@@ -127,7 +137,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
                   <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">Total Marks</span>
                   <span className="text-[26px] font-extrabold text-black">
                     {result.score}
-                    {eligibilityWarning && <span className="text-[#d32f2f] ml-1">*</span>}
+                    {isBlocking && <span className="text-[#d32f2f] ml-1">*</span>}
                   </span>
                 </td>
                 <td className="border border-black p-5 text-center w-1/3">

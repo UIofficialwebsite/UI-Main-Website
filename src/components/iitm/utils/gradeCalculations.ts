@@ -18,5 +18,7 @@ export function getGradePoints(score: number): number {
  */
 export function calculateGradeByLevel(_level: Level, subjectKey: string, values: Record<string, number>): number {
   const score = calculateConfiguredGrade(subjectKey, values);
-  return getEligibilityIssue(subjectKey, values) ? Math.min(score, 39) : score;
+  // Only a blocking issue (cannot sit the end term -> repeat the course) forces a
+  // fail. An OPPE shortfall is I_OP: the score the student actually earned stands.
+  return getEligibilityIssue(subjectKey, values)?.severity === "blocking" ? Math.min(score, 39) : score;
 }
