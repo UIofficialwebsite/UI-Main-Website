@@ -127,10 +127,10 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "business_data_management",
       name: "Business Data Management",
       fields: [
-        { id: "GA", label: "Graded Assignments (Max 10)", min: 0, max: 10 },
-        { id: "Qz1", label: "Quiz 1 (Max 20)", min: 0, max: 20 },
-        { id: "Qz2", label: "Quiz 2 (Max 20)", min: 0, max: 20 },
-        { id: "F", label: "End Term Exam (Max 50)", min: 0, max: 50 }
+        { id: "GA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
       ]
     },
     {
@@ -159,6 +159,7 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "databasems",
       name: "Database Management Systems",
       fields: [
+        { id: "GAA", label: "Assignment eligibility average (best 5 of 7)", min: 0, max: 100 },
         { id: "GAA2", label: "SQL Assignments (W2, W3)", min: 0, max: 100 },
         { id: "GAA3", label: "Prog Assignment (W7)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
