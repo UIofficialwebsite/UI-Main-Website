@@ -16,6 +16,7 @@ import ScrollPersistence from "@/components/ScrollPersistence";
 import ShareClickTracker from "@/components/ShareClickTracker";
 import { Suspense, lazy, ComponentType } from "react";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
+import { Analytics } from "@vercel/analytics/react";
 
 // Helper to handle chunk loading errors with auto-reload
 function lazyWithRetry<T extends ComponentType<any>>(
@@ -136,6 +137,7 @@ const App = () => (
               <InstallAppPrompt />
               <PushOptInPrompt />
               <ScanToInstall />
+              <Analytics />
               
               <RouteErrorBoundary>
               <Suspense fallback={
