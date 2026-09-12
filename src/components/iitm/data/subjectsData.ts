@@ -73,7 +73,9 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       fields: [
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "OPPE1_EL", label: "Were you eligible for OPPE 1?", min: 0, max: 1, controls: "OPPE1" },
         { id: "OPPE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "OPPE2_EL", label: "Were you eligible for OPPE 2?", min: 0, max: 1, controls: "OPPE2" },
         { id: "OPPE2", label: "OPPE 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
       ]
@@ -117,7 +119,9 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       name: "Machine Learning Practice",
       fields: [
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "OPPE1_EL", label: "Were you eligible for OPPE 1?", min: 0, max: 1, controls: "OPPE1" },
         { id: "OPPE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "OPPE2_EL", label: "Were you eligible for OPPE 2?", min: 0, max: 1, controls: "OPPE2" },
         { id: "OPPE2", label: "OPPE 2", min: 0, max: 100 },
         { id: "KA", label: "Kaggle Avg (KA)", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
@@ -151,6 +155,7 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "OP_EL", label: "Were you eligible for the OPPE?", min: 0, max: 1, controls: "OP" },
         { id: "OP", label: "OPPE Score", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
       ]
@@ -164,6 +169,7 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
         { id: "GAA3", label: "Prog Assignment (W7)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "OP_EL", label: "Were you eligible for the OPPE?", min: 0, max: 1, controls: "OP" },
         { id: "OP", label: "OPPE Score", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
       ]
@@ -185,7 +191,9 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "PE1_EL", label: "Were you eligible for Programming Exam 1?", min: 0, max: 1, controls: "PE1" },
         { id: "PE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "PE2_EL", label: "Were you eligible for Programming Exam 2?", min: 0, max: 1, controls: "PE2" },
         { id: "PE2", label: "OPPE 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
       ]
@@ -196,6 +204,7 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       fields: [
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "OPPE_EL", label: "Were you eligible for the OPPE?", min: 0, max: 1, controls: "OPPE" },
         { id: "OPPE", label: "OPPE Score", min: 0, max: 100 },
         { id: "BPTA", label: "BPT Avg", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
@@ -291,7 +300,9 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       name: "Intro to Big Data",
       fields: [
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "OPPE1_EL", label: "Were you eligible for OPPE 1?", min: 0, max: 1, controls: "OPPE1" },
         { id: "OPPE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "OPPE2_EL", label: "Were you eligible for OPPE 2?", min: 0, max: 1, controls: "OPPE2" },
         { id: "OPPE2", label: "OPPE 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 },
         { id: "Bonus", label: "Bonus (Max 5)", min: 0, max: 5 }
@@ -303,7 +314,9 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       fields: [
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "OPPE1_EL", label: "Were you eligible for OPPE 1?", min: 0, max: 1, controls: "OPPE1" },
         { id: "OPPE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "OPPE2_EL", label: "Were you eligible for OPPE 2?", min: 0, max: 1, controls: "OPPE2" },
         { id: "OPPE2", label: "OPPE 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
       ]
@@ -463,7 +476,9 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       name: "MLOPS",
       fields: [
         { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "OPPE1_EL", label: "Were you eligible for OPPE 1?", min: 0, max: 1, controls: "OPPE1" },
         { id: "OPPE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "OPPE2_EL", label: "Were you eligible for OPPE 2?", min: 0, max: 1, controls: "OPPE2" },
         { id: "OPPE2", label: "OPPE 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 },
         { id: "Bonus", label: "Bonus (Max 5)", min: 0, max: 5 }

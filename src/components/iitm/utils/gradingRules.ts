@@ -10,6 +10,10 @@ type Requirement =
   // Checking a single field instead would wrongly fail a student who missed or
   // failed the first attempt but cleared the second.
   | { type: "any-minimum"; fields: string[]; minimum: number; label: string }
+  // "was the student eligible to sit at least one of these exams" - this gates
+  // the END TERM (e.g. Intro to Python: ineligible for both OPPEs => repeat the
+  // course). Distinct from any-minimum, which gates PASSING on the score.
+  | { type: "any-eligible"; fields: string[]; label: string }
   | { type: "one-present"; fields: string[]; label: string };
 
 interface FormulaProfile {
@@ -20,6 +24,25 @@ interface FormulaProfile {
 }
 
 const n = (values: Values, field: string) => Number(values[field] ?? 0);
+/** An unset eligibility toggle means "eligible" so existing inputs behave as before. */
+const isEligible = (values: Values, field: string) => values[field] === undefined || Number(values[field]) === 1;
+
+/**
+ * Zero out any exam the student says they were not eligible for. The document
+ * defines every such component as "0, if not attempted", so an exam that was
+ * never written must not carry whatever is left in the box.
+ */
+function applyEligibilityGates(subjectKey: string, values: Values): Values {
+  const fields = getCalculatorSubject(subjectKey)?.fields;
+  if (!fields) return values;
+  let out = values;
+  for (const field of fields) {
+    if (!field.controls || isEligible(values, field.id)) continue;
+    if (out === values) out = { ...values };
+    out[field.controls] = 0;
+  }
+  return out;
+}
 const bonusAfterPassing = (base: number, values: Values, field = "Bonus") =>
   base >= 40 ? base + n(values, field) : base;
 const maxQuiz = (v: Values) => Math.max(n(v, "Qz1"), n(v, "Qz2"));
@@ -44,7 +67,7 @@ export const FORMULA_PROFILES: Record<string, FormulaProfile> = {
   "foundation-programming": {
     formula: "0.15Qz1 + 0.4F + 0.25max(OPPE1,OPPE2) + 0.2min(OPPE1,OPPE2)",
     calculate: v => 0.15 * n(v, "Qz1") + 0.4 * n(v, "F") + 0.25 * Math.max(n(v, "OPPE1"), n(v, "OPPE2")) + 0.2 * Math.min(n(v, "OPPE1"), n(v, "OPPE2")),
-    requirements: [{ type: "minimum", field: "GAA", minimum: 40, label: "Assignment eligibility average" }, { type: "any-minimum", fields: ["OPPE1", "OPPE2"], minimum: 40, label: "at least one OPPE (OPPE1 or OPPE2)" }],
+    requirements: [{ type: "minimum", field: "GAA", minimum: 40, label: "Assignment eligibility average" }, { type: "any-eligible", fields: ["OPPE1_EL", "OPPE2_EL"], label: "eligible for at least one OPPE" }, { type: "any-minimum", fields: ["OPPE1", "OPPE2"], minimum: 40, label: "at least one OPPE (OPPE1 or OPPE2)" }],
   },
   "c-programming-2026": {
     formula: "0.25Qz1 + 0.45F + max(0.15OPPE1 + 0.15OPPE2, 0.2max(OPPE1,OPPE2))",
@@ -62,7 +85,7 @@ export const FORMULA_PROFILES: Record<string, FormulaProfile> = {
   "pdsa": { formula: "0.05GAA + 0.2OP + 0.45F + max(0.2max(Qz1,Qz2), 0.1Qz1 + 0.2Qz2)", calculate: v => 0.05*n(v,"GAA")+0.2*n(v,"OP")+0.45*n(v,"F")+Math.max(0.2*maxQuiz(v),0.1*n(v,"Qz1")+0.2*n(v,"Qz2")), requirements:[...standardRequirements] },
   "dbms": { formula: "0.03GAA2 + 0.02GAA3 + 0.2OP + 0.45F + max(0.2max(Qz1,Qz2), 0.1Qz1 + 0.2Qz2)", calculate: v => 0.03*n(v,"GAA2")+0.02*n(v,"GAA3")+0.2*n(v,"OP")+0.45*n(v,"F")+Math.max(0.2*maxQuiz(v),0.1*n(v,"Qz1")+0.2*n(v,"Qz2")), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"one-present",fields:["Qz1","Qz2"],label:"at least one quiz"},{type:"minimum",field:"OP",minimum:35,label:"OPPE"}] },
   "java": { formula: "0.05GAA + 0.2max(PE1,PE2) + 0.45F + max(0.2max(Qz1,Qz2), 0.1Qz1 + 0.2Qz2) + 0.1min(PE1,PE2)", calculate:v=>0.05*n(v,"GAA")+0.2*Math.max(n(v,"PE1"),n(v,"PE2"))+0.45*n(v,"F")+Math.max(0.2*maxQuiz(v),0.1*n(v,"Qz1")+0.2*n(v,"Qz2"))+0.1*Math.min(n(v,"PE1"),n(v,"PE2")), requirements:[...standardRequirements,{type:"any-minimum",fields:["PE1","PE2"],minimum:30,label:"at least one programming exam (PE1 or PE2)"}] },
-  "system-commands": { formula:"0.05GAA + 0.25Qz1 + 0.3OPPE + 0.3F + 0.1BPTA", calculate:v=>0.05*n(v,"GAA")+0.25*n(v,"Qz1")+0.3*n(v,"OPPE")+0.3*n(v,"F")+0.1*n(v,"BPTA"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"one-present",fields:["Qz1"],label:"Quiz 1"},{type:"minimum",field:"OPPE",minimum:40,label:"OPPE"}] },
+  "system-commands": { formula:"0.05GAA + 0.25Qz1 + 0.3OPPE + 0.3F + 0.1BPTA", calculate:v=>0.05*n(v,"GAA")+0.25*n(v,"Qz1")+0.3*n(v,"OPPE")+0.3*n(v,"F")+0.1*n(v,"BPTA"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"any-eligible",fields:["OPPE_EL"],label:"eligible for the OPPE"},{type:"minimum",field:"OPPE",minimum:40,label:"OPPE"}] },
   "dl-genai": { formula:"0.1GAA + 0.2Qz1 + 0.2Qz2 + 0.25F + 0.1NPPE1 + 0.15NPPE2", calculate:v=>0.1*n(v,"GAA")+0.2*n(v,"Qz1")+0.2*n(v,"Qz2")+0.25*n(v,"F")+0.1*n(v,"NPPE1")+0.15*n(v,"NPPE2"), requirements:standardRequirements },
   "tds": { formula:"0.2GAA + 0.2ROE + 0.2P1 + 0.2P2 + 0.2F", calculate:v=>0.2*n(v,"GAA")+0.2*n(v,"ROE")+0.2*n(v,"P1")+0.2*n(v,"P2")+0.2*n(v,"F"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"}] },
   "degree-standard": { formula:"0.1GAA + 0.4F + 0.25Qz1 + 0.25Qz2", calculate:v=>0.1*n(v,"GAA")+0.4*n(v,"F")+0.25*n(v,"Qz1")+0.25*n(v,"Qz2"), requirements:standardRequirements },
@@ -110,7 +133,7 @@ export function calculateConfiguredGrade(subjectKey: string, values: Values): nu
   const profileName = getCalculatorSubject(subjectKey)?.formulaProfile;
   const profile = profileName && FORMULA_PROFILES[profileName];
   if (!profile) return 0;
-  const score = profile.calculate(values);
+  const score = profile.calculate(applyEligibilityGates(subjectKey, values));
   return profile.capAt100 ? Math.min(100, score) : score;
 }
 
@@ -118,9 +141,14 @@ export function getEligibilityIssue(subjectKey: string, values: Values): Eligibi
   const profileName = getCalculatorSubject(subjectKey)?.formulaProfile;
   const profile = profileName && FORMULA_PROFILES[profileName];
   if (!profile) return { message: "This course has no published grading formula configured yet." };
+  values = applyEligibilityGates(subjectKey, values);
   for (const requirement of profile.requirements || []) {
     if (requirement.type === "minimum") {
       if (n(values, requirement.field) < requirement.minimum) return { message: `${requirement.label} must be at least ${requirement.minimum}.` };
+    } else if (requirement.type === "any-eligible") {
+      if (!requirement.fields.some((field) => isEligible(values, field))) {
+        return { message: `You must be ${requirement.label} to appear for the end term exam.` };
+      }
     } else if (requirement.type === "any-minimum") {
       if (!requirement.fields.some((field) => n(values, field) >= requirement.minimum)) {
         return { message: `${requirement.label} must be at least ${requirement.minimum}.` };

@@ -28,6 +28,22 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
     return field ? field.label : key;
   };
 
+  // Eligibility toggles are stored as 1/0; show them as Yes/No, and show an exam
+  // the student was not eligible for as "Not eligible" rather than whatever
+  // number is still sitting in the (hidden) box - it is scored as 0.
+  const gateFor = new Map<string, string>();
+  subjectDetails?.fields.forEach((item) => {
+    if (item.controls) gateFor.set(item.controls, item.id);
+  });
+  const wasEligible = (toggleId: string) => (inputValues[toggleId] ?? "1") === "1";
+  const getDisplayValue = (key: string, value: string) => {
+    const field = subjectDetails?.fields.find((f) => f.id === key);
+    if (field?.controls) return value === "0" ? "No" : "Yes";
+    const gate = gateFor.get(key);
+    if (gate && !wasEligible(gate)) return "Not eligible";
+    return value || "0";
+  };
+
   const getFormulaLegend = (formula: string) => {
     const legendItems = [];
     if (formula.includes("F")) legendItems.push("F = End Term Exam");
@@ -144,7 +160,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
                     {getLabelForKey(key)}
                   </td>
                   <td className="border border-black p-4 text-right font-bold text-black">
-                    {value || "0"}
+                    {getDisplayValue(key, value)}
                   </td>
                 </tr>
               ))}

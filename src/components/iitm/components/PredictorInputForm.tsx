@@ -36,6 +36,17 @@ export default function PredictorInputForm({
     }
   };
 
+
+  // An eligibility toggle (field.controls) records whether the student was
+  // allowed to sit that exam. Answering "No" hides its score box: the exam was
+  // never written, so the grading document counts it as 0 rather than whatever
+  // happens to be typed. An untouched toggle means eligible.
+  const gateFor = new Map<string, string>();
+  inputFields.forEach((item) => {
+    if (item.controls) gateFor.set(item.controls, item.id);
+  });
+  const isEligible = (toggleId: string) => (inputValues[toggleId] ?? "1") === "1";
+
   return (
     <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-['Inter']">
       
@@ -53,22 +64,52 @@ export default function PredictorInputForm({
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-8">
-        {inputFields.map((field) => (
-          <div key={field.id} className="space-y-3">
-            <Label htmlFor={field.id} className="text-sm font-medium text-black font-['Inter']">
-              {field.label}
-            </Label>
-            <Input
-              id={field.id}
-              type="text"
-              inputMode="decimal"
-              placeholder={`Enter score (<= ${field.max})`}
-              value={inputValues[field.id] || ""}
-              onChange={(e) => handleValueChange(field.id, e.target.value, field.max)}
-              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-['Inter'] font-normal placeholder:font-normal placeholder:text-gray-300 transition-colors"
-            />
-          </div>
-        ))}
+        {inputFields.map((field) => {
+          if (field.controls) {
+            return (
+              <div key={field.id} className="space-y-3">
+                <Label className="text-sm font-medium text-black font-['Inter']">
+                  {field.label}
+                </Label>
+                <div className="flex gap-2">
+                  {(["1", "0"] as const).map((choice) => (
+                    <button
+                      key={choice}
+                      type="button"
+                      onClick={() => onInputChange(field.id, choice)}
+                      className={`h-12 flex-1 rounded-sm border-2 text-sm font-medium font-['Inter'] transition-colors ${
+                        isEligible(field.id) === (choice === "1")
+                          ? "border-black bg-black text-white"
+                          : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      {choice === "1" ? "Yes" : "No"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          const gate = gateFor.get(field.id);
+          // Not eligible -> no score to enter; it is scored as 0.
+          if (gate && !isEligible(gate)) return null;
+          return (
+            <div key={field.id} className="space-y-3">
+              <Label htmlFor={field.id} className="text-sm font-medium text-black font-['Inter']">
+                {field.label}
+              </Label>
+              <Input
+                id={field.id}
+                type="text"
+                inputMode="decimal"
+                placeholder={`Enter score (<= ${field.max})`}
+                value={inputValues[field.id] || ""}
+                onChange={(e) => handleValueChange(field.id, e.target.value, field.max)}
+                className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-['Inter'] font-normal placeholder:font-normal placeholder:text-gray-300 transition-colors"
+              />
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex justify-start">
