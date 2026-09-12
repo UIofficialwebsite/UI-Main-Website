@@ -41,6 +41,18 @@ const isLiveAndAvailable = (course: Course) => {
   return cutoffDate.getTime() >= new Date().setHours(0, 0, 0, 0);
 };
 
+// Once a student declines the batch promo we must not nag them again: persist
+// the refusal so it survives reloads and further predictions. Only clearing
+// site data brings it back.
+const BATCH_PROMO_DISMISSED_KEY = "ui-mp-batch-promo-dismissed";
+const readBatchPromoDismissed = (): boolean => {
+  try {
+    return localStorage.getItem(BATCH_PROMO_DISMISSED_KEY) === "1";
+  } catch {
+    return false; // private mode / storage blocked
+  }
+};
+
 const isPaidCourse = (course: Course) => Number(course.discounted_price ?? course.price) > 0;
 
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
@@ -86,7 +98,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
   const [showBatchPrompt, setShowBatchPrompt] = useState(false);
-  const [dismissedBatchPrompt, setDismissedBatchPrompt] = useState(false);
+  const [dismissedBatchPrompt, setDismissedBatchPrompt] = useState(readBatchPromoDismissed);
 
   // Promote only a live, purchasable batch for the exact programme and level.
   // This prevents a Foundation prediction from showing a Diploma batch, or any old batch.
@@ -144,7 +156,6 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     setInputValues({});
     setResults(null);
     setShowBatchPrompt(false);
-    setDismissedBatchPrompt(false);
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
@@ -189,7 +200,6 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       });
     } catch (e) { /* silent */ }
 
-    setDismissedBatchPrompt(false);
     setResults(newResults);
   };
 
@@ -197,18 +207,21 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     setInputValues({});
     setResults(null);
     setShowBatchPrompt(false);
-    setDismissedBatchPrompt(false);
   };
 
   const dismissBatchPrompt = () => {
     setShowBatchPrompt(false);
     setDismissedBatchPrompt(true);
+    try {
+      localStorage.setItem(BATCH_PROMO_DISMISSED_KEY, "1");
+    } catch {
+      /* storage blocked - fall back to in-session dismissal */
+    }
   };
 
   const exploreFeaturedBatch = () => {
     if (!featuredBatch) return;
-    setShowBatchPrompt(false);
-    setDismissedBatchPrompt(true);
+    dismissBatchPrompt();
     navigate(`/courses/${featuredBatch.id}`);
   };
 

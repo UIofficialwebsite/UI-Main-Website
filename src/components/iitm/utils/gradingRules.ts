@@ -5,6 +5,11 @@ export interface EligibilityIssue { message: string }
 type Values = Record<string, number | undefined>;
 type Requirement =
   | { type: "minimum"; field: string; minimum: number; label: string }
+  // "at least one of these fields must reach `minimum`" - e.g. the published
+  // rule "score in ONE of the two programming exams (OPPE1, OPPE2) >= 40".
+  // Checking a single field instead would wrongly fail a student who missed or
+  // failed the first attempt but cleared the second.
+  | { type: "any-minimum"; fields: string[]; minimum: number; label: string }
   | { type: "one-present"; fields: string[]; label: string };
 
 interface FormulaProfile {
@@ -39,24 +44,24 @@ export const FORMULA_PROFILES: Record<string, FormulaProfile> = {
   "foundation-programming": {
     formula: "0.15Qz1 + 0.4F + 0.25max(OPPE1,OPPE2) + 0.2min(OPPE1,OPPE2)",
     calculate: v => 0.15 * n(v, "Qz1") + 0.4 * n(v, "F") + 0.25 * Math.max(n(v, "OPPE1"), n(v, "OPPE2")) + 0.2 * Math.min(n(v, "OPPE1"), n(v, "OPPE2")),
-    requirements: [{ type: "minimum", field: "GAA", minimum: 40, label: "Assignment eligibility average" }, { type: "one-present", fields: ["Qz1"], label: "Quiz 1" }, { type: "minimum", field: "OPPE1", minimum: 40, label: "at least one OPPE" }],
+    requirements: [{ type: "minimum", field: "GAA", minimum: 40, label: "Assignment eligibility average" }, { type: "one-present", fields: ["Qz1"], label: "Quiz 1" }, { type: "any-minimum", fields: ["OPPE1", "OPPE2"], minimum: 40, label: "at least one OPPE (OPPE1 or OPPE2)" }],
   },
   "c-programming-2026": {
     formula: "0.25Qz1 + 0.45F + max(0.15OPPE1 + 0.15OPPE2, 0.2max(OPPE1,OPPE2))",
     calculate: v => 0.25*n(v,"Qz1") + 0.45*n(v,"F") + Math.max(0.15*n(v,"OPPE1") + 0.15*n(v,"OPPE2"), 0.2*Math.max(n(v,"OPPE1"),n(v,"OPPE2"))),
-    requirements: [{ type:"one-present", fields:["Qz1"], label:"Quiz 1" }, { type:"minimum", field:"OPPE1", minimum:40, label:"at least one OPPE" }],
+    requirements: [{ type:"one-present", fields:["Qz1"], label:"Quiz 1" }, { type:"any-minimum", fields:["OPPE1","OPPE2"], minimum:40, label:"at least one OPPE (OPPE1 or OPPE2)" }],
   },
   "diploma-five-gaa": { formula: "0.05GAA + 0.4F + 0.25Qz1 + 0.25Qz2", calculate: v => 0.05 * n(v, "GAA") + 0.4 * n(v, "F") + 0.25 * n(v, "Qz1") + 0.25 * n(v, "Qz2"), requirements: standardRequirements },
   "diploma-five-gaa-best-quiz": { formula: "0.05GAA + max(0.6F + 0.25max(Qz1,Qz2), 0.4F + 0.25Qz1 + 0.3Qz2) + Bonus", calculate: v => 0.05 * n(v, "GAA") + Math.max(0.6 * n(v, "F") + 0.25 * maxQuiz(v), 0.4 * n(v, "F") + 0.25 * n(v, "Qz1") + 0.3 * n(v, "Qz2")) + n(v, "Bonus"), requirements: standardRequirements, capAt100: true },
   "diploma-five-gla-best-quiz": { formula: "0.05GLA + max(0.6F + 0.25max(Qz1,Qz2), 0.4F + 0.25Qz1 + 0.3Qz2)", calculate: v => 0.05 * n(v, "GLA") + Math.max(0.6 * n(v, "F") + 0.25 * maxQuiz(v), 0.4 * n(v, "F") + 0.25 * n(v, "Qz1") + 0.3 * n(v, "Qz2")), requirements: standardRequirements },
   "electronic-standard": { formula: "0.1GAA + max(0.6F + 0.2max(Qz1,Qz2), 0.4F + 0.2Qz1 + 0.3Qz2)", calculate: electronicScore, requirements: standardRequirements },
   "electronic-standard-bonus": { formula: "0.1GAA + max(0.6F + 0.2max(Qz1,Qz2), 0.4F + 0.2Qz1 + 0.3Qz2) + Bonus", calculate: v => electronicScore(v) + n(v, "Bonus"), requirements: standardRequirements, capAt100: true },
-  "mlp": { formula: "0.1GAA + 0.3F + 0.2OPPE1 + 0.2OPPE2 + 0.2KA", calculate: v => 0.1*n(v,"GAA") + 0.3*n(v,"F") + 0.2*n(v,"OPPE1") + 0.2*n(v,"OPPE2") + 0.2*n(v,"KA"), requirements: [...standardRequirements, { type: "minimum", field: "OPPE1", minimum: 40, label: "at least one OPPE" }] },
+  "mlp": { formula: "0.1GAA + 0.3F + 0.2OPPE1 + 0.2OPPE2 + 0.2KA", calculate: v => 0.1*n(v,"GAA") + 0.3*n(v,"F") + 0.2*n(v,"OPPE1") + 0.2*n(v,"OPPE2") + 0.2*n(v,"KA"), requirements: [...standardRequirements, { type: "any-minimum", fields: ["OPPE1", "OPPE2"], minimum: 40, label: "at least one OPPE (OPPE1 or OPPE2)" }] },
   "bdm": { formula: "GA + Qz1 + Qz2 + F", calculate: v => n(v,"GA") + n(v,"Qz1") + n(v,"Qz2") + n(v,"F"), requirements: [{ type: "minimum", field: "GA", minimum: 4, label: "Graded assignments (out of 10)" }, { type: "one-present", fields:["Qz1","Qz2"], label:"at least one quiz" }] },
   "business-analytics": { formula: "2(0.7max(Qz1,Qz2) + 0.3min(Qz1,Qz2)) + A + F + Bonus", calculate: v => 2*(0.7*Math.max(n(v,"Qz1"),n(v,"Qz2"))+0.3*Math.min(n(v,"Qz1"),n(v,"Qz2"))) + n(v,"A") + n(v,"F") + n(v,"Bonus"), requirements: [{ type:"minimum", field:"F", minimum:10, label:"End term (out of 40)" }, { type:"one-present", fields:["Qz1","Qz2"], label:"at least one quiz" }], capAt100:true },
   "pdsa": { formula: "0.05GAA + 0.2OP + 0.45F + max(0.2max(Qz1,Qz2), 0.1Qz1 + 0.2Qz2)", calculate: v => 0.05*n(v,"GAA")+0.2*n(v,"OP")+0.45*n(v,"F")+Math.max(0.2*maxQuiz(v),0.1*n(v,"Qz1")+0.2*n(v,"Qz2")), requirements:[...standardRequirements,{type:"minimum",field:"OP",minimum:40,label:"OPPE"}] },
   "dbms": { formula: "0.03GAA2 + 0.02GAA3 + 0.2OP + 0.45F + max(0.2max(Qz1,Qz2), 0.1Qz1 + 0.2Qz2)", calculate: v => 0.03*n(v,"GAA2")+0.02*n(v,"GAA3")+0.2*n(v,"OP")+0.45*n(v,"F")+Math.max(0.2*maxQuiz(v),0.1*n(v,"Qz1")+0.2*n(v,"Qz2")), requirements:[{type:"one-present",fields:["Qz1","Qz2"],label:"at least one quiz"},{type:"minimum",field:"OP",minimum:35,label:"OPPE"}] },
-  "java": { formula: "0.05GAA + 0.2max(PE1,PE2) + 0.45F + max(0.2max(Qz1,Qz2), 0.1Qz1 + 0.2Qz2) + 0.1min(PE1,PE2)", calculate:v=>0.05*n(v,"GAA")+0.2*Math.max(n(v,"PE1"),n(v,"PE2"))+0.45*n(v,"F")+Math.max(0.2*maxQuiz(v),0.1*n(v,"Qz1")+0.2*n(v,"Qz2"))+0.1*Math.min(n(v,"PE1"),n(v,"PE2")), requirements:[...standardRequirements,{type:"minimum",field:"PE1",minimum:30,label:"at least one programming exam"}] },
+  "java": { formula: "0.05GAA + 0.2max(PE1,PE2) + 0.45F + max(0.2max(Qz1,Qz2), 0.1Qz1 + 0.2Qz2) + 0.1min(PE1,PE2)", calculate:v=>0.05*n(v,"GAA")+0.2*Math.max(n(v,"PE1"),n(v,"PE2"))+0.45*n(v,"F")+Math.max(0.2*maxQuiz(v),0.1*n(v,"Qz1")+0.2*n(v,"Qz2"))+0.1*Math.min(n(v,"PE1"),n(v,"PE2")), requirements:[...standardRequirements,{type:"any-minimum",fields:["PE1","PE2"],minimum:30,label:"at least one programming exam (PE1 or PE2)"}] },
   "system-commands": { formula:"0.05GAA + 0.25Qz1 + 0.3OPPE + 0.3F + 0.1BPTA", calculate:v=>0.05*n(v,"GAA")+0.25*n(v,"Qz1")+0.3*n(v,"OPPE")+0.3*n(v,"F")+0.1*n(v,"BPTA"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"one-present",fields:["Qz1"],label:"Quiz 1"},{type:"minimum",field:"OPPE",minimum:40,label:"OPPE"}] },
   "dl-genai": { formula:"0.1GAA + 0.2Qz1 + 0.2Qz2 + 0.25F + 0.1NPPE1 + 0.15NPPE2", calculate:v=>0.1*n(v,"GAA")+0.2*n(v,"Qz1")+0.2*n(v,"Qz2")+0.25*n(v,"F")+0.1*n(v,"NPPE1")+0.15*n(v,"NPPE2"), requirements:standardRequirements },
   "tds": { formula:"0.2GAA + 0.2ROE + 0.2P1 + 0.2P2 + 0.2F", calculate:v=>0.2*n(v,"GAA")+0.2*n(v,"ROE")+0.2*n(v,"P1")+0.2*n(v,"P2")+0.2*n(v,"F"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"}] },
@@ -71,8 +76,8 @@ export const FORMULA_PROFILES: Record<string, FormulaProfile> = {
   "design-thinking": { formula:"0.1GAA + 0.1GP1 + 0.1GP2 + 0.2GP3 + 0.2Qz2 + 0.3F", calculate:v=>0.1*n(v,"GAA")+0.1*n(v,"GP1")+0.1*n(v,"GP2")+0.2*n(v,"GP3")+0.2*n(v,"Qz2")+0.3*n(v,"F"), requirements:[{ type:"minimum",field:"GAA",minimum:40,label:"assignment eligibility average" },{type:"minimum",field:"GP3",minimum:60,label:"final project"}] },
   "privacy-security": { formula:"0.2GAA + 0.3F + 0.25Qz1 + 0.25Qz2", calculate:v=>0.2*n(v,"GAA")+0.3*n(v,"F")+0.25*n(v,"Qz1")+0.25*n(v,"Qz2"), requirements:standardRequirements },
   "computer-systems": { formula:"0.1GAA + 0.4F + 0.2Qz1 + 0.25Qz2 + 0.05CircuitVerse assignment", calculate:v=>0.1*n(v,"GAA")+0.4*n(v,"F")+0.2*n(v,"Qz1")+0.25*n(v,"Qz2")+0.05*n(v,"CVA"), requirements:standardRequirements },
-  "big-data": { formula:"0.1GAA + 0.3F + 0.2OPPE1 + 0.4OPPE2 + Bonus", calculate:v=>0.1*n(v,"GAA")+0.3*n(v,"F")+0.2*n(v,"OPPE1")+0.4*n(v,"OPPE2")+n(v,"Bonus"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"minimum",field:"OPPE1",minimum:40,label:"at least one OPPE"}] },
-  "c-programming": { formula:"0.1GAA + 0.2Qz1 + 0.2OPPE1 + 0.2OPPE2 + 0.3F", calculate:v=>0.1*n(v,"GAA")+0.2*n(v,"Qz1")+0.2*n(v,"OPPE1")+0.2*n(v,"OPPE2")+0.3*n(v,"F"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"one-present",fields:["Qz1"],label:"Quiz 1"},{type:"minimum",field:"OPPE1",minimum:40,label:"at least one OPPE"}] },
+  "big-data": { formula:"0.1GAA + 0.3F + 0.2OPPE1 + 0.4OPPE2 + Bonus", calculate:v=>0.1*n(v,"GAA")+0.3*n(v,"F")+0.2*n(v,"OPPE1")+0.4*n(v,"OPPE2")+n(v,"Bonus"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"any-minimum",fields:["OPPE1","OPPE2"],minimum:40,label:"at least one OPPE (OPPE1 or OPPE2)"}] },
+  "c-programming": { formula:"0.1GAA + 0.2Qz1 + 0.2OPPE1 + 0.2OPPE2 + 0.3F", calculate:v=>0.1*n(v,"GAA")+0.2*n(v,"Qz1")+0.2*n(v,"OPPE1")+0.2*n(v,"OPPE2")+0.3*n(v,"F"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"one-present",fields:["Qz1"],label:"Quiz 1"},{type:"any-minimum",fields:["OPPE1","OPPE2"],minimum:40,label:"at least one OPPE (OPPE1 or OPPE2)"}] },
   "deep-learning-practice": { formula:"0.05GA + 0.15Qz1 + 0.15Qz2 + 0.15Qz3 + 0.25avg(NPPE1,NPPE2,NPPE3) + 0.25Viva", calculate:v=>0.05*n(v,"GA")+0.15*n(v,"Qz1")+0.15*n(v,"Qz2")+0.15*n(v,"Qz3")+0.25*(n(v,"NPPE1")+n(v,"NPPE2")+n(v,"NPPE3"))/3+0.25*n(v,"Viva"), requirements:[{type:"minimum",field:"GA",minimum:40,label:"Assignment eligibility average"},{type:"minimum",field:"Viva",minimum:50,label:"Viva"}] },
   "math-genai": { formula:"0.05GAA + 0.35F + 0.2Qz1 + 0.2Qz2 + 0.2NPPE + Bonus", calculate:v=>0.05*n(v,"GAA")+0.35*n(v,"F")+0.2*n(v,"Qz1")+0.2*n(v,"Qz2")+0.2*n(v,"NPPE")+n(v,"Bonus"), requirements:standardRequirements,capAt100:true },
   "mlops": { formula:"0.2GAA + 0.3F + 0.25OPPE1 + 0.25OPPE2 + Bonus", calculate:v=>0.2*n(v,"GAA")+0.3*n(v,"F")+0.25*n(v,"OPPE1")+0.25*n(v,"OPPE2")+n(v,"Bonus"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"}],capAt100:true },
@@ -116,6 +121,10 @@ export function getEligibilityIssue(subjectKey: string, values: Values): Eligibi
   for (const requirement of profile.requirements || []) {
     if (requirement.type === "minimum") {
       if (n(values, requirement.field) < requirement.minimum) return { message: `${requirement.label} must be at least ${requirement.minimum}.` };
+    } else if (requirement.type === "any-minimum") {
+      if (!requirement.fields.some((field) => n(values, field) >= requirement.minimum)) {
+        return { message: `${requirement.label} must be at least ${requirement.minimum}.` };
+      }
     } else if (!requirement.fields.some((field) => values[field] !== undefined)) {
       return { message: `You must enter ${requirement.label}; enter 0 if you attended and scored zero.` };
     }
