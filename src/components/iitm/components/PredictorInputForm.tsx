@@ -17,7 +17,7 @@ export default function PredictorInputForm({
   onInputChange, 
   onCalculate
 }: PredictorInputFormProps) {
-  const inputFields = subject.fields.filter(f => f.id !== 'F' && !f.label.toLowerCase().includes('bonus'));
+  const inputFields = subject.fields.filter(f => f.id !== 'F' && f.controls !== 'F' && !f.label.toLowerCase().includes('bonus'));
 
   const handleValueChange = (fieldId: string, value: string, max: number) => {
     if (value === "") {

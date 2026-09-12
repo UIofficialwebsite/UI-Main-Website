@@ -199,7 +199,24 @@ const aerospaceCatalogue: CatalogueCourse[] = [
 ];
 
 const legacyCatalogue: CatalogueCourse[] = legacyCalculatorSubjects.map(({ key, name, credits, programme, level }) => ({ key, name, credits, programme, level }));
-const allCalculatorSubjects = [...legacyCalculatorSubjects, ...managementFoundation, ...aerospaceCalculatorSubjects, ...dsPublishedDegreeSubjects];
+// Being absent for the end term alone is grade I, not a fail - the student sits
+// the end term by itself in a later term and keeps every other mark. Add the
+// toggle once here rather than repeating it in every subject definition.
+const withEndTermToggle = (subject: CalculatorSubject): CalculatorSubject => {
+  if (!subject.fields.some((item) => item.id === "F") || subject.fields.some((item) => item.controls === "F")) {
+    return subject;
+  }
+  return {
+    ...subject,
+    fields: subject.fields.flatMap((item) => (
+      item.id === "F"
+        ? [{ id: "F_WROTE", label: "Did you write the End Term exam?", min: 0, max: 1, controls: "F" }, item]
+        : [item]
+    )),
+  };
+};
+
+const allCalculatorSubjects = [...legacyCalculatorSubjects, ...managementFoundation, ...aerospaceCalculatorSubjects, ...dsPublishedDegreeSubjects].map(withEndTermToggle);
 const allCatalogueCourses = [...legacyCatalogue, ...managementCatalogue, ...aerospaceCatalogue, ...dsPublishedDegreeSubjects.map(({ key, name, credits, programme, level }) => ({ key, name, credits, programme, level }))];
 
 // The subject selector is intentionally term-specific: only courses present in

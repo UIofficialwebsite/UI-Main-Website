@@ -113,7 +113,8 @@ export const FORMULA_PROFILES: Record<string, FormulaProfile> = {
   "computer-systems": { formula:"0.1GAA + 0.4F + 0.2Qz1 + 0.25Qz2 + 0.05CircuitVerse assignment", calculate:v=>0.1*n(v,"GAA")+0.4*n(v,"F")+0.2*n(v,"Qz1")+0.25*n(v,"Qz2")+0.05*n(v,"CVA"), requirements:standardRequirements },
   "big-data": { formula:"0.1GAA + 0.3F + 0.2OPPE1 + 0.4OPPE2 + Bonus", calculate:v=>0.1*n(v,"GAA")+0.3*n(v,"F")+0.2*n(v,"OPPE1")+0.4*n(v,"OPPE2")+n(v,"Bonus"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"any-minimum",fields:["OPPE1","OPPE2"],minimum:40,label:"at least one OPPE (OPPE1 or OPPE2)",severity:"incomplete"}] },
   "c-programming": { formula:"0.1GAA + 0.2Qz1 + 0.2OPPE1 + 0.2OPPE2 + 0.3F", calculate:v=>0.1*n(v,"GAA")+0.2*n(v,"Qz1")+0.2*n(v,"OPPE1")+0.2*n(v,"OPPE2")+0.3*n(v,"F"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"},{type:"one-present",fields:["Qz1"],label:"Quiz 1"},{type:"any-minimum",fields:["OPPE1","OPPE2"],minimum:40,label:"at least one OPPE (OPPE1 or OPPE2)",severity:"incomplete"}] },
-  "deep-learning-practice": { formula:"0.05GA + 0.15Qz1 + 0.15Qz2 + 0.15Qz3 + 0.25avg(NPPE1,NPPE2,NPPE3) + 0.25Viva", calculate:v=>0.05*n(v,"GA")+0.15*n(v,"Qz1")+0.15*n(v,"Qz2")+0.15*n(v,"Qz3")+0.25*(n(v,"NPPE1")+n(v,"NPPE2")+n(v,"NPPE3"))/3+0.25*n(v,"Viva"), requirements:[{type:"minimum",field:"GA",minimum:40,label:"Assignment eligibility average"},{type:"minimum",field:"Viva",minimum:50,label:"Viva"}] },
+  "deep-learning-practice": { formula:"0.05GA + 0.15Qz1 + 0.15Qz2 + 0.15Qz3 + 0.25avg(NPPE1,NPPE2,NPPE3) + 0.25Viva", calculate:v=>0.05*n(v,"GA")+0.15*n(v,"Qz1")+0.15*n(v,"Qz2")+0.15*n(v,"Qz3")+0.25*(n(v,"NPPE1")+n(v,"NPPE2")+n(v,"NPPE3"))/3+0.25*n(v,"Viva"), /* The published section for this course lists only its components and the
+     formula - no eligibility or viva threshold - so no gate is enforced. */ },
   "math-genai": { formula:"0.05GAA + 0.35F + 0.2Qz1 + 0.2Qz2 + 0.2NPPE", calculate:v=>0.05*n(v,"GAA")+0.35*n(v,"F")+0.2*n(v,"Qz1")+0.2*n(v,"Qz2")+0.2*n(v,"NPPE"), requirements:standardRequirements,capAt100:true },
   "mlops": { formula:"0.2GAA + 0.3F + 0.25OPPE1 + 0.25OPPE2 + Bonus", calculate:v=>0.2*n(v,"GAA")+0.3*n(v,"F")+0.25*n(v,"OPPE1")+0.25*n(v,"OPPE2")+n(v,"Bonus"), requirements:[{type:"minimum",field:"GAA",minimum:40,label:"Assignment eligibility average"}],capAt100:true },
   "managerial-economics": { formula:"0.15GAA + max(0.2Qz1 + 0.2Qz2 + 0.45F, 0.5F + 0.25max(Qz1,Qz2))", calculate:v=>0.15*n(v,"GAA")+Math.max(0.2*n(v,"Qz1")+0.2*n(v,"Qz2")+0.45*n(v,"F"),0.5*n(v,"F")+0.25*maxQuiz(v)), requirements:standardRequirements },
@@ -167,6 +168,11 @@ export function getEligibilityIssue(subjectKey: string, values: Values): Eligibi
   const profile = profileName && FORMULA_PROFILES[profileName];
   if (!profile) return { message: "This course has no published grading formula configured yet.", severity: "blocking" };
   values = applyEligibilityGates(subjectKey, values);
+  // "If you are absent for ET alone but all other assessment components are
+  // completed ... grade will be pushed as I", and with a failed OPPE too it is
+  // I_BOTH. Either way the marks are carried over, so this is not a fail.
+  const endTermToggle = getCalculatorSubject(subjectKey)?.fields.find((f) => f.controls === "F");
+  const absentEndTerm = !!endTermToggle && !isEligible(values, endTermToggle.id);
   let incomplete: EligibilityIssue | null = null;
   for (const requirement of profile.requirements || []) {
     if (requirement.type === "minimum") {
@@ -188,6 +194,14 @@ export function getEligibilityIssue(subjectKey: string, values: Values): Eligibi
     } else if (!requirement.fields.some((field) => values[field] !== undefined)) {
       return { message: `You must enter ${requirement.label}; enter 0 if you attended and scored zero.`, severity: "blocking" };
     }
+  }
+  if (absentEndTerm) {
+    return {
+      severity: "incomplete",
+      message: incomplete
+        ? "You were absent for the end term and have not cleared a programming exam, so the term result is I_BOTH (incomplete) — not a fail. You re-attempt the end term and the programming exam in a later term; every other mark is carried over."
+        : "You were absent for the end term, so the term result is I (incomplete) — not a fail. You can sit the end term alone in a later term and every other mark is carried over.",
+    };
   }
   return incomplete;
 }
