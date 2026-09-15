@@ -421,13 +421,25 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           <div className="space-y-3 w-full">
             {courses.map((course, index) => (
               <div key={course.id} className="grid grid-cols-12 gap-4 items-center group w-full">
-                <div className="col-span-6 md:col-span-7">
-                  <Select value={course.name || "__custom"} onValueChange={(value) => selectCatalogueCourse(index, value)}>
-                    <SelectTrigger className="h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans font-normal">
-                      <SelectValue placeholder="Select course" />
+                <div className="col-span-6 md:col-span-7 space-y-2">
+                  {/* The typed name is the value that counts, so it is always
+                      editable. Previously it only appeared while the name was
+                      empty, which made it vanish after the first keystroke. The
+                      dropdown is a shortcut that fills in the name and credits. */}
+                  <Input
+                    placeholder="Subject name"
+                    value={course.name}
+                    onChange={(e) => updateCourse(index, "name", e.target.value)}
+                    className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
+                  />
+                  <Select
+                    value={catalogueCourses.some((item) => item.name === course.name) ? course.name : ""}
+                    onValueChange={(value) => selectCatalogueCourse(index, value)}
+                  >
+                    <SelectTrigger className="h-9 text-xs border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans font-normal text-gray-600">
+                      <SelectValue placeholder="Or pick from the course list" />
                     </SelectTrigger>
                     <SelectContent className="z-[9999] max-h-[300px] bg-white">
-                      <SelectItem value="__custom">Custom course</SelectItem>
                       {catalogueCourses.map((catalogueCourse) => (
                         <SelectItem key={catalogueCourse.key} value={catalogueCourse.name}>
                           {catalogueCourse.name} ({catalogueCourse.credits} credits)
@@ -435,14 +447,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  {!course.name && (
-                    <Input
-                      placeholder="Custom course name"
-                      value={course.name}
-                      onChange={(e) => updateCourse(index, "name", e.target.value)}
-                      className="mt-2 bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
-                    />
-                  )}
                 </div>
                 <div className="col-span-2 md:col-span-2">
                     <Input
