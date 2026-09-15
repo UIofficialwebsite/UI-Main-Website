@@ -178,6 +178,7 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "appdev1",
       name: "Application Development 1",
       fields: [
+        { id: "GAA", label: "Assignment eligibility average (best 5 of 7)", min: 0, max: 100 },
         { id: "GLA", label: "Lab Avg (Best 2/5 + W7)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
