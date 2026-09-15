@@ -45,7 +45,10 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
     const field = subjectDetails?.fields.find((f) => f.id === key);
     if (field?.controls) return value === "0" ? "No" : "Yes";
     const gate = gateFor.get(key);
-    if (gate && !wasEligible(gate)) return "Not eligible";
+    if (gate && !wasEligible(gate)) {
+      // The end term is about attendance, not eligibility.
+      return key === "F" ? "Absent" : "Not eligible";
+    }
     return value || "0";
   };
 
@@ -110,7 +113,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
         {eligibilityWarning && (
           <div className={`mb-8 w-full p-4 border ${isBlocking ? "border-[#d32f2f] bg-[#fffbfb]" : "border-[#e6a700] bg-[#fff8e1]"}`}>
             <span className={`block text-[14px] font-bold mb-1 ${isBlocking ? "text-[#d32f2f]" : "text-[#8a6100]"}`}>
-              {isBlocking ? "Eligibility Requirements Not Met" : "Incomplete (I_OP) — not a fail"}
+              {isBlocking ? "Eligibility Requirements Not Met" : `Incomplete (${issue?.code ?? "I"}) — not a fail`}
             </span>
             <span className="text-[13px] text-[#333333]">
               <strong className={isBlocking ? "text-[#d32f2f]" : "text-[#8a6100]"}>
@@ -129,8 +132,13 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
               <tr>
                 <td className="border border-black p-5 text-center w-1/3">
                   <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">Expected Grade</span>
-                  <span className="text-[40px] font-extrabold" style={{ color: gradeColor }}>
-                    {result.letter}
+                  <span
+                    className={issue?.code ? "text-[28px] font-extrabold text-[#8a6100]" : "text-[40px] font-extrabold"}
+                    style={issue?.code ? undefined : { color: gradeColor }}
+                  >
+                    {/* An incomplete withholds the grade until the missing exam is
+                        re-attempted, so show I / I_OP / I_BOTH rather than a letter. */}
+                    {issue?.code ?? result.letter}
                   </span>
                 </td>
                 <td className="border border-black p-5 text-center w-1/3">
@@ -142,7 +150,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
                 </td>
                 <td className="border border-black p-5 text-center w-1/3">
                   <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">Grade Point</span>
-                  <span className="text-[26px] font-extrabold text-black">{result.points}</span>
+                  <span className="text-[26px] font-extrabold text-black">{issue?.code ? "—" : result.points}</span>
                 </td>
               </tr>
             </tbody>

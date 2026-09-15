@@ -12,7 +12,7 @@ import { getCalculatorSubject } from "../data/curriculumConfig";
  *                That is an incomplete, not a fail, so the real score stands.
  */
 export type IssueSeverity = "blocking" | "incomplete";
-export interface EligibilityIssue { message: string; severity: IssueSeverity }
+export interface EligibilityIssue { message: string; severity: IssueSeverity; /** I, I_OP or I_BOTH - the grade actually awarded for an incomplete. */ code?: string }
 
 type Values = Record<string, number | undefined>;
 type Requirement =
@@ -155,6 +155,7 @@ function shortfall(label: string, minimum: number, severity: IssueSeverity = "bl
   if (severity === "incomplete") {
     return {
       severity,
+      code: "I_OP",
       message:
         `You need at least ${minimum} in ${label}. Without it the term result is I_OP (incomplete) — not a fail: ` +
         `your end-term and other marks are kept and you re-attempt only the programming exam in a later term.`,
@@ -198,6 +199,7 @@ export function getEligibilityIssue(subjectKey: string, values: Values): Eligibi
   if (absentEndTerm) {
     return {
       severity: "incomplete",
+      code: incomplete ? "I_BOTH" : "I",
       message: incomplete
         ? "You were absent for the end term and have not cleared a programming exam, so the term result is I_BOTH (incomplete) — not a fail. You re-attempt the end term and the programming exam in a later term; every other mark is carried over."
         : "You were absent for the end term, so the term result is I (incomplete) — not a fail. You can sit the end term alone in a later term and every other mark is carried over.",
