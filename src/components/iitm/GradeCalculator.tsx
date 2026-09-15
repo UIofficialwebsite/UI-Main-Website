@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getCalculatorSubjects, normaliseLevel, normaliseProgramme, PROGRAMMES } from "./data/curriculumConfig";
 import { calculateGradeByLevel, getGradeLetter, getGradePoints } from "./utils/gradeCalculations";
@@ -8,6 +8,12 @@ import GradeResult from "./components/GradeResult";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { logToolUsage } from "@/utils/toolLogger";
+import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import { cachedRead } from "@/utils/edgeCache";
+import { supabase } from "@/integrations/supabase/client";
+import { Job } from "@/types/job";
 
 interface GradeCalculatorProps {
   level: string; // Changed to string to safely accept "Foundation" etc.
@@ -17,6 +23,33 @@ interface GradeCalculatorProps {
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
+
+  // Same hiring ticker the CGPA calculator shows. It reads the ACTIVE jobs
+  // through the shared edge cache, so adding it here costs no extra Supabase
+  // egress - the response is already warm from the other tools.
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const tickerPlugin = useRef(Autoplay({ delay: 3500, stopOnInteraction: false }));
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const rows = await cachedRead<Job[]>("jobs", async () => {
+        const { data } = await supabase
+          .from("jobs")
+          .select("id, title, application_url, description, is_active")
+          .eq("is_active", true);
+        return (data || []) as unknown as Job[];
+      });
+      if (active) {
+        setJobs(rows || []);
+        setJobsLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
   
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
@@ -111,6 +144,46 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
 
   return (
     <div className="w-full bg-white font-sans text-gray-900">
+
+      {/* Hiring ticker (screen only), matching the CGPA calculator. */}
+      {!jobsLoading && jobs.length > 0 && (
+        <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
+          <Carousel
+            plugins={[tickerPlugin.current as any]}
+            className="w-full"
+            onMouseEnter={tickerPlugin.current.stop}
+            onMouseLeave={tickerPlugin.current.reset}
+            opts={{ align: "start", loop: true }}
+          >
+            <CarouselContent>
+              {jobs.map((job) => (
+                <CarouselItem key={job.id} className="basis-full">
+                  <div className="flex items-center justify-between gap-4 h-9 w-full max-w-[1600px] mx-auto">
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap font-sans">
+                        OPEN NOW
+                      </span>
+                      <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
+                        {job.title} applications are live
+                      </span>
+                    </div>
+                    <a href={job.application_url || "#"} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
+                      >
+                        Apply Now
+                      </Button>
+                    </a>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+      )}
+
       <div className="w-full py-8">
         <div className="mb-10 w-full max-w-3xl relative z-50">
           <Label className="text-sm font-medium text-black font-sans mb-3 block">
