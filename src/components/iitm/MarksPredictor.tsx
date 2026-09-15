@@ -18,6 +18,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Course } from "@/components/admin/courses/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
+import { Job } from "@/types/job";
 
 interface MarksPredictorProps {
   level: string; 
@@ -53,7 +54,6 @@ const readBatchPromoDismissed = (): boolean => {
   }
 };
 
-const isPaidCourse = (course: Course) => Number(course.discounted_price ?? course.price) > 0;
 
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -95,6 +95,31 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     };
   }, []);
 
+  // Hiring ticker, matching the Grade and CGPA calculators. Reads ACTIVE jobs
+  // through the shared edge cache, so it adds no Supabase egress.
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const rows = await cachedRead<Job[]>("jobs", async () => {
+        const { data } = await supabase
+          .from("jobs")
+          .select("id, title, application_url, description, is_active")
+          .eq("is_active", true);
+        return (data || []) as unknown as Job[];
+      });
+      if (active) {
+        setJobs(rows || []);
+        setJobsLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, PredictionResult> | null>(null);
   const [showBatchPrompt, setShowBatchPrompt] = useState(false);
@@ -120,10 +145,6 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       });
   }, [courses, branch, level]);
 
-  const paidMatchingCourses = useMemo(
-    () => matchingCourses.filter(isPaidCourse),
-    [matchingCourses]
-  );
 
   const featuredBatch = matchingCourses[0];
 
@@ -228,9 +249,10 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   return (
     <div className="w-full bg-white font-['Inter'] text-gray-900">
       
-      {/* Moving reminder stays available after the student dismisses the purchase prompt. */}
-      {results && !coursesLoading && paidMatchingCourses.length > 0 && (
-        <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only animate-in fade-in slide-in-from-top-4 duration-500">
+      {/* Hiring ticker (screen only). This slot used to promote live batches;
+          it now shows job openings, consistent with the other two tools. */}
+      {!jobsLoading && jobs.length > 0 && (
+        <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
           <Carousel
             plugins={[plugin.current as any]}
             className="w-full"
@@ -239,26 +261,26 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
             opts={{ align: "start", loop: true }}
           >
             <CarouselContent>
-              {paidMatchingCourses.map((course) => (
-                <CarouselItem key={course.id} className="basis-full">
+              {jobs.map((job) => (
+                <CarouselItem key={job.id} className="basis-full">
                   <div className="flex items-center justify-between gap-4 h-9 w-full max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-4 overflow-hidden">
                       <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap font-sans">
                         OPEN NOW
                       </span>
                       <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
-                        {course.title} is live for {level}
+                        {job.title} applications are live
                       </span>
                     </div>
-                    
-                    <Button 
-                      onClick={() => navigate(`/courses/${course.id}`)}
-                      size="sm" 
-                      variant="default" 
-                      className="shrink-0 h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans uppercase"
-                    >
-                      Enroll Now
-                    </Button>
+                    <a href={job.application_url || "#"} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
+                      >
+                        Apply Now
+                      </Button>
+                    </a>
                   </div>
                 </CarouselItem>
               ))}
@@ -268,7 +290,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       )}
 
       {/* Adjust top padding if the banner is showing so it doesn't look cramped */}
-      <div className={`w-full ${results && paidMatchingCourses.length > 0 ? 'pb-8' : 'py-8'}`}>
+      <div className={`w-full ${!jobsLoading && jobs.length > 0 ? 'pb-8' : 'py-8'}`}>
 
         {/* 01. Select Course */}
         <div className="mb-10 w-full max-w-3xl relative z-50">
