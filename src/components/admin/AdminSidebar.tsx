@@ -24,8 +24,7 @@ import {
   FileDown,
   Share2,
   Megaphone,
-  LucideIcon,
-} from "lucide-react";
+  LucideIcon, Link2} from "lucide-react";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -57,6 +56,7 @@ const groups: MenuGroup[] = [
       { id: "page-banners", label: "Page Banners", icon: ImageIcon },
       { id: "course-faqs", label: "Course FAQs", icon: HelpCircle },
       { id: "batch-schedule", label: "Batch Schedule", icon: CalendarRange },
+      { id: "batch-mapping", label: "Batch Mapping", icon: Link2 },
       { id: "coupons", label: "Coupons", icon: Tag },
     ],
   },
