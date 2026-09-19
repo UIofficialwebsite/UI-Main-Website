@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLoginModal } from '@/context/LoginModalContext';
 import { useCourseCatalog, unlockItem, type CatalogItem, type CatalogSubject } from '@/hooks/useCourseCatalog';
 import { cn } from '@/lib/utils';
+import SecureVideoPlayer from '@/components/courses/detail/SecureVideoPlayer';
 import { ChevronDown, FileText, Lock, Notebook, PlayCircle, Loader2 } from 'lucide-react';
 
 /**
@@ -42,7 +43,7 @@ const SSPContentBrowser: React.FC<Props> = ({ courseId, courseTitle, onBuyClick 
   const [kind, setKind] = useState<Kind>('video');
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [viewer, setViewer] = useState<{ title: string; url: string } | null>(null);
+  const [viewer, setViewer] = useState<{ title: string; videoId?: string; url?: string } | null>(null);
   const [paywall, setPaywall] = useState<{ subject: string } | null>(null);
 
   /** Only offer a tab for a kind the batch actually has. */
@@ -71,9 +72,17 @@ const SSPContentBrowser: React.FC<Props> = ({ courseId, courseTitle, onBuyClick 
     try {
       const result = await unlockItem(item.id);
 
-      if (result.allowed && result.url) {
-        if (result.type === 'video') setViewer({ title: result.title ?? item.title, url: result.url });
-        else window.open(result.url, '_blank', 'noopener,noreferrer');
+      if (result.allowed && (result.video_id || result.url)) {
+        if (result.type === 'video') {
+          setViewer({
+            title: result.title ?? item.title,
+            videoId: result.video_id,
+            url: result.url,
+          });
+        } else if (result.url) {
+          // Documents genuinely need a tab; there is no chrome to strip.
+          window.open(result.url, '_blank', 'noopener,noreferrer');
+        }
         return;
       }
       if (result.reason === 'login_required') { openLogin(); return; }
@@ -222,15 +231,11 @@ const SSPContentBrowser: React.FC<Props> = ({ courseId, courseTitle, onBuyClick 
             </DialogTitle>
           </DialogHeader>
           {viewer && (
-            <div className="aspect-video w-full bg-black">
-              <iframe
-                src={viewer.url}
-                title={viewer.title}
-                className="h-full w-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
+            <SecureVideoPlayer
+              videoId={viewer.videoId}
+              url={viewer.url}
+              title={viewer.title}
+            />
           )}
         </DialogContent>
       </Dialog>
