@@ -37,9 +37,33 @@ export interface CourseCatalog {
   totals: { video: number; note: number; dpp: number; free: number };
 }
 
-export type UnlockResult =
-  | { allowed: true; type: CatalogItemType; title: string; url: string; free: boolean }
-  | { allowed: false; reason: 'login_required' | 'not_purchased' | 'not_found' | 'no_content' | 'unavailable' | 'bad_request' | 'forbidden'; batch?: string; subject?: string };
+export type UnlockDenial =
+  | 'login_required'
+  | 'not_purchased'
+  | 'not_found'
+  | 'no_content'
+  | 'unavailable'
+  | 'bad_request'
+  | 'forbidden';
+
+/**
+ * Deliberately one flat shape rather than a discriminated union: this project
+ * compiles with `strict: false`, and TypeScript does not narrow `allowed: true`
+ * vs `allowed: false` without strictNullChecks. A flat type with optional
+ * fields means callers get real checking instead of silently losing it.
+ *
+ * `url` is present only on an allowed result, so callers test for it.
+ */
+export interface UnlockResult {
+  allowed: boolean;
+  type?: CatalogItemType;
+  title?: string;
+  url?: string;
+  free?: boolean;
+  reason?: UnlockDenial;
+  batch?: string;
+  subject?: string;
+}
 
 export const useCourseCatalog = (courseId: string | undefined) =>
   useQuery<CourseCatalog>({
