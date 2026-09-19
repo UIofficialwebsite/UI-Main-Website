@@ -1,20 +1,40 @@
 import React from 'react';
 import { LayoutDashboard, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SSPContentBrowser from '@/components/courses/detail/SSPContentBrowser';
+import { useCourseCatalog } from '@/hooks/useCourseCatalog';
 
-const SSPPortalSection: React.FC = () => {
+interface SSPPortalSectionProps {
+  /** When given, the card also lists this batch's real contents. */
+  courseId?: string;
+  courseTitle?: string;
+  onBuyClick?: () => void;
+}
+
+const SSPPortalSection: React.FC<SSPPortalSectionProps> = ({ courseId, courseTitle, onBuyClick }) => {
+  // Live counts for the three tiles that describe actual content, so the card
+  // says "285 lectures" instead of a generic promise. The query is shared with
+  // the browser below, so this costs no extra request.
+  const { data: catalog } = useCourseCatalog(courseId);
+  const countLabel = (n?: number, noun?: string) =>
+    n && n > 0 ? `${n} ${noun}${n > 1 ? 's' : ''} in this batch.` : undefined;
+
   const features = [
     {
       // Custom Icon Provided
       iconUrl: "https://i.ibb.co/Jw0JZThT/image.png",
       title: "Recorded Lectures",
-      description: "HD recordings available for unlimited replay.",
+      description:
+        countLabel(catalog?.totals?.video, 'lecture') ??
+        "HD recordings available for unlimited replay.",
     },
     {
       // Updated Icon from IITM BS PYQ Section
       iconUrl: "https://i.ibb.co/XkVT3SgT/image.png",
       title: "Study Materials",
-      description: "PDFs, notes, and practice sheets vault.",
+      description:
+        countLabel(catalog?.totals?.note, 'note') ??
+        "PDFs, notes, and practice sheets vault.",
     },
     {
       // Default Icon
@@ -38,7 +58,9 @@ const SSPPortalSection: React.FC = () => {
       // Default Icon
       icon: ClipboardCheck,
       title: "Test & Practice",
-      description: "Assignments and simulated mock exams.",
+      description:
+        countLabel(catalog?.totals?.dpp, 'practice sheet') ??
+        "Assignments and simulated mock exams.",
     }
   ];
 
@@ -101,6 +123,14 @@ const SSPPortalSection: React.FC = () => {
                )
             })}
          </div>
+
+         {courseId && (
+           <SSPContentBrowser
+             courseId={courseId}
+             courseTitle={courseTitle ?? ''}
+             onBuyClick={onBuyClick}
+           />
+         )}
        </div>
     </section>
   );
