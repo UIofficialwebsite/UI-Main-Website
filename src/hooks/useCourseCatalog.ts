@@ -58,6 +58,13 @@ export interface UnlockResult {
   allowed: boolean;
   type?: CatalogItemType;
   title?: string;
+  /**
+   * A bare YouTube id, returned instead of `url` for YouTube lectures so no
+   * copy-pasteable youtube.com link ever reaches the page. Mounted through the
+   * IFrame API by SecureVideoPlayer.
+   */
+  video_id?: string;
+  /** Present for notes, practice sheets and non-YouTube video hosts. */
   url?: string;
   free?: boolean;
   reason?: UnlockDenial;
