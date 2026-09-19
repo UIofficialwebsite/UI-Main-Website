@@ -84,6 +84,10 @@ export const useCourseCatalog = (courseId: string | undefined) =>
     // The catalog is the same for everyone and already cached at the edge;
     // there is no reason for a visitor to re-fetch it while browsing.
     staleTime: 10 * 60_000,
+    // The app sets refetchOnMount: false globally, which is right for slow
+    // marketing content but wrong here — it left a stale catalog (wrong locks,
+    // missing free items) on screen indefinitely. Opt this one query back in.
+    refetchOnMount: true,
     retry: 1,
   });
 
