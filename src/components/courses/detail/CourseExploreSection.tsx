@@ -64,10 +64,10 @@ const CourseExploreSection: React.FC<Props> = ({ courseId, courseTitle, onBuyCli
     try {
       const result = await unlockItem(item.id);
 
-      if (result.allowed) {
+      if (result.allowed && result.url) {
         // Notes and practice sheets are documents — a new tab is the natural
         // place for them. Lectures play inline.
-        if (result.type === 'video') setViewer({ title: result.title, url: result.url });
+        if (result.type === 'video') setViewer({ title: result.title ?? item.title, url: result.url });
         else window.open(result.url, '_blank', 'noopener,noreferrer');
         return;
       }
