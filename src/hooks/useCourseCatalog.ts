@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
  * per-item request (`unlockItem`) that checks payment server-side.
  */
 
-export type CatalogItemType = 'video' | 'note' | 'dpp';
+export type CatalogItemType = 'video' | 'note' | 'dpp' | 'uikp';
 
 export interface CatalogItem {
   id: string;
@@ -26,7 +26,7 @@ export interface CatalogItem {
 
 export interface CatalogSubject {
   subject: string;
-  counts: { video: number; note: number; dpp: number; free: number };
+  counts: { video: number; note: number; dpp: number; uikp: number; free: number };
   items: CatalogItem[];
 }
 
@@ -34,7 +34,7 @@ export interface CourseCatalog {
   batch: string | null;
   preview_enabled: boolean;
   subjects: CatalogSubject[];
-  totals: { video: number; note: number; dpp: number; free: number };
+  totals: { video: number; note: number; dpp: number; uikp: number; free: number };
 }
 
 export type UnlockDenial =
