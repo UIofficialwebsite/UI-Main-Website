@@ -24,7 +24,6 @@ import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 import SubjectsSection from '@/components/courses/detail/SubjectsSection';
-import CourseExploreSection from '@/components/courses/detail/CourseExploreSection';
 import { useAuth } from '@/hooks/useAuth';
 import { usePageSEO, getCourseTitleSEO } from "@/utils/seoManager";
 
@@ -77,7 +76,6 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
     curriculum: useRef<HTMLDivElement>(null),
-    explore: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
     moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
@@ -216,7 +214,6 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
   const tabs = [
     { id: 'features', label: 'Features' },
     ...((course.subject || addons.length > 0) ? [{ id: 'curriculum', label: 'Subjects' }] : []),
-    { id: 'explore', label: 'Explore' },
     { id: 'about', label: 'About' },
     { id: 'moreDetails', label: 'More Details' },
     { id: 'schedule', label: 'Schedule' },
@@ -252,17 +249,16 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
               <div ref={sectionRefs.curriculum}>
                 <SubjectsSection course={course} addons={addons} />
               </div>
-              <div ref={sectionRefs.explore}>
-                <CourseExploreSection
+              <div ref={sectionRefs.about}><AboutSection course={course} /></div>
+              <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
+              <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
+              <div ref={sectionRefs.ssp}>
+                <SSPPortalSection
                   courseId={course.id}
                   courseTitle={course.title}
                   onBuyClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 />
               </div>
-              <div ref={sectionRefs.about}><AboutSection course={course} /></div>
-              <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
-              <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
-              <div ref={sectionRefs.ssp}><SSPPortalSection /></div>
               <div ref={sectionRefs.access}><CourseAccessGuide /></div>
               <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
             </div>
@@ -301,17 +297,16 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
               <div ref={sectionRefs.curriculum}>
                 <SubjectsSection course={course} addons={addons} />
               </div>
-              <div ref={sectionRefs.explore}>
-                <CourseExploreSection
+              <div ref={sectionRefs.about}><AboutSection course={course} /></div>
+              <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
+              <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
+              <div ref={sectionRefs.ssp}>
+                <SSPPortalSection
                   courseId={course.id}
                   courseTitle={course.title}
                   onBuyClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 />
               </div>
-              <div ref={sectionRefs.about}><AboutSection course={course} /></div>
-              <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
-              <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
-              <div ref={sectionRefs.ssp}><SSPPortalSection /></div>
               <div ref={sectionRefs.access}><CourseAccessGuide /></div>
               <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
             </div>
