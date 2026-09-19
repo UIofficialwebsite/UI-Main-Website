@@ -122,7 +122,18 @@ const persister = createSyncStoragePersister({
 const App = () => (
   <PersistQueryClientProvider
     client={queryClient}
-    persistOptions={{ persister, maxAge: ONE_DAY }}
+    persistOptions={{
+      persister,
+      maxAge: ONE_DAY,
+      dehydrateOptions: {
+        // Never freeze the batch catalog in localStorage. It changes whenever
+        // an admin uploads a lecture or flips a free-preview switch, and with
+        // refetchOnMount off a persisted copy kept showing a returning visitor
+        // the old list with the wrong locks for up to a day. It is already
+        // cached at the CDN, so fetching it again on load costs nothing.
+        shouldDehydrateQuery: (query) => query.queryKey[0] !== 'course-catalog',
+      },
+    }}
   >
     <AuthProvider>
       <BackendIntegratedWrapper>
