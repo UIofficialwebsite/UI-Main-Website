@@ -10,6 +10,7 @@ import CouponsManagerTab from "@/components/admin/CouponsManagerTab";
 import PageBannersManagerTab from "@/components/admin/PageBannersManagerTab";
 import CourseFAQsManagerTab from "@/components/admin/CourseFAQsManagerTab";
 import BatchScheduleManagerTab from "@/components/admin/BatchScheduleManagerTab";
+import BatchMappingTab from '@/components/admin/BatchMappingTab';
 import NotesManagerTab from "@/components/admin/NotesManagerTab";
 import PYQsManagerTab from "@/components/admin/PYQsManagerTab";
 import StudyGroupsManagerTab from "@/components/admin/StudyGroupsManagerTab";
@@ -58,6 +59,7 @@ const AdminDashboard = () => {
               {activeTab === "page-banners" && <PageBannersManagerTab />}
               {activeTab === "course-faqs" && <CourseFAQsManagerTab />}
               {activeTab === "batch-schedule" && <BatchScheduleManagerTab />}
+              {activeTab === "batch-mapping" && <BatchMappingTab />}
               {activeTab === "coupons" && <CouponsManagerTab />}
               {activeTab === "notes" && <NotesManagerTab />}
               {activeTab === "pyqs" && <PYQsManagerTab />}
