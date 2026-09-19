@@ -10,10 +10,51 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      abandoned_cart_recovery: {
+        Row: {
+          coupon_code: string | null
+          course_id: string | null
+          created_at: string
+          email_sent: boolean
+          enrollment_id: string
+          id: string
+          push_sent: boolean
+          user_id: string | null
+        }
+        Insert: {
+          coupon_code?: string | null
+          course_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          enrollment_id: string
+          id?: string
+          push_sent?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          coupon_code?: string | null
+          course_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          enrollment_id?: string
+          id?: string
+          push_sent?: boolean
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_cart_recovery_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_audit_log: {
         Row: {
           action: string
@@ -141,6 +182,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cart_recovery_config: {
+        Row: {
+          coupon_code: string
+          enabled: boolean
+          id: number
+          min_coupon_amount: number
+          updated_at: string
+        }
+        Insert: {
+          coupon_code?: string
+          enabled?: boolean
+          id?: number
+          min_coupon_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          coupon_code?: string
+          enabled?: boolean
+          id?: number
+          min_coupon_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       cashfree_webhook_events: {
         Row: {
@@ -301,6 +366,13 @@ export type Database = {
             referencedRelation: "coupons"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "coupon_redemptions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
         ]
       }
       coupons: {
@@ -326,6 +398,9 @@ export type Database = {
           min_prev_enrollments: number | null
           prev_enrolled_within_days: number | null
           stackable: boolean
+          tier2_above_amount: number | null
+          tier2_discount_value: number | null
+          tiers: Json
           updated_at: string
           user_segment: string | null
           valid_from: string | null
@@ -354,6 +429,9 @@ export type Database = {
           min_prev_enrollments?: number | null
           prev_enrolled_within_days?: number | null
           stackable?: boolean
+          tier2_above_amount?: number | null
+          tier2_discount_value?: number | null
+          tiers?: Json
           updated_at?: string
           user_segment?: string | null
           valid_from?: string | null
@@ -382,6 +460,9 @@ export type Database = {
           min_prev_enrollments?: number | null
           prev_enrolled_within_days?: number | null
           stackable?: boolean
+          tier2_above_amount?: number | null
+          tier2_discount_value?: number | null
+          tiers?: Json
           updated_at?: string
           user_segment?: string | null
           valid_from?: string | null
@@ -417,6 +498,38 @@ export type Database = {
             foreignKeyName: "course_addons_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_batch_map: {
+        Row: {
+          course_id: string
+          erp_batch_name: string
+          note: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          course_id: string
+          erp_batch_name: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          course_id?: string
+          erp_batch_name?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_batch_map_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: true
             referencedRelation: "courses"
             referencedColumns: ["id"]
           },
@@ -714,6 +827,33 @@ export type Database = {
           },
         ]
       }
+      homepage_popups: {
+        Row: {
+          button_text: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_url: string
+        }
+        Insert: {
+          button_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url: string
+        }
+        Update: {
+          button_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string
+        }
+        Relationships: []
+      }
       iitm_branch_notes: {
         Row: {
           branch: string
@@ -980,192 +1120,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notes: {
-        Row: {
-          class_level: string | null
-          content_url: string | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          display_order_no: number | null
-          download_count: number | null
-          exam_type: string | null
-          file_link: string | null
-          id: string
-          is_active: boolean | null
-          session: string | null
-          shift: string | null
-          subject: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          class_level?: string | null
-          content_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          display_order_no?: number | null
-          download_count?: number | null
-          exam_type?: string | null
-          file_link?: string | null
-          id?: string
-          is_active?: boolean | null
-          session?: string | null
-          shift?: string | null
-          subject?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          class_level?: string | null
-          content_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          display_order_no?: number | null
-          download_count?: number | null
-          exam_type?: string | null
-          file_link?: string | null
-          id?: string
-          is_active?: boolean | null
-          session?: string | null
-          shift?: string | null
-          subject?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      shares: {
-        Row: {
-          channel: string | null
-          content_id: string | null
-          content_type: string
-          created_at: string
-          id: string
-          sharer_user_id: string | null
-          target_url: string
-          title: string | null
-          token: string
-        }
-        Insert: {
-          channel?: string | null
-          content_id?: string | null
-          content_type: string
-          created_at?: string
-          id?: string
-          sharer_user_id?: string | null
-          target_url: string
-          title?: string | null
-          token: string
-        }
-        Update: {
-          channel?: string | null
-          content_id?: string | null
-          content_type?: string
-          created_at?: string
-          id?: string
-          sharer_user_id?: string | null
-          target_url?: string
-          title?: string | null
-          token?: string
-        }
-        Relationships: []
-      }
-      share_clicks: {
-        Row: {
-          clicked_by_user_id: string | null
-          created_at: string
-          id: string
-          ip_hash: string | null
-          is_bot: boolean
-          referrer: string | null
-          share_id: string | null
-          token: string
-          user_agent: string | null
-        }
-        Insert: {
-          clicked_by_user_id?: string | null
-          created_at?: string
-          id?: string
-          ip_hash?: string | null
-          is_bot?: boolean
-          referrer?: string | null
-          share_id?: string | null
-          token: string
-          user_agent?: string | null
-        }
-        Update: {
-          clicked_by_user_id?: string | null
-          created_at?: string
-          id?: string
-          ip_hash?: string | null
-          is_bot?: boolean
-          referrer?: string | null
-          share_id?: string | null
-          token?: string
-          user_agent?: string | null
-        }
-        Relationships: []
-      }
-      abandoned_cart_recovery: {
-        Row: {
-          coupon_code: string | null
-          course_id: string | null
-          created_at: string
-          email_sent: boolean
-          enrollment_id: string
-          id: string
-          push_sent: boolean
-          user_id: string | null
-        }
-        Insert: {
-          coupon_code?: string | null
-          course_id?: string | null
-          created_at?: string
-          email_sent?: boolean
-          enrollment_id: string
-          id?: string
-          push_sent?: boolean
-          user_id?: string | null
-        }
-        Update: {
-          coupon_code?: string | null
-          course_id?: string | null
-          created_at?: string
-          email_sent?: boolean
-          enrollment_id?: string
-          id?: string
-          push_sent?: boolean
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      cart_recovery_config: {
-        Row: {
-          coupon_code: string
-          enabled: boolean
-          id: number
-          min_coupon_amount: number
-          updated_at: string
-        }
-        Insert: {
-          coupon_code?: string
-          enabled?: boolean
-          id?: number
-          min_coupon_amount?: number
-          updated_at?: string
-        }
-        Update: {
-          coupon_code?: string
-          enabled?: boolean
-          id?: number
-          min_coupon_amount?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       note_download_logs: {
         Row: {
           branch: string | null
@@ -1223,6 +1177,63 @@ export type Database = {
         }
         Relationships: []
       }
+      notes: {
+        Row: {
+          class_level: string | null
+          content_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_order_no: number | null
+          download_count: number | null
+          exam_type: string | null
+          file_link: string | null
+          id: string
+          is_active: boolean | null
+          session: string | null
+          shift: string | null
+          subject: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          class_level?: string | null
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order_no?: number | null
+          download_count?: number | null
+          exam_type?: string | null
+          file_link?: string | null
+          id?: string
+          is_active?: boolean | null
+          session?: string | null
+          shift?: string | null
+          subject?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          class_level?: string | null
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order_no?: number | null
+          download_count?: number | null
+          exam_type?: string | null
+          file_link?: string | null
+          id?: string
+          is_active?: boolean | null
+          session?: string | null
+          shift?: string | null
+          subject?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       page_banners: {
         Row: {
           created_at: string
@@ -1241,39 +1252,6 @@ export type Database = {
           id?: string
           image_url?: string
           page_path?: string
-        }
-        Relationships: []
-      }
-      push_subscriptions: {
-        Row: {
-          auth: string
-          created_at: string
-          endpoint: string
-          id: string
-          last_seen: string
-          p256dh: string
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          auth: string
-          created_at?: string
-          endpoint: string
-          id?: string
-          last_seen?: string
-          p256dh: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          auth?: string
-          created_at?: string
-          endpoint?: string
-          id?: string
-          last_seen?: string
-          p256dh?: string
-          user_agent?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -1561,6 +1539,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_seen: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_seen?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_seen?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pyqs: {
         Row: {
           branch: string | null
@@ -1621,6 +1632,89 @@ export type Database = {
           title?: string
           updated_at?: string
           year?: number | null
+        }
+        Relationships: []
+      }
+      share_clicks: {
+        Row: {
+          clicked_by_user_id: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          is_bot: boolean
+          referrer: string | null
+          share_id: string | null
+          source: string | null
+          token: string
+          user_agent: string | null
+        }
+        Insert: {
+          clicked_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          is_bot?: boolean
+          referrer?: string | null
+          share_id?: string | null
+          source?: string | null
+          token: string
+          user_agent?: string | null
+        }
+        Update: {
+          clicked_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          is_bot?: boolean
+          referrer?: string | null
+          share_id?: string | null
+          source?: string | null
+          token?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_clicks_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shares: {
+        Row: {
+          channel: string | null
+          content_id: string | null
+          content_type: string
+          created_at: string
+          id: string
+          sharer_user_id: string | null
+          target_url: string
+          title: string | null
+          token: string
+        }
+        Insert: {
+          channel?: string | null
+          content_id?: string | null
+          content_type: string
+          created_at?: string
+          id?: string
+          sharer_user_id?: string | null
+          target_url: string
+          title?: string | null
+          token: string
+        }
+        Update: {
+          channel?: string | null
+          content_id?: string | null
+          content_type?: string
+          created_at?: string
+          id?: string
+          sharer_user_id?: string | null
+          target_url?: string
+          title?: string | null
+          token?: string
         }
         Relationships: []
       }
@@ -1896,45 +1990,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_share_analytics: { Args: never; Returns: Json }
-      log_si_click: {
-        Args: { p_token: string; p_ref?: string; p_ua?: string }
+      allow_recovery_coupon_email: {
+        Args: { p_email: string }
         Returns: undefined
       }
-      record_share: {
-        Args: {
-          p_token: string
-          p_content_type: string
-          p_content_id: string
-          p_title: string
-          p_target_url: string
-          p_channel?: string
-        }
-        Returns: undefined
-      }
-      create_share: {
-        Args: {
-          p_content_type: string
-          p_content_id: string
-          p_title: string
-          p_target_url: string
-          p_channel?: string
-        }
-        Returns: string
-      }
-      save_push_subscription: {
-        Args: {
-          p_endpoint: string
-          p_p256dh: string
-          p_auth: string
-          p_user_agent?: string
-        }
-        Returns: undefined
-      }
-      delete_push_subscription: {
-        Args: { p_endpoint: string }
-        Returns: undefined
-      }
+      attach_si_click: { Args: { p_click: string }; Returns: undefined }
       bulk_assign_promotional_group_slots: {
         Args: { p_emails: string[]; p_group_id: string }
         Returns: number
@@ -1949,6 +2009,21 @@ export type Database = {
           member_id: string
           was_already_assigned: boolean
         }[]
+      }
+      course_erp_batch: { Args: { p_course_id: string }; Returns: string }
+      create_share: {
+        Args: {
+          p_channel?: string
+          p_content_id: string
+          p_content_type: string
+          p_target_url: string
+          p_title: string
+        }
+        Returns: string
+      }
+      delete_push_subscription: {
+        Args: { p_endpoint: string }
+        Returns: undefined
       }
       enroll_student_with_addons:
         | {
@@ -1980,6 +2055,15 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: undefined
       }
+      get_indexable_iitm_subjects: {
+        Args: never
+        Returns: {
+          branch: string
+          level: string
+          note_count: number
+          subject_name: string
+        }[]
+      }
       get_my_role: { Args: never; Returns: string }
       get_public_testimonials: {
         Args: never
@@ -1997,6 +2081,20 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_recoverable_carts: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount: number
+          course_id: string
+          course_title: string
+          created_at: string
+          email: string
+          enrollment_id: string
+          full_name: string
+          user_id: string
+        }[]
+      }
+      get_share_analytics: { Args: never; Returns: Json }
       increment_download_count: {
         Args: { content_id: string; table_name: string; user_email?: string }
         Returns: undefined
@@ -2005,6 +2103,21 @@ export type Database = {
       is_admin_user: { Args: { user_email: string }; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: { user_email: string }; Returns: boolean }
+      log_si_click: {
+        Args: { p_ref?: string; p_token: string; p_ua?: string }
+        Returns: string
+      }
+      record_share: {
+        Args: {
+          p_channel?: string
+          p_content_id: string
+          p_content_type: string
+          p_target_url: string
+          p_title: string
+          p_token: string
+        }
+        Returns: undefined
+      }
       redeem_coupon: {
         Args: {
           p_coupon_id: string
@@ -2027,6 +2140,16 @@ export type Database = {
         }
         Returns: string
       }
+      save_push_subscription: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_p256dh: string
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
+      share_source_from_ref: { Args: { ref: string }; Returns: string }
       verify_employee: {
         Args: { p_employee_code: string }
         Returns: {
@@ -2060,12 +2183,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2089,11 +2212,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2114,11 +2237,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2139,11 +2262,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2156,11 +2279,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
