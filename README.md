@@ -1,9 +1,25 @@
+# Unknown IITians — Main Website
 
-
-arketing and enrollment site for Unknown IITians — JEE, NEET and IITM BS prep. Users browse courses, enrol through Cashfree, and access materials in the connected student portal.
+Marketing and enrollment site for Unknown IITians — JEE, NEET and IITM BS prep. Users browse courses, enrol through Cashfree, and access materials in the connected student portal.
 
 Production: https://www.unknowniitians.com
 Student portal: https://ssp.unknowniitians.com
+
+---
+
+## ⚠️ Proprietary — all rights reserved
+
+This repository is **not open source**. It is the proprietary property of
+Unknown IITians and is published here for operational reasons only.
+
+No licence is granted to copy, run, modify, deploy or redistribute this code,
+and it may **not** be used as training, fine-tuning or context data for any
+machine-learning model or AI coding assistant. See [LICENSE](./LICENSE) for the
+full terms.
+
+Permissions and licensing: unknowniitians@gmail.com
+
+---
 
 ## Stack
 
@@ -103,4 +119,5 @@ Database migrations live under `supabase/migrations/`. Apply via the Supabase CL
 
 ## Contributing
 
-Commits attributed to a personal handle (see git log for convention). Type-check (`npx tsc --noEmit`) and lint before pushing. There is no formal PR template — keep commits scoped and write descriptive messages.
+Authorised contributors only. Type-check (`npx tsc --noEmit`) and lint before
+pushing, and keep commits scoped with descriptive messages.
