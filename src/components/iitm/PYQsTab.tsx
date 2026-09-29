@@ -1,8 +1,9 @@
 import React from "react";
-import { Download } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
+import { quizSpaceLevelLink, quizSpacePaperLink } from "@/lib/quizspace";
 
 interface PYQsTabProps {
   branch: string;
@@ -37,14 +38,36 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
     return matchesProgram && matchesYear && matchesType && matchesSubject;
   });
 
+  // Quiz Space, Unknown IITians' practice site, has these papers question by
+  // question with answer keys and mock tests: a way in from every paper.
+  const practice = quizSpaceLevelLink(branchSlug, levelSlug);
+
   return (
     <div className="space-y-6">
+      <a
+        href={practice.href}
+        target="_blank"
+        rel="noopener"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-[#1E3A8A]/15 bg-blue-50/60 px-5 py-4 hover:border-[#1E3A8A]/40 transition-colors"
+      >
+        <div>
+          <p className="text-sm font-bold text-gray-900">{practice.label} — practise online on Quiz Space</p>
+          <p className="text-xs text-gray-600 mt-1">
+            Every IITM BS paper question by question, with the answer key and timed mock tests on the real exam screen. Free.
+          </p>
+        </div>
+        <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase text-[#1E3A8A]">
+          Open Quiz Space <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
+        </span>
+      </a>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {contentLoading ? (
           <div className="col-span-3 flex justify-center py-20 animate-pulse text-slate-400 font-bold">LOADING PAPERS...</div>
         ) : filteredPYQs.length > 0 ? (
           filteredPYQs.map((pyq) => {
             const dCount = downloadCounts[pyq.id] || pyq.download_count || 0;
+            const online = quizSpacePaperLink(pyq.session, pyq.year);
             const displayDownloads = dCount >= 1000 ? `${(dCount / 1000).toFixed(1)}k` : dCount;
 
             return (
@@ -93,9 +116,23 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                     )}
                   </div>
                   
-                  <p className="text-xs text-gray-500 mb-6 line-clamp-2">
-                    {pyq.description || `Assessment paper for ${pyq.subject}.`}
+                  <p className={`text-xs text-gray-500 line-clamp-2 ${online ? "mb-3" : "mb-6"}`}>
+                    {pyq.description ||
+                      (pyq.subject
+                        ? `Assessment paper for ${pyq.subject}.`
+                        : `${pyq.session || "IITM BS"} paper${pyq.year ? `, ${pyq.year}` : ""}.`)}
                   </p>
+                  {online && (
+                    <a
+                      href={online.href}
+                      target="_blank"
+                      rel="noopener"
+                      className="inline-flex items-center gap-1 mb-5 text-[11px] font-semibold text-[#1E3A8A] hover:underline"
+                    >
+                      {online.label} on Quiz Space
+                      <ExternalLink className="w-3 h-3" strokeWidth={2} />
+                    </a>
+                  )}
                 </div>
 
                 <div className="mt-auto font-sans">
