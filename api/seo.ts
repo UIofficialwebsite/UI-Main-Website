@@ -18,6 +18,45 @@ const ANON_KEY =
 const DEFAULT_OG = `${SITE}/web-uploads/UI_logo.png`;
 const BRAND = "Unknown IITians";
 
+// Quiz Space — Unknown IITians' site for practising IITM BS PYQs online. The
+// same links the site shows visitors in its footer and PYQs tab
+// (src/lib/quizspace.ts), so crawlers see what visitors see. This function
+// imports nothing, so they are repeated here: change both together.
+const QUIZ_SPACE = "https://quizspace.unknowniitians.com";
+const QUIZ_SPACE_FOOTER: Array<[string, string]> = [
+  [QUIZ_SPACE, "Practise IITM BS PYQs online — Quiz Space"],
+  [`${QUIZ_SPACE}/exam/qualifier`, "IITM BS Qualifier PYQs with solutions"],
+  [`${QUIZ_SPACE}/exam/quiz-1`, "IITM BS Quiz 1 PYQs with solutions"],
+  [`${QUIZ_SPACE}/exam/quiz-2`, "IITM BS Quiz 2 PYQs with solutions"],
+  [`${QUIZ_SPACE}/exam/end-term`, "IITM BS End Term PYQs with solutions"],
+];
+const QUIZ_SPACE_LEVELS: Array<[string, string]> = [
+  [`${QUIZ_SPACE}/program/data-science/foundation`, "IITM BS Data Science Foundation PYQs with solutions"],
+  [`${QUIZ_SPACE}/program/data-science`, "IITM BS Data Science Diploma PYQs with solutions"],
+  [`${QUIZ_SPACE}/program/data-science/bs`, "IITM BS Data Science Degree PYQs with solutions"],
+  [`${QUIZ_SPACE}/program/electronic-systems/foundation`, "IITM BS Electronic Systems Foundation PYQs with solutions"],
+  [`${QUIZ_SPACE}/program/electronic-systems/diploma`, "IITM BS Electronic Systems Diploma PYQs with solutions"],
+  [`${QUIZ_SPACE}/program/electronic-systems/bs`, "IITM BS Electronic Systems Degree PYQs with solutions"],
+];
+
+function linkList(links: Array<[string, string]>): string {
+  return `<ul>${links.map(([href, label]) => `<li><a href="${esc(href)}">${esc(label)}</a></li>`).join("")}</ul>`;
+}
+
+/** The footer's Quiz Space links, on every page as in the site's own footer. */
+function quizSpaceFooter(): string {
+  return `<nav aria-label="IITM BS PYQ practice"><h2>IITM BS PYQs</h2>${linkList(QUIZ_SPACE_FOOTER)}</nav>`;
+}
+
+/** The PYQs tab's banner: the same papers to practise online, level by level. */
+function quizSpacePractice(): string {
+  return (
+    `<section><h2>Practise IITM BS PYQs online on Quiz Space</h2>` +
+    `<p>Every IITM BS paper question by question, with the answer key and timed mock tests on the real exam screen. Free.</p>` +
+    `${linkList(QUIZ_SPACE_LEVELS)}</section>`
+  );
+}
+
 // ---- helpers ---------------------------------------------------------------
 
 function esc(s: string): string {
@@ -110,6 +149,7 @@ function render(d: Doc): string {
   <meta name="twitter:image" content="${esc(og)}" />${ld}
 </head>
 <body>${d.bodyHtml || `<h1>${esc(d.title)}</h1><p>${esc(d.description)}</p>`}
+  ${quizSpaceFooter()}
   <p><a href="${esc(canonical)}">Open ${esc(BRAND)}</a></p>
 </body>
 </html>`;
@@ -599,9 +639,11 @@ export default async function handler(req: Request): Promise<Response> {
   } else if (PAGES[path]) {
     const meta = PAGES[path];
     const extra = PAGE_EXTRAS[path];
-    const bodyHtml = extra?.faqs
-      ? `<h1>${esc(meta.title)}</h1>\n  <p>${esc(meta.description)}</p>\n  ${faqBody(extra.faqs)}`
-      : undefined;
+    const practice = path === "/exam-preparation/iitm-bs/pyqs" ? `\n  ${quizSpacePractice()}` : "";
+    const bodyHtml =
+      extra?.faqs || practice
+        ? `<h1>${esc(meta.title)}</h1>\n  <p>${esc(meta.description)}</p>${practice}${extra?.faqs ? `\n  ${faqBody(extra.faqs)}` : ""}`
+        : undefined;
     html = render({ ...meta, path, jsonLd: extra?.schema, bodyHtml });
   } else {
     // Generic fallback: derive a sensible title from the path.
