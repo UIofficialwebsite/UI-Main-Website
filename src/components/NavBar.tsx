@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTrigger, SheetClose } from "@/co
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { QUIZ_SPACE } from "@/lib/quizspace";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import PushNotificationToggle from "@/components/PushNotificationToggle";
@@ -222,6 +223,8 @@ const NavBar = () => {
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
+
+            <a href={QUIZ_SPACE} target="_blank" rel="noopener" className="text-gray-700 hover:text-royal transition-colors font-medium">Quizspace</a>
             
             <NavigationMenu className="static">
               <NavigationMenuList>
@@ -309,6 +312,7 @@ const NavBar = () => {
                       <button onClick={() => setActivePane("courses")} className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] text-left">
                         All Courses <ChevronRight className="h-4 w-4 text-[#333]" />
                       </button>
+                      <a href={QUIZ_SPACE} target="_blank" rel="noopener" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>Quizspace</a>
                       <button onClick={() => setActivePane("examprep")} className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] text-left">
                         Exam Preparation <ChevronRight className="h-4 w-4 text-[#333]" />
                       </button>
