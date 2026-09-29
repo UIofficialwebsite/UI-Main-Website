@@ -4,6 +4,7 @@ import { Mail, Phone, MapPin, Youtube, Linkedin, Instagram, MessageCircle } from
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
+import { QUIZ_SPACE_FOOTER_LINKS } from "@/lib/quizspace";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -301,6 +302,14 @@ const Footer = () => {
                         All IITM BS PYQs
                       </a>
                     </li>
+                    {/* Quiz Space: the same PYQs to practise online, with answers and mock tests. */}
+                    {QUIZ_SPACE_FOOTER_LINKS.map((link) => (
+                      <li key={link.href}>
+                        <a href={link.href} target="_blank" rel="noopener" className="text-gray-400 hover:text-white transition-colors text-sm">
+                          {link.label}
+                        </a>
+                      </li>
+                    ))}
                   </ul>
                 </div>
                 <div>
