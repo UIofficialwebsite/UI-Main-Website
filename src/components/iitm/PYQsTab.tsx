@@ -3,7 +3,12 @@ import { Download, ExternalLink } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
-import { quizSpaceLevelLink, quizSpacePaperLink } from "@/lib/quizspace";
+import { quizSpaceForPaper, quizSpaceLevelLink } from "@/lib/quizspace";
+
+// The Google Drive "View" and "Download" buttons (and download counts), off
+// for now: papers are practised on Quiz Space instead. The links stay in the
+// database and the code stays here — set this to true to bring them back.
+const SHOW_DRIVE_BUTTONS = false;
 
 interface PYQsTabProps {
   branch: string;
@@ -67,7 +72,7 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
         ) : filteredPYQs.length > 0 ? (
           filteredPYQs.map((pyq) => {
             const dCount = downloadCounts[pyq.id] || pyq.download_count || 0;
-            const online = quizSpacePaperLink(pyq.session, pyq.year);
+
             const displayDownloads = dCount >= 1000 ? `${(dCount / 1000).toFixed(1)}k` : dCount;
 
             return (
@@ -87,10 +92,12 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                       />
                     </div>
                     {/* Download Count */}
-                    <div className="flex items-center text-gray-400 text-[11px] font-medium">
-                      <Download className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
-                      <span>{displayDownloads}</span>
-                    </div>
+                    {SHOW_DRIVE_BUTTONS && (
+                      <div className="flex items-center text-gray-400 text-[11px] font-medium">
+                        <Download className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
+                        <span>{displayDownloads}</span>
+                      </div>
+                    )}
                   </div>
                   
                   <h3 className="font-bold text-gray-900 mb-2 text-sm leading-tight line-clamp-2">
@@ -116,27 +123,36 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                     )}
                   </div>
                   
-                  <p className={`text-xs text-gray-500 line-clamp-2 ${online ? "mb-3" : "mb-6"}`}>
+                  <p className="text-xs text-gray-500 mb-6 line-clamp-2">
                     {pyq.description ||
                       (pyq.subject
                         ? `Assessment paper for ${pyq.subject}.`
                         : `${pyq.session || "IITM BS"} paper${pyq.year ? `, ${pyq.year}` : ""}.`)}
                   </p>
-                  {online && (
-                    <a
-                      href={online.href}
-                      target="_blank"
-                      rel="noopener"
-                      className="inline-flex items-center gap-1 mb-5 text-[11px] font-semibold text-[#1E3A8A] hover:underline"
-                    >
-                      {online.label} on Quiz Space
-                      <ExternalLink className="w-3 h-3" strokeWidth={2} />
-                    </a>
-                  )}
                 </div>
 
                 <div className="mt-auto font-sans">
-                  {user ? (
+                  {!SHOW_DRIVE_BUTTONS ? (
+                    user ? (
+                      // Signed in: the paper's sitting on Quiz Space, or its home page.
+                      <a
+                        href={quizSpaceForPaper(pyq.id)}
+                        target="_blank"
+                        rel="noopener"
+                        className="w-full bg-[#1E3A8A] text-white h-[44px] text-[12px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
+                      >
+                        Practise on Quiz Space
+                        <ExternalLink className="w-4 h-4" strokeWidth={2} />
+                      </a>
+                    ) : (
+                      <button
+                        className="w-full bg-[#1E3A8A] text-white h-[44px] text-[12px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
+                        onClick={() => openLogin()}
+                      >
+                        Login to view
+                      </button>
+                    )
+                  ) : user ? (
                     <div className="flex space-x-3">
                       <button 
                         className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
