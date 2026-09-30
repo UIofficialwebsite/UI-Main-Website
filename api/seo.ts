@@ -14,6 +14,7 @@ import {
 } from "./_shared/seoContent";
 import { hubContent, hubPath } from "./_shared/subjectHub";
 import { indexContent } from "./_shared/subjectsIndex";
+import { displayName } from "./_shared/subjectAliases";
 import { COMPARE_DISCLAIMER, comparePageFor, type ComparePage } from "./_shared/comparePages";
 import { infoFor } from "./_shared/seoContent";
 
@@ -750,9 +751,10 @@ async function notesSubjectDoc(path: string): Promise<string> {
   const notes = await fetchRows(
     `iitm_branch_notes?select=title,week_number&subject_id=eq.${subject.id}&is_active=eq.true&order=week_number.asc`
   );
-  const title = `${subjectName} Notes — IITM BS ${dbLevel} (Free PDF) | ${BRAND}`;
+  const shortName = displayName(slugify(subjectName), subjectName);
+  const title = `${shortName} Notes — IITM BS ${dbLevel} (Free PDF) | ${BRAND}`;
   const desc =
-    `Free IITM BS ${dbLevel} notes for ${subjectName} (${dbBranch}) — ` +
+    `Free IITM BS ${dbLevel} notes for ${shortName}${shortName !== subjectName ? ` (${subjectName})` : ""}, ${dbBranch} — ` +
     `${notes.length} downloadable PDF study notes covering all weeks, by ${BRAND}.`;
   const items = notes
     .map((n) => `<li>${esc(String(n.title))}</li>`)
@@ -867,9 +869,13 @@ async function notesLevelDoc(path: string): Promise<string> {
     return render({ title: `IITM BS ${dbLevel} Notes | ${BRAND}`, description: `Free IITM BS ${dbLevel} notes by ${BRAND}.`, path, index: false });
   }
   const title = `IITM BS ${dbLevel} Notes: ${dbBranch} (Free PDFs) | ${BRAND}`;
-  const desc = `Free IITM BS ${dbLevel} notes for ${dbBranch}: subject-wise, week-wise PDF notes for ${subjects.length} subjects, including ${subjects.slice(0, 3).map((x) => String(x.subject_name)).join(", ")}.`;
+  const desc = `Free IITM BS ${dbLevel} notes for ${dbBranch}: week-wise PDFs for ${subjects.length} subjects, including ${subjects.slice(0, 4).map((x) => displayName(slugify(String(x.subject_name)), String(x.subject_name))).join(", ")}.`;
   const list = subjects
-    .map((x) => `<li><a href="${esc(`${path}/${slugify(String(x.subject_name))}`)}">${esc(String(x.subject_name))} notes</a> — <a href="${esc(hubPath(dbBranch, dbLevel, String(x.subject_name)))}">${esc(String(x.subject_name))}: notes, PYQs &amp; tools</a></li>`)
+    .map((x) => {
+      const full = String(x.subject_name);
+      const short = displayName(slugify(full), full);
+      return `<li><a href="${esc(`${path}/${slugify(full)}`)}">${esc(short)} notes</a> — <a href="${esc(hubPath(dbBranch, dbLevel, full))}">${esc(short)}: notes, PYQs &amp; tools</a></li>`;
+    })
     .join("");
   const body = `<h1>IITM BS ${esc(dbLevel)} Notes: ${esc(dbBranch)}</h1>\n  <p>${esc(desc)}</p>\n  <h2>Subjects</h2><ul>${list}</ul>`;
   return render({
