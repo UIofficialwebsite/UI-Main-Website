@@ -9,6 +9,7 @@
 export const QUIZ_SPACE = "https://quizspace.unknowniitians.com";
 
 import type { ComparePage } from "./pageTypes";
+import { LECTURE_GROUPS } from "./lectures";
 import { GUIDE_PAGES } from "./guidePages";
 
 export type { ComparePage, CompareSection } from "./pageTypes";
@@ -32,6 +33,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     title: "Best IITM BS Resources: PYQs, Notes, Calculators & Courses",
     description: "A student's guide to IITM BS study resources: what to look for in previous year papers, notes, grade calculators, live courses and communities.",
     h1: "Best IITM BS Study Resources",
+    answer: "Short answer: for previous year papers use Quiz Space; for notes and lectures use the free notes and YouTube lectures from Unknown IITians; for grades and scores use the grade calculator. The details are below.",
     intro:
       "The IIT Madras BS degree has plenty of study resources, but they solve different problems. This guide sorts them by what you need and what to look for, so you can choose what fits your term.",
     sections: [
@@ -147,6 +149,8 @@ export const COMPARE_PAGES: ComparePage[] = [
     title: "IITM BS Qualifier Preparation: Notes, PYQs & Live Courses",
     description: "Preparing for the IITM BS Qualifier? What to study, how to practise with previous year papers, and the free notes and live courses available.",
     h1: "IITM BS Qualifier preparation resources",
+    embed: "lectures",
+    lectureGroups: [{ heading: LECTURE_GROUPS.qualifier.heading, ids: [...LECTURE_GROUPS.qualifier.ids] }],
     intro:
       "The Qualifier is where most students first meet the IITM BS routine. Here is a simple way to prepare with notes, previous year papers and, if you want lectures, a live course.",
     sections: [
@@ -181,6 +185,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     title: "IITM BS Study Path: Resources for Every Level",
     description: "A level-by-level path through the IITM BS degree, Qualifier to Degree, with the free notes, PYQs, calculators and courses for each step.",
     h1: "IITM BS study path: resources for every level",
+    answer: "Short answer: start with the Qualifier, then Foundation, Diploma and Degree. At each level, use the notes, lectures and previous year papers for your subjects.",
     intro:
       "A simple path through the IIT Madras BS degree, with the free resources Unknown IITians offers at each step, so you can keep one routine from the Qualifier to the Degree.",
     sections: [
@@ -212,6 +217,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     title: "IITM BS Official Website, Portal & Login: An Unofficial Guide",
     description: "Looking for the official IITM BS website? An unofficial student guide to what is published officially, and the free notes, PYQs and calculators we add.",
     h1: "IITM BS official website and portal: an unofficial guide",
+    cta: ["https://study.iitm.ac.in", "Go to the official IITM BS website"],
     intro:
       "Unknown IITians is an independent study-resources site. It is not IIT Madras, and it is not affiliated with or endorsed by IIT Madras. If you are looking for the official IITM BS website, this guide explains what the official sources are for and what an independent site like ours adds.",
     sections: [
