@@ -4,7 +4,7 @@
  * Imports only the hub module's helpers.
  */
 import { hubPath, slugify } from "./subjectHub";
-import { displayName } from "./subjectAliases";
+import { aliasForSubject, displayName } from "./subjectAliases";
 
 export interface IndexSubject {
   branch: string;
@@ -18,7 +18,13 @@ export interface IndexContent {
   description: string;
   h1: string;
   intro: string;
-  groups: Array<{ heading: string; path: string | null; links: Array<[string, string]> }>;
+  groups: Array<{
+    heading: string;
+    path: string | null;
+    links: Array<[string, string]>;
+    /** The same subjects as rows: the name students type, the full name and the other spellings. */
+    rows: Array<{ href: string; short: string; full: string; also: string[] }>;
+  }>;
   faqs: Array<{ q: string; a: string }>;
   crumbs: Array<[string, string]>;
 }
@@ -42,6 +48,15 @@ export function indexContent(branch: string | null, level: string | null, all: I
     return {
       heading: `${b} ${l}`,
       path: levelIndexPath(b, l),
+      rows: scoped.filter((s) => keyOf(s) === k).map((s) => {
+        const alias = aliasForSubject(slugify(s.name));
+        return {
+          href: hubPath(b, l, s.name),
+          short: displayName(slugify(s.name), s.name),
+          full: s.name,
+          also: alias ? alias.also.filter((x) => x !== s.name && x !== alias.short).slice(0, 3) : [],
+        };
+      }),
       links: scoped.filter((s) => keyOf(s) === k).map((s): [string, string] => {
         const short = displayName(slugify(s.name), s.name);
         return [hubPath(b, l, s.name), short === s.name ? s.name : `${short} (${s.name})`];
