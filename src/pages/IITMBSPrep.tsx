@@ -6,6 +6,7 @@ import ExamPrepHeader from "@/components/ExamPrepHeader";
 import BranchNotesTab from "@/components/iitm/BranchNotesTab";
 import { useIITMNotesFilters } from "@/components/iitm/hooks/useIITMNotesFilters";
 import PYQsTab from "@/components/iitm/PYQsTab";
+import PageInfo from "@/components/iitm/PageInfo";
 import NewsTab from "@/components/iitm/NewsTab";
 import ImportantDatesTab from "@/components/iitm/ImportantDatesTab";
 import SyllabusTab, { SYLLABUS_DATA, CourseLevel } from "@/components/iitm/SyllabusTab";
@@ -847,6 +848,7 @@ const IITMBSPrep = () => {
             />}
             {activeTab === "news" && <NewsTab sortOrder={sortOrder} />}
             {activeTab === "dates" && <ImportantDatesTab />}
+            <PageInfo pathname={location.pathname} />
           </div>
         </section>
       </main>
