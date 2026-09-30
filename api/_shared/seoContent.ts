@@ -103,6 +103,11 @@ export const HUB_LINKS: Array<[string, string]> = [
   ["/exam-preparation/iitm-bs/news", "IITM BS news and updates"],
   ["/courses/category/iitm-bs", "IITM BS live courses: Qualifier, Foundation and Diploma"],
   ["/best-iitm-bs-resources", "Best IITM BS study resources: a comparison guide"],
+  ["/youtube-channel", "Unknown IITians YouTube channel: free IITM BS lectures"],
+  ["/free-iitm-bs-lectures", "Free IITM BS lectures by subject"],
+  ["/iitm-bs", "IITM BS subjects: the complete list"],
+  ["/iitm-bs-exam-revision-resources", "IITM BS revision: Quiz 1, Quiz 2, End Term and the Qualifier"],
+  ["/iitm-bs-courses-guide", "IITM BS courses: how to choose a live batch"],
 ];
 
 export const TOOL_INFO: Record<string, { heading: string; intro: string; faqs: Faq[] }> = {
