@@ -16,6 +16,15 @@ export interface ComparePage {
   sections: CompareSection[];
   faqs: Array<{ q: string; a: string }>;
   links: Array<[string, string]>;
-  /** "tools": the working calculators, shown right under the introduction, before anything else. */
-  embed?: "tools";
+  /**
+   * The real thing the visitor came for, shown on the page before the text:
+   * "tools" the calculators (the tools page itself), "lectures" a video player for the playlists in
+   * `lectureGroups`, "courses" the live course cards.
+   */
+  embed?: "tools" | "lectures" | "courses";
+  lectureGroups?: Array<{ heading: string; ids: string[] }>;
+  /** One clear button at the top, for pages whose visitor wants to go and do something. */
+  cta?: [string, string];
+  /** The short, direct answer, shown first. */
+  answer?: string;
 }
