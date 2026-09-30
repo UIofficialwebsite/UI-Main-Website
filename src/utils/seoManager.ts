@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const SITE_NAME = 'Unknown IITians';
-const BASE_URL = 'https://unknowniitians.com';
+const BASE_URL = 'https://www.unknowniitians.com';
 
 /**
  * Custom hook to set the document title dynamically
@@ -77,7 +77,7 @@ export const setPageTitle = (title: string, appendSiteName: boolean = true) => {
  */
 export const SEO_TITLES = {
   // Homepage
-  HOME: 'Live Courses for IITM BS Qualifier, Foundation, Diploma & Free Study Materials for JEE, NEET & IITM BS',
+  HOME: 'Unknown IITians: IITM BS Courses, Notes, PYQs & Free Tools',
   
   // Static pages
   ABOUT: 'About Us - Our Story & Mission',
@@ -105,7 +105,7 @@ export const SEO_TITLES = {
   // Exam Prep
   JEE_PREP: 'JEE Preparation 2026 - Notes, PYQs & Study Materials',
   NEET_PREP: 'NEET Preparation 2026 - Notes, PYQs & Study Materials',
-  IITM_PREP: 'IITM BS Preparation - Notes, PYQs & Tools',
+  IITM_PREP: 'IITM BS Degree Preparation: Notes, PYQs, Tools & Courses',
   
   // Career
   CAREER: 'Careers - Join Our Team',
