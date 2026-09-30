@@ -13,6 +13,7 @@ import {
   CGPA_TOOL_FAQS, GRADE_TOOL_FAQS, HUB_FAQS, HUB_LINKS, MARKS_TOOL_FAQS, NOTES_FAQS, PYQ_FAQS, SCORE_CHECK_FAQ,
 } from "./_shared/seoContent";
 import { hubContent } from "./_shared/subjectHub";
+import { COMPARE_DISCLAIMER, comparePageFor, type ComparePage } from "./_shared/comparePages";
 
 export const config = { runtime: "edge" };
 
@@ -792,6 +793,29 @@ async function subjectHubDoc(path: string): Promise<string> {
   });
 }
 
+/** The "alternative" and "best resources" pages: /best-iitm-bs-resources, /acegrade-alternative, … */
+function compareDoc(page: ComparePage): string {
+  const links = page.links.map(([href, label]) => `<li><a href="${esc(href)}">${esc(label)}</a></li>`).join("");
+  const sections = page.sections
+    .map(
+      (sec) =>
+        `<h2>${esc(sec.heading)}</h2>` +
+        sec.paragraphs.map((t) => `<p>${esc(t)}</p>`).join("") +
+        (sec.bullets ? `<ul>${sec.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>` : "")
+    )
+    .join("\n  ");
+  const body =
+    `<h1>${esc(page.h1)}</h1>\n  <p>${esc(page.intro)}</p>\n  ${sections}` +
+    `\n  <h2>Where to go</h2><ul>${links}</ul>\n  ${faqBody(page.faqs)}\n  <p><small>${esc(COMPARE_DISCLAIMER)}</small></p>`;
+  return render({
+    title: page.title,
+    description: page.description,
+    path: page.path,
+    bodyHtml: body,
+    jsonLd: [breadcrumbSchema([["Home", "/"], [page.h1, page.path]]), faqSchema(page.faqs)],
+  });
+}
+
 function titleFromPath(path: string): string {
   const last = path.split("/").filter(Boolean).pop() || "";
   const words = last.replace(/[-_]/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -842,7 +866,10 @@ export default async function handler(req: Request): Promise<Response> {
   if (toolTwinLevel) levelDoc = toolLevelDoc(toolTwinLevel[2], toolTwinLevel[3], toolTwinLevel[1], true);
   else if (toolLevel) levelDoc = toolLevelDoc(toolLevel[1], toolLevel[2], toolLevel[3], false);
 
-  if (courseMatch) {
+  const compare = comparePageFor(path);
+  if (compare) {
+    html = compareDoc(compare);
+  } else if (courseMatch) {
     html = await courseDoc(courseMatch[1]);
   } else if (notesSubjectMatch) {
     html = await notesSubjectDoc(path);
