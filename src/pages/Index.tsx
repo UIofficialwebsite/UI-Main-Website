@@ -6,6 +6,7 @@ import CategoriesSection from "@/components/CategoriesSection";
 import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
+import ReachSection from "@/components/ReachSection";
 import Footer from "@/components/Footer";
 import HomepagePopup from "@/components/HomepagePopup";
 import { useDocumentTitle, useCanonicalUrl, SEO_TITLES } from "@/utils/seoManager";
@@ -22,6 +23,7 @@ const Index = () => {
       <WelcomeSection />
       <CategoriesSection />
       <WhyChooseUsSection />
+      <ReachSection />
       <TestimonialsSection />
       <ResourceHubSection />
       <Footer />
