@@ -1,9 +1,9 @@
 /**
- * "Alternative" and "best resources" pages for people comparing IITM BS study sites.
+ * Buyer's guides for IITM BS students choosing study resources: what to look for in past papers,
+ * notes, calculators and courses, and where Unknown IITians' own resources fit.
  *
- * Written to help someone choose, not to score points: what other sites say about themselves is
- * taken from their own public pages (September 2026) and said in their words, nothing is claimed
- * about what they lack, and each page says the sites are not affiliated. ONE copy, imported by
+ * These pages NEVER name or point at any other site or brand — a deliberate rule, so nothing
+ * here can be read as a claim about, or a use of the name of, anyone else. ONE copy, imported by
  * the page visitors see and by the crawler function (api/seo.ts). Imports nothing.
  */
 export const QUIZ_SPACE = "https://quizspace.unknowniitians.com";
@@ -26,7 +26,7 @@ export interface ComparePage {
 }
 
 export const COMPARE_DISCLAIMER =
-  "Other sites are described from their own public pages as of September 2026 and may have changed since. Unknown IITians is not affiliated with them. Please check any calculator's result against your course's official grading document.";
+  "Please check any calculator's result against your course's official grading document.";
 
 const OUR_LINKS: Array<[string, string]> = [
   ["/exam-preparation/iitm-bs/tools/grade-calculator", "IITM BS grade calculator and score checker"],
@@ -42,10 +42,10 @@ export const COMPARE_PAGES: ComparePage[] = [
   {
     path: "/best-iitm-bs-resources",
     title: "Best IITM BS Resources: PYQs, Notes, Calculators & Courses",
-    description: "A student's guide to IITM BS study resources: where to find previous year papers, notes, grade calculators, live courses and communities.",
+    description: "A student's guide to IITM BS study resources: what to look for in previous year papers, notes, grade calculators, live courses and communities.",
     h1: "Best IITM BS Study Resources",
     intro:
-      "The IIT Madras BS degree has plenty of study resources, but they solve different problems. This guide sorts them by what you need, so you can choose what fits your term.",
+      "The IIT Madras BS degree has plenty of study resources, but they solve different problems. This guide sorts them by what you need and what to look for, so you can choose what fits your term.",
     sections: [
       {
         heading: "Previous year question papers (PYQs)",
@@ -66,15 +66,13 @@ export const COMPARE_PAGES: ComparePage[] = [
       {
         heading: "Grade, score and CGPA calculators",
         paragraphs: [
-          "A good calculator applies your course's official grading formula, so you can see where you stand and what you still need. Unknown IITians offers a grade calculator and score checker, a CGPA calculator and a marks predictor for all four IITM BS branches.",
-          "AceGrade (acegrade.in) describes itself as an all-in-one platform with tools for IITM BS students. Whichever you use, compare the result with your course's official grading document.",
+          "A good calculator applies your course's official grading formula, covers your branch and level, and shows both your total score and your grade. Unknown IITians offers a grade calculator and score checker, a CGPA calculator and a marks predictor for all four IITM BS branches.",
         ],
       },
       {
         heading: "Live courses and coaching",
         paragraphs: [
-          "If you want lectures and doubt-solving on a schedule, look at live batches. Unknown IITians runs live Qualifier and Foundation courses for IITM BS.",
-          "The IITM Student Community site (iitmdatascience.com) lists Qualifier coaching, re-exam coaching, graded assignment help, notes and WhatsApp groups, and links to its YouTube channel.",
+          "If you want lectures and doubt-solving on a schedule, look at live batches: check what level they cover, how long they run, and whether recordings and practice papers are included. Unknown IITians runs live Qualifier and Foundation courses for IITM BS.",
         ],
       },
       {
@@ -85,7 +83,7 @@ export const COMPARE_PAGES: ComparePage[] = [
       },
       {
         heading: "How to choose",
-        paragraphs: ["Start from the problem you have this week, not from the site."],
+        paragraphs: ["Start from the problem you have this week."],
         bullets: [
           "Exam coming up: practise previous year papers under time.",
           "Falling behind on a subject: follow the week-wise notes and, if needed, join a live batch.",
@@ -95,29 +93,40 @@ export const COMPARE_PAGES: ComparePage[] = [
     ],
     faqs: [
       {
-        q: "What is the best site for IITM BS PYQs?",
+        q: "Where can I find IITM BS PYQs?",
         a: "Unknown IITians and Quiz Space offer free previous year papers by subject, exam and year, and Quiz Space lets you practise them online with answer keys and timed mock tests.",
       },
       {
-        q: "Which IITM BS grade calculator should I use?",
-        a: "One that applies your course's official grading formula. The Unknown IITians grade calculator covers all four IITM BS branches and shows your total score and grade. Check any result against your course's official grading document.",
+        q: "What should an IITM BS grade calculator do?",
+        a: "It should apply your course's official grading formula and cover your branch and level. The Unknown IITians grade calculator covers all four IITM BS branches and shows your total score and grade. Check any result against your course's official grading document.",
       },
       { q: "Are there free IITM BS notes?", a: "Yes. Unknown IITians offers free week-wise notes for IITM BS Data Science and Electronic Systems subjects." },
     ],
     links: OUR_LINKS,
   },
   {
-    path: "/acegrade-alternative",
-    title: "AceGrade Alternative for IITM BS: Grade & Score Tools",
-    description: "Looking for an AceGrade alternative? Unknown IITians has a free IITM BS grade calculator, score checker, CGPA calculator and marks predictor.",
-    h1: "AceGrade alternative for IITM BS students",
+    path: "/iitm-bs-grade-and-score-tools",
+    title: "IITM BS Grade & Score Tools: How to Check Your Score",
+    description: "How to check your IITM BS score and grade: what a good calculator does, how to use one step by step, and free tools for every branch.",
+    h1: "IITM BS grade and score tools: how to check your score",
     intro:
-      "AceGrade describes itself as an all-in-one platform with tools for IITM BS students. If you want another place to check your scores and plan your grades, here is what Unknown IITians offers, free.",
+      "Checking your score and grade early tells you where to spend your effort. Here is what a good IITM BS grade calculator does, how to use one, and the free tools Unknown IITians offers for every branch.",
     sections: [
+      {
+        heading: "What a good calculator does",
+        paragraphs: [
+          "It should follow the official grading formula of your course, cover your branch and level, take your assignment, quiz and end-term marks, and show both your total score and your letter grade.",
+        ],
+        bullets: [
+          "Covers your branch: Data Science, Management, Aeronautics or Electronic Systems.",
+          "Uses the course's published formula, not a rough guess.",
+          "Shows what you still need, not just what you have.",
+        ],
+      },
       {
         heading: "Check your score and grade",
         paragraphs: [
-          "Pick your branch, level and course in the grade calculator, then enter your assignment, quiz and end-term marks. It applies the course's official formula and shows your total score and letter grade, so it doubles as an IITM BS score checker.",
+          "In the Unknown IITians grade calculator, pick your branch, level and course, then enter your assignment, quiz and end-term marks. It shows your total score and letter grade, so it works as an IITM BS score checker.",
         ],
       },
       {
@@ -129,79 +138,58 @@ export const COMPARE_PAGES: ComparePage[] = [
         paragraphs: ["The marks predictor takes the internal scores you already have and your target grade, and tells you the end-term marks you need."],
       },
       {
-        heading: "Practise, not just calculate",
-        paragraphs: [
-          "Knowing your grade helps, but marks come from practice. Unknown IITians has free week-wise notes and previous year papers, and Quiz Space lets you practise those papers online with answer keys.",
-        ],
-      },
-      {
-        heading: "Which should you use?",
-        paragraphs: [
-          "A calculator is only as good as its formula. Check any result against your course's official grading document, and feel free to use two tools for a second opinion.",
-        ],
+        heading: "Then practise",
+        paragraphs: ["Knowing your grade helps, but marks come from practice: free week-wise notes, and previous year papers you can attempt online on Quiz Space with answer keys."],
       },
     ],
     faqs: [
-      {
-        q: "Is Unknown IITians an alternative to AceGrade?",
-        a: "It covers similar ground for grades and scores, with a grade calculator and score checker, a CGPA calculator and a marks predictor for all four IITM BS branches, and adds free notes, previous year papers and live courses. They are separate sites and you can use both.",
-      },
-      { q: "Is the Unknown IITians grade calculator free?", a: "Yes. The IITM BS grade calculator, CGPA calculator and marks predictor are completely free." },
+      { q: "Is there a free IITM BS score checker?", a: "Yes. The Unknown IITians grade calculator shows your total score and letter grade from your assignment, quiz and end-term marks, and it is completely free." },
       { q: "Which IITM BS branches do the calculators cover?", a: "All four: Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems." },
+      { q: "How accurate is an IITM BS grade calculator?", a: "It is as accurate as the formula it uses. Compare the result with your course's official grading document, and re-check it when the course's marking scheme changes." },
     ],
     links: OUR_LINKS,
   },
   {
-    path: "/iitmdatascience-alternative",
-    title: "iitmdatascience.com Alternative: IITM BS Notes, PYQs & Courses",
-    description: "Comparing IITM BS study sites? Unknown IITians offers live Qualifier and Foundation courses, free notes, previous year papers and grade tools.",
-    h1: "iitmdatascience.com alternative for IITM BS students",
+    path: "/iitm-bs-qualifier-preparation-resources",
+    title: "IITM BS Qualifier Preparation: Notes, PYQs & Live Courses",
+    description: "Preparing for the IITM BS Qualifier? What to study, how to practise with previous year papers, and the free notes and live courses available.",
+    h1: "IITM BS Qualifier preparation resources",
     intro:
-      "The IITM Student Community site (iitmdatascience.com) lists Qualifier coaching, re-exam coaching, graded assignment help, notes and question papers, and WhatsApp groups. If you are comparing options, here is what Unknown IITians offers.",
+      "The Qualifier is where most students first meet the IITM BS routine. Here is a simple way to prepare with notes, previous year papers and, if you want lectures, a live course.",
     sections: [
       {
-        heading: "Qualifier preparation",
+        heading: "Learn the subjects week by week",
+        paragraphs: ["Follow the week-wise notes for each Qualifier subject in order, and finish each week's practice before moving on. Unknown IITians has free notes for the Qualifier subjects."],
+      },
+      {
+        heading: "Practise previous year papers",
         paragraphs: [
-          "Unknown IITians runs live IITM BS Qualifier courses with lectures, practice and doubt-solving. Alongside them you get free notes for the Qualifier subjects and previous year Qualifier papers you can practise online on Quiz Space.",
+          "Attempt previous year Qualifier papers under time, then review every mistake. Quiz Space lets you attempt them online on an exam-like screen with answer keys, free with a Google sign-in.",
         ],
       },
       {
-        heading: "Preparing through the term",
-        paragraphs: [
-          "Week-wise notes follow each subject's structure, previous year papers cover Quiz 1, Quiz 2, OPPE and End Term, and the calculators show where you stand as marks come in.",
-        ],
+        heading: "If you want lectures and doubt-solving",
+        paragraphs: ["Unknown IITians runs live IITM BS Qualifier courses with lectures, practice and doubt-solving. Compare batch dates, what is covered and what practice is included before you join."],
       },
       {
-        heading: "Community",
-        paragraphs: ["Unknown IITians lists IITM BS communities and study groups, and runs a Telegram community for IITM BS students."],
-      },
-      {
-        heading: "How to compare",
-        paragraphs: ["Match each site to what you need right now."],
-        bullets: [
-          "Do you want live lectures on a schedule, or self-paced notes and practice?",
-          "Do you want previous year papers you can attempt online with answers?",
-          "Do you want a grade and CGPA calculator that follows your course's formula?",
-        ],
+        heading: "Join a community",
+        paragraphs: ["Study groups make hard weeks easier. See the IITM BS communities page and the Telegram community for IITM BS students."],
       },
     ],
     faqs: [
-      {
-        q: "Does Unknown IITians offer IITM BS Qualifier coaching?",
-        a: "Yes. It offers live IITM BS Qualifier and Foundation courses with lectures, practice and doubt-solving, plus free notes and previous year papers.",
-      },
-      { q: "Are IITM BS notes and previous year papers free on Unknown IITians?", a: "Yes. Notes and previous year papers are free, and Quiz Space is free with a Google sign-in." },
-      { q: "Can I use more than one IITM BS study site?", a: "Yes. The sites are separate, and many students combine a source of notes, a source of practice papers and a calculator." },
+      { q: "How do I prepare for the IITM BS Qualifier?", a: "Study the subject notes week by week, solve previous year Qualifier papers under timed conditions on Quiz Space, and join a live Qualifier course if you want lectures and doubt-solving." },
+      { q: "Does Unknown IITians offer IITM BS Qualifier coaching?", a: "Yes. It offers live IITM BS Qualifier and Foundation courses, plus free notes and previous year papers." },
+      { q: "Are Qualifier notes and papers free?", a: "Yes. The notes and previous year papers are free, and Quiz Space is free with a Google sign-in." },
     ],
     links: OUR_LINKS,
   },
   {
-    path: "/genziitian-alternative",
-    title: "Gen-Z IITian Alternative: Free IITM BS Resources",
-    description: "Comparing IITM BS study sites? See what Unknown IITians offers at each level, Qualifier to Degree: notes, PYQs, calculators and live courses.",
-    h1: "Gen-Z IITian alternative for IITM BS students",
+    path: "/iitm-bs-study-path-by-level",
+    title: "IITM BS Study Path: Resources for Every Level",
+    description: "A level-by-level path through the IITM BS degree, Qualifier to Degree, with the free notes, PYQs, calculators and courses for each step.",
+    h1: "IITM BS study path: resources for every level",
     intro:
-      "Gen-Z IITian (genziitian.in) is another site for IITM BS students. If you are comparing options, here is a level-by-level path through the degree with the free resources Unknown IITians offers at each step.",
+      "A simple path through the IIT Madras BS degree, with the free resources Unknown IITians offers at each step, so you can keep one routine from the Qualifier to the Degree.",
     sections: [
       {
         heading: "Qualifier",
@@ -221,11 +209,8 @@ export const COMPARE_PAGES: ComparePage[] = [
       },
     ],
     faqs: [
-      {
-        q: "Is Unknown IITians an alternative to Gen-Z IITian?",
-        a: "Both help IITM BS students. Unknown IITians offers free notes, previous year papers with online practice on Quiz Space, grade, CGPA and marks calculators, and live Qualifier and Foundation courses. They are separate sites, so you can use both.",
-      },
       { q: "Which IITM BS levels does Unknown IITians cover?", a: "Qualifier, Foundation, Diploma and Degree, for Data Science and Electronic Systems, with the calculators covering all four branches." },
+      { q: "Where do I start with IITM BS resources?", a: "Pick your level, follow the week-wise notes for your subjects, and practise previous year papers on Quiz Space. Each subject also has its own page tying its notes, papers and calculators together." },
     ],
     links: OUR_LINKS,
   },
