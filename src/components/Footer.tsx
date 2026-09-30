@@ -387,8 +387,28 @@ const Footer = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="/courses" className="text-gray-400 hover:text-white transition-colors text-sm">
-                    Video Lectures
+                  <a href="/free-iitm-bs-lectures" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    Free IITM BS Lectures
+                  </a>
+                </li>
+                <li>
+                  <a href="/youtube-channel" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    YouTube Channel
+                  </a>
+                </li>
+                <li>
+                  <a href="/iitm-bs" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    IITM BS Subjects
+                  </a>
+                </li>
+                <li>
+                  <a href="/best-iitm-bs-resources" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    Best IITM BS Resources
+                  </a>
+                </li>
+                <li>
+                  <a href="/iitm-bs-courses-guide" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    How to Choose a Course
                   </a>
                 </li>
               </ul>
