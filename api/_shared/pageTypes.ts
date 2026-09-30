@@ -16,4 +16,6 @@ export interface ComparePage {
   sections: CompareSection[];
   faqs: Array<{ q: string; a: string }>;
   links: Array<[string, string]>;
+  /** "tools": the working calculators, shown right under the introduction, before anything else. */
+  embed?: "tools";
 }
