@@ -6,6 +6,8 @@
 // live/active content is listed, so Google keeps expired courses out — the
 // "only live courses show" behaviour.
 
+import { ALL_GUIDES } from "./_shared/comparePages";
+
 export const config = { runtime: "edge" };
 
 const SITE = "https://www.unknowniitians.com";
@@ -35,11 +37,6 @@ const STATIC: Array<[string, string, string]> = [
   ["/exam-preparation/iitm-bs/news", "daily", "0.7"],
   ["/exam-preparation/iitm-bs/dates", "weekly", "0.7"],
   ["/exam-preparation/iitm-bs/communities", "weekly", "0.6"],
-  ["/best-iitm-bs-resources", "monthly", "0.8"],
-  ["/iitm-bs-grade-and-score-tools", "monthly", "0.7"],
-  ["/iitm-bs-qualifier-preparation-resources", "monthly", "0.7"],
-  ["/iitm-bs-study-path-by-level", "monthly", "0.7"],
-  ["/iitm-bs-official-website-guide", "monthly", "0.8"],
   ["/career", "weekly", "0.6"],
   ["/career/openings", "weekly", "0.6"],
   ["/about", "monthly", "0.8"],
@@ -114,6 +111,7 @@ export default async function handler(): Promise<Response> {
 
   const parts: string[] = [];
   for (const [path, cf, pr] of STATIC) parts.push(urlTag(path, cf, pr, today));
+  for (const g of ALL_GUIDES) parts.push(urlTag(g.path, "monthly", "0.8", today));
 
   // A category page is listed only when more than one category has live courses; with one, it is /courses itself.
   const liveCats = [...new Set(courses.map((c) => String(c.exam_category || "")).filter(Boolean))];
@@ -159,13 +157,18 @@ export default async function handler(): Promise<Response> {
   }
 
   // One hub per subject: /iitm-bs/<branch>/<level>/<subject> (notes, PYQs, tools and batches together).
+  const levelPages = new Set<string>();
   for (const s of allSubjects) {
     const branch = s.branch as string;
     const level = s.level as string;
     const subject = s.subject_name as string;
     if (!branch || !level || !subject) continue;
     parts.push(urlTag(`/iitm-bs/${slugify(branch)}/${slugify(level)}/${slugify(subject)}`, "monthly", "0.7", today));
+    levelPages.add(`/iitm-bs/${slugify(branch)}/${slugify(level)}`);
   }
+  // The lists that gather them: every subject, and each branch and level.
+  parts.push(urlTag("/iitm-bs", "weekly", "0.8", today));
+  for (const p of levelPages) parts.push(urlTag(p, "weekly", "0.8", today));
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${parts.join("\n")}\n</urlset>\n`;
 
