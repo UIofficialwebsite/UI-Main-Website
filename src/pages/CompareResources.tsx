@@ -1,8 +1,11 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { useDocumentTitle, useCanonicalUrl } from "@/utils/seoManager";
+import { useBackend } from "@/components/BackendIntegratedWrapper";
+import LectureShelf from "@/components/iitm/LectureShelf";
+import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { COMPARE_DISCLAIMER, comparePageFor } from "../../api/_shared/comparePages";
 import type { ComparePage } from "../../api/_shared/pageTypes";
 
@@ -77,13 +80,34 @@ const GuideSections = ({ page }: { page: ComparePage }) => (
   </div>
 );
 
-/** The page's own heading and introduction, for guides that do not lead with a tool. */
+/** The live courses, as on the courses page: for guides whose visitor came to see them. */
+const LiveCourses = () => {
+  const { loadCourses } = useBackend();
+  useEffect(() => { loadCourses(); }, [loadCourses]);
+  return (
+    <PaidCoursesTab branch="All Branches" levels={[]} subjects={[]} priceRange={null} newlyLaunched={false} fasttrackOnly={false} bestSellerOnly={false} />
+  );
+};
+
+/** The page's own heading and introduction, the short answer and the one button, before anything else. */
 const GuideHead = ({ page }: { page: ComparePage }) => (
   <section className="bg-gradient-to-b from-blue-50/70 to-white border-b border-blue-100">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <p className="text-[11px] font-normal uppercase tracking-wider text-gray-500">IITM BS study resources</p>
       <h1 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight text-[#1f2937]">{page.h1}</h1>
       <p className="mt-4 max-w-3xl text-[16px] leading-relaxed text-gray-600">{page.intro}</p>
+      {page.answer && (
+        <p className="mt-5 max-w-3xl rounded-xl border border-blue-100 bg-white p-4 text-[15px] font-medium leading-relaxed text-[#1f2937]">{page.answer}</p>
+      )}
+      {page.cta && (
+        <div className="mt-6">
+          {page.cta[0].startsWith("http") ? (
+            <a href={page.cta[0]} target="_blank" rel="noopener" className="inline-flex items-center rounded-lg bg-[#1E3A8A] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#1e40af]">{page.cta[1]}</a>
+          ) : (
+            <Link to={page.cta[0]} className="inline-flex items-center rounded-lg bg-[#1E3A8A] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#1e40af]">{page.cta[1]}</Link>
+          )}
+        </div>
+      )}
     </div>
   </section>
 );
@@ -116,6 +140,12 @@ const CompareResources = ({ path }: { path: string }) => {
       <NavBar />
       <main className="pt-16">
         <GuideHead page={page} />
+        {page.embed === "lectures" && page.lectureGroups && (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8"><LectureShelf groups={page.lectureGroups} /></div>
+        )}
+        {page.embed === "courses" && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8"><LiveCourses /></div>
+        )}
         <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white">
           <GuideSections page={page} />
         </article>
