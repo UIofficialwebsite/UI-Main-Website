@@ -4,7 +4,6 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import BranchNotesTab from "@/components/iitm/BranchNotesTab";
-import PYQsTab from "@/components/iitm/PYQsTab";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import LectureShelf from "@/components/iitm/LectureShelf";
@@ -15,7 +14,7 @@ import { SUBJECT_CALC } from "@/components/iitm/data/subjectCalcMap";
 import { supabase } from "@/integrations/supabase/client";
 import { slugify, unslugify } from "@/utils/urlHelpers";
 import { useDocumentTitle, useCanonicalUrl } from "@/utils/seoManager";
-import { hubContent, type HubContent } from "../../api/_shared/subjectHub";
+import { hubContent, quizSpaceLink, type HubContent } from "../../api/_shared/subjectHub";
 import { playlistId } from "../../api/_shared/lectures";
 
 /**
@@ -30,18 +29,18 @@ interface SubjectRow { id: number; subject_name: string }
 interface NoteRow { title: string; week_number: number | null }
 interface CourseRow { id: string; title: string; price: number | string | null }
 
-type TabId = "notes" | "lectures" | "pyqs" | "grade" | "batches";
+type TabId = "notes" | "lectures" | "grade" | "batches";
 
 const IITMSubjectHub = () => {
   const { branch = "", level = "", subject = "" } = useParams<{ branch: string; level: string; subject: string }>();
-  const { loadCourses, loadIitmBranchPyqs } = useBackend();
+  const { loadCourses } = useBackend();
   const [hub, setHub] = useState<HubContent | null>(null);
   const [name, setName] = useState("");
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
-  // ?tab=lectures|pyqs|grade|batches opens that tab, so a tab can be linked to directly.
+  // ?tab=lectures|grade|batches opens that tab, so a tab can be linked to directly.
   const [searchParams] = useSearchParams();
   const wanted = searchParams.get("tab");
-  const startTab: TabId = (["notes", "lectures", "pyqs", "grade", "batches"] as const).find((t) => t === wanted) ?? "notes";
+  const startTab: TabId = (["notes", "lectures", "grade", "batches"] as const).find((t) => t === wanted) ?? "notes";
   const [tab, setTab] = useState<TabId>(startTab);
 
   const dbBranch = unslugify(branch);
@@ -52,8 +51,7 @@ const IITMSubjectHub = () => {
 
   useEffect(() => {
     loadCourses();
-    loadIitmBranchPyqs();
-  }, [loadCourses, loadIitmBranchPyqs]);
+  }, [loadCourses]);
 
   useEffect(() => {
     let live = true;
@@ -92,7 +90,9 @@ const IITMSubjectHub = () => {
 
   const tabs: Array<[TabId, string]> = [["notes", "Notes"]];
   if (hub && hub.lectures.length > 0) tabs.push(["lectures", "Lectures"]);
-  tabs.push(["pyqs", "PYQs"], ["grade", "Grade calculator"], ["batches", "Live batches"]);
+  tabs.push(["grade", "Grade calculator"], ["batches", "Live batches"]);
+  // PYQs live on Quiz Space: this subject's page there, opened straight from the tab.
+  const pyqHref = quizSpaceLink(dbBranch, dbLevel, name).href;
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
@@ -104,7 +104,8 @@ const IITMSubjectHub = () => {
           <>
             <div className="w-full bg-[#eef0ff]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8 overflow-x-auto pt-5" role="tablist" aria-label={`${name} resources`}>
-                {tabs.map(([id, label]) => (
+                {tabs.flatMap(([id, label]) => {
+                  const node = (
                   <button
                     key={id}
                     type="button"
@@ -115,7 +116,24 @@ const IITMSubjectHub = () => {
                   >
                     {label}
                   </button>
-                ))}
+                  );
+                  // PYQs go after Notes and Lectures.
+                  return id === "grade"
+                    ? [
+                        <a
+                          key="pyqs"
+                          href={pyqHref}
+                          target="_blank"
+                          rel="noopener"
+                          className="pb-2 text-[14px] md:text-[15px] whitespace-nowrap font-medium text-[#6b7280] transition-all hover:text-[#6366f1]"
+                        >
+                          PYQs <span aria-hidden="true" className="text-[12px]">↗</span>
+                          <span className="sr-only"> on Quiz Space (opens in a new tab)</span>
+                        </a>,
+                        node,
+                      ]
+                    : [node];
+                })}
               </div>
             </div>
 
@@ -127,7 +145,6 @@ const IITMSubjectHub = () => {
                     <LectureShelf groups={[{ heading: name, ids: hub.lectures.map(([url]) => playlistId(url)) }]} />
                   </div>
                 )}
-                {tab === "pyqs" && <PYQsTab branch={dbBranch} level={dbLevel} years={[]} examTypes={[]} subjects={[name]} />}
                 {tab === "grade" && (() => {
                   // This subject's own course, already chosen; the full calculator is one button away.
                   const calc = SUBJECT_CALC[`${branch}/${level}/${subject}`];
