@@ -7,6 +7,8 @@
  * The subject → Quiz Space map below is generated from the two sites' subject lists; subjects
  * with no Quiz Space counterpart (mostly labs) link to their level's page there instead.
  */
+import { lecturesFor } from "./lectures";
+
 export const QUIZ_SPACE = "https://quizspace.unknowniitians.com";
 export const YOUTUBE_CHANNEL = "https://www.youtube.com/@UnknownIITians";
 
@@ -91,6 +93,8 @@ export interface HubContent {
   intro: string;
   /** Where to go for each thing, as [href, label]; external ones start with http. */
   links: Array<[string, string]>;
+  /** The subject's lecture playlists on YouTube, as [link, title]; none for a subject without any. */
+  lectures: Array<[string, string]>;
   noteTitles: string[];
   batches: Array<[string, string]>;
   siblingLinks: Array<[string, string]>;
@@ -134,6 +138,7 @@ export function hubContent(i: HubInput): HubContent {
     [`${tools}/cgpa-calculator`, `${level} CGPA calculator`],
     [`${YOUTUBE_CHANNEL}/search?query=${encodeURIComponent(`IITM BS ${subject}`)}`, `Watch IITM BS ${subject} videos on YouTube`],
   ];
+  const lectures = lecturesFor(slugify(branch), slugify(level), slugify(subject));
 
   const batches = i.batches.map((b): [string, string] => [`/courses/${b.id}`, b.price ? `${b.title} (₹${Math.round(b.price)})` : `${b.title} (free)`]);
 
@@ -167,6 +172,7 @@ export function hubContent(i: HubInput): HubContent {
     h1: `IITM BS ${subject}`,
     intro,
     links,
+    lectures,
     noteTitles: i.notes.map((x) => x.title),
     batches,
     siblingLinks: i.siblings.filter((s) => s !== subject).map((s): [string, string] => [hubPath(branch, level, s), `${s}`]),
