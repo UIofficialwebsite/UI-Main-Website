@@ -116,8 +116,8 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAd
 const QuizSpaceLogo = () => (
   <span className="flex items-center">
     <span className="sr-only">Quiz Space</span>
-    <img src="/quizspace/quizspace-mark.webp" alt="" aria-hidden="true" width={34} height={34} className="h-[30px] w-[30px] shrink-0" />
-    <span aria-hidden="true" className="ml-[1px] -translate-y-[1px] text-[19px] leading-none font-semibold tracking-[-0.015em] text-[#0c0a09]">uiz Space</span>
+    <img src="/quizspace/quizspace-mark.webp" alt="" aria-hidden="true" width={34} height={34} className="h-[24px] w-[24px] shrink-0" />
+    <span aria-hidden="true" className="ml-[1px] text-base leading-none font-semibold tracking-[-0.01em] text-gray-700">uiz Space</span>
   </span>
 );
 
