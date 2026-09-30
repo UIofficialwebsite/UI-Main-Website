@@ -12,6 +12,7 @@
 import {
   CGPA_TOOL_FAQS, GRADE_TOOL_FAQS, HUB_FAQS, HUB_LINKS, MARKS_TOOL_FAQS, NOTES_FAQS, PYQ_FAQS, SCORE_CHECK_FAQ,
 } from "./_shared/seoContent";
+import { hubContent } from "./_shared/subjectHub";
 
 export const config = { runtime: "edge" };
 
@@ -746,6 +747,51 @@ async function notesLevelDoc(path: string): Promise<string> {
   });
 }
 
+/** A subject hub: /iitm-bs/<branch>/<level>/<subject>. Built by the same code the visitor's page uses. */
+async function subjectHubDoc(path: string): Promise<string> {
+  const [, , branchSlug, levelSlug, subjectSlug] = path.split("/");
+  const dbBranch = branchToDb(branchSlug);
+  const dbLevel = levelToDb(levelSlug);
+  const subjects = await fetchRows(
+    `iitm_bs_subjects?select=id,subject_name&branch=eq.${encodeURIComponent(dbBranch)}&level=eq.${encodeURIComponent(dbLevel)}&order=display_order.asc`
+  );
+  const subject = subjects.find((x) => slugify(String(x.subject_name)) === subjectSlug);
+  if (!subject) {
+    return render({ title: `IITM BS ${dbLevel} | ${BRAND}`, description: `${BRAND} — IITM BS study resources.`, path, index: false });
+  }
+  const [notes, batches] = await Promise.all([
+    fetchRows(`iitm_branch_notes?select=title,week_number&subject_id=eq.${subject.id}&is_active=eq.true&order=week_number.asc`),
+    fetchRows(`courses?select=id,title,price&is_live=eq.true&exam_category=eq.IITM%20BS&branch=eq.${encodeURIComponent(dbBranch)}&level=eq.${encodeURIComponent(dbLevel)}&order=title.asc`),
+  ]);
+  const hub = hubContent({
+    branch: dbBranch,
+    level: dbLevel,
+    subject: String(subject.subject_name),
+    notes: notes.map((x) => ({ title: String(x.title), week: (x.week_number as number | null) ?? null })),
+    batches: batches.map((x) => ({ id: String(x.id), title: String(x.title), price: x.price == null ? null : Number(x.price) })),
+    siblings: subjects.map((x) => String(x.subject_name)),
+  });
+  const anchor = ([href, label]: [string, string]) =>
+    href.startsWith("http")
+      ? `<li><a href="${esc(href)}">${esc(label)}</a></li>`
+      : `<li><a href="${esc(href)}">${esc(label)}</a></li>`;
+  const list = (items: Array<[string, string]>) => `<ul>${items.map(anchor).join("")}</ul>`;
+  const body =
+    `<h1>${esc(hub.h1)}</h1>\n  <p>${esc(hub.intro)}</p>` +
+    `\n  <h2>Where to go</h2>${list(hub.links)}` +
+    (hub.noteTitles.length ? `\n  <h2>Notes in this subject</h2><ul>${hub.noteTitles.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : "") +
+    (hub.batches.length ? `\n  <h2>Live batches for ${esc(dbLevel)}</h2>${list(hub.batches)}` : "") +
+    (hub.siblingLinks.length ? `\n  <h2>Other ${esc(dbLevel)} subjects</h2>${list(hub.siblingLinks)}` : "") +
+    `\n  ${faqBody(hub.faqs)}`;
+  return render({
+    title: hub.title,
+    description: hub.description,
+    path,
+    bodyHtml: body,
+    jsonLd: [breadcrumbSchema(hub.crumbs), faqSchema(hub.faqs)],
+  });
+}
+
 function titleFromPath(path: string): string {
   const last = path.split("/").filter(Boolean).pop() || "";
   const words = last.replace(/[-_]/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -786,6 +832,7 @@ export default async function handler(req: Request): Promise<Response> {
   const notesSubjectMatch = /^\/exam-preparation\/iitm-bs\/notes\/[^/]+\/[^/]+\/[^/]+$/.test(path);
   const notesLevelMatch = /^\/exam-preparation\/iitm-bs\/notes\/[^/]+\/[^/]+$/.test(path);
   const toolBranchMatch = /^\/iitm-tools\/[^/]+\/[^/]+$/.test(path);
+  const hubMatch = /^\/iitm-bs\/[^/]+\/[^/]+\/[^/]+$/.test(path);
   const toolTwinLevel = path.match(/^\/iitm-tools\/([^/]+)\/([^/]+)\/([^/]+)$/);
   const toolLevel = path.match(/^\/exam-preparation\/iitm-bs\/tools\/([^/]+)\/([^/]+)\/([^/]+)$/);
   // The old /iitm-tools/<tool> addresses are twins of the tool pages under /exam-preparation:
@@ -799,6 +846,8 @@ export default async function handler(req: Request): Promise<Response> {
     html = await courseDoc(courseMatch[1]);
   } else if (notesSubjectMatch) {
     html = await notesSubjectDoc(path);
+  } else if (hubMatch) {
+    html = await subjectHubDoc(path);
   } else if (notesLevelMatch) {
     html = await notesLevelDoc(path);
   } else if (levelDoc) {
