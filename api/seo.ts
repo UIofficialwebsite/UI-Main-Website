@@ -13,6 +13,7 @@ import {
   CGPA_TOOL_FAQS, GRADE_TOOL_FAQS, HUB_FAQS, HUB_LINKS, MARKS_TOOL_FAQS, NOTES_FAQS, PYQ_FAQS, SCORE_CHECK_FAQ,
 } from "./_shared/seoContent";
 import { hubContent, hubPath } from "./_shared/subjectHub";
+import { indexContent } from "./_shared/subjectsIndex";
 import { COMPARE_DISCLAIMER, comparePageFor, type ComparePage } from "./_shared/comparePages";
 import { infoFor } from "./_shared/seoContent";
 
@@ -877,6 +878,24 @@ async function notesLevelDoc(path: string): Promise<string> {
   });
 }
 
+/** The subject lists: /iitm-bs and /iitm-bs/<branch>/<level>. */
+async function subjectsIndexDoc(path: string): Promise<string> {
+  const parts = path.split("/").filter(Boolean); // [iitm-bs] or [iitm-bs, branch, level]
+  const dbBranch = parts[1] ? branchToDb(parts[1]) : null;
+  const dbLevel = parts[2] ? levelToDb(parts[2]) : null;
+  const rows = await fetchRows("iitm_bs_subjects?select=subject_name,branch,level&order=display_order.asc&limit=500");
+  const all = rows.map((r) => ({ branch: String(r.branch), level: String(r.level), name: String(r.subject_name) }));
+  const ix = indexContent(dbBranch, dbLevel, all);
+  if (ix.groups.length === 0) {
+    return render({ title: `IITM BS subjects | ${BRAND}`, description: `${BRAND} — IITM BS study resources.`, path, index: false });
+  }
+  const list = ix.groups
+    .map((g) => `<h2>${g.path ? `<a href="${esc(g.path)}">${esc(g.heading)}</a>` : esc(g.heading)}</h2><ul>${g.links.map(([href, label]) => `<li><a href="${esc(href)}">${esc(label)}</a></li>`).join("")}</ul>`)
+    .join("\n  ");
+  const body = `<h1>${esc(ix.h1)}</h1>\n  <p>${esc(ix.intro)}</p>\n  ${list}\n  ${faqBody(ix.faqs)}`;
+  return render({ title: ix.title, description: ix.description, path, bodyHtml: body, jsonLd: [breadcrumbSchema(ix.crumbs), faqSchema(ix.faqs)] });
+}
+
 /** A subject hub: /iitm-bs/<branch>/<level>/<subject>. Built by the same code the visitor's page uses. */
 async function subjectHubDoc(path: string): Promise<string> {
   const [, , branchSlug, levelSlug, subjectSlug] = path.split("/");
@@ -930,7 +949,8 @@ function compareDoc(page: ComparePage): string {
       (sec) =>
         `<h2>${esc(sec.heading)}</h2>` +
         sec.paragraphs.map((t) => `<p>${esc(t)}</p>`).join("") +
-        (sec.bullets ? `<ul>${sec.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>` : "")
+        (sec.bullets ? `<ul>${sec.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>` : "") +
+        (sec.links ? `<ul>${sec.links.map(([href, label]) => `<li><a href="${esc(href)}">${esc(label)}</a></li>`).join("")}</ul>` : "")
     )
     .join("\n  ");
   const body =
@@ -997,6 +1017,7 @@ export default async function handler(req: Request): Promise<Response> {
   const notesLevelMatch = /^\/exam-preparation\/iitm-bs\/notes\/[^/]+\/[^/]+$/.test(path);
   const toolBranchMatch = /^\/iitm-tools\/[^/]+\/[^/]+$/.test(path);
   const hubMatch = /^\/iitm-bs\/[^/]+\/[^/]+\/[^/]+$/.test(path);
+  const indexMatch = /^\/iitm-bs(\/[^/]+\/[^/]+)?$/.test(path);
   const toolTwinLevel = path.match(/^\/iitm-tools\/([^/]+)\/([^/]+)\/([^/]+)$/);
   const toolLevel = path.match(/^\/exam-preparation\/iitm-bs\/tools\/([^/]+)\/([^/]+)\/([^/]+)$/);
   // The old /iitm-tools/<tool> addresses are twins of the tool pages under /exam-preparation:
@@ -1015,6 +1036,8 @@ export default async function handler(req: Request): Promise<Response> {
     html = await notesSubjectDoc(path);
   } else if (hubMatch) {
     html = await subjectHubDoc(path);
+  } else if (indexMatch) {
+    html = await subjectsIndexDoc(path);
   } else if (notesLevelMatch) {
     html = await notesLevelDoc(path);
   } else if (levelDoc) {
