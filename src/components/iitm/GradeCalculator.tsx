@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getCalculatorSubjects, normaliseLevel, normaliseProgramme, PROGRAMMES } from "./data/curriculumConfig";
 import { calculateGradeByLevel, getGradeLetter, getGradePoints } from "./utils/gradeCalculations";
 import { Level } from "./types/gradeTypes";
@@ -18,9 +18,17 @@ import { Job } from "@/types/job";
 interface GradeCalculatorProps {
   level: string; // Changed to string to safely accept "Foundation" etc.
   branch: string;
+  /**
+   * A subject's own page: the calculator opens on this course (its key) with no course picker, and a
+   * button below leads to the full calculator for every other subject. Pass "" for a subject whose grading
+   * formula is not published, and it says so and shows the same button.
+   */
+  lockedKey?: string;
+  /** The subject's name, shown in place of the picker. */
+  lockedName?: string;
 }
 
-export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
+export default function GradeCalculator({ level, branch, lockedKey, lockedName }: GradeCalculatorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
 
@@ -59,10 +67,11 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     return getCalculatorSubjects(normaliseProgramme(branch), normaliseLevel(level));
   }, [branch, level]);
 
-  const urlSubjectKey = searchParams.get("subject");
+  const locked = lockedKey !== undefined;
+  const urlSubjectKey = locked ? null : searchParams.get("subject");
   const currentSubject = useMemo(() => 
-    filteredSubjects.find(s => s.key === urlSubjectKey),
-    [filteredSubjects, urlSubjectKey]
+    locked ? filteredSubjects.find(s => s.key === lockedKey) : filteredSubjects.find(s => s.key === urlSubjectKey),
+    [filteredSubjects, urlSubjectKey, locked, lockedKey]
   );
 
   useEffect(() => {
@@ -185,6 +194,17 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
       )}
 
       <div className="w-full py-8">
+        {locked ? (
+          <div className="mb-8 w-full max-w-3xl">
+            <p className="text-sm font-medium text-black font-sans mb-2">Course</p>
+            <p className="text-xl font-semibold text-[#1f2937] font-sans">{currentSubject?.name ?? lockedName}</p>
+            {!currentSubject && (
+              <p className="mt-2 text-sm text-gray-600 font-sans">
+                A published grading formula for this course is not available in the calculator yet. You can still check the other subjects below.
+              </p>
+            )}
+          </div>
+        ) : (
         <div className="mb-10 w-full max-w-3xl relative z-50">
           <Label className="text-sm font-medium text-black font-sans mb-3 block">
             01. Select Course
@@ -217,6 +237,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
             </SelectContent>
           </Select>
         </div>
+        )}
 
         <div className="relative z-0">
           {currentSubject && (
@@ -236,6 +257,17 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
             subjectKey={currentSubject.key}
             onReset={resetCalculator} 
           />
+        )}
+
+        {locked && (
+          <div className="mt-10 max-w-3xl">
+            <Link
+              to={`/exam-preparation/iitm-bs/tools/${programme}/${normaliseLevel(level)}/grade-calculator`}
+              className="inline-flex w-full items-center justify-center rounded-lg bg-[#1E3A8A] px-6 py-4 text-[16px] font-semibold text-white shadow-md transition-colors hover:bg-[#1e40af] sm:w-auto"
+            >
+              Calculate for other subjects
+            </Link>
+          </div>
         )}
       </div>
     </div>
