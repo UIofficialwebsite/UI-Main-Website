@@ -147,7 +147,7 @@ const IITMSubjectHub = () => {
             <section className="bg-white border-t border-gray-100">
               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
                 <div>
-                  <h2 className="text-xl font-bold text-[#1f2937]">About {name}</h2>
+                  <h2 className="text-xl font-bold text-[#1f2937]">About {hub.h1.replace(/^IITM BS /, "")}</h2>
                   <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-gray-600">{hub.intro}</p>
                 </div>
                 {hub.siblingLinks.length > 0 && (
