@@ -22,7 +22,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
+import { SEO_TITLES, useDocumentTitle, useCanonicalUrl } from "@/utils/seoManager";
 
 // --- NEW IMPORTS FOR TOOLS ---
 import MarksPredictor from "@/components/iitm/MarksPredictor";
@@ -46,8 +46,20 @@ const FilledArrow = ({ isOpen }: { isOpen: boolean }) => (
   </svg>
 );
 
-const IITMBSPrep = () => {
-  usePageSEO(SEO_TITLES.IITM_PREP, "/exam-preparation/iitm-bs");
+/**
+ * A guide page that IS the tools page: the same header, tabs, filters and calculators, held on the guide's
+ * own address (nothing redirects), with the guide's text below in place of the tools page's own block.
+ */
+export interface FixedTools {
+  tool: string; // grade-calculator, cgpa-calculator or marks-predictor
+  path: string; // the guide's own address
+  title: string; // its <title>
+  heading: string; // its H1
+}
+
+const IITMBSPrep = ({ fixed, below }: { fixed?: FixedTools; below?: React.ReactNode } = {}) => {
+  useDocumentTitle(fixed ? fixed.title : SEO_TITLES.IITM_PREP, !fixed);
+  useCanonicalUrl(fixed ? fixed.path : "/exam-preparation/iitm-bs");
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,7 +82,9 @@ const IITMBSPrep = () => {
   const [filterOffset, setFilterOffset] = useState(0);
   
   // Parse initial URL params
-  const initialUrlState = parseIITMBSUrl(location.pathname);
+  // A guide held on its own address reads its state as if it were the tools page for its tool.
+  const statePath = fixed ? `/exam-preparation/iitm-bs/tools/${fixed.tool}` : location.pathname;
+  const initialUrlState = parseIITMBSUrl(statePath);
   
   // Tab State
   const [activeTab, setActiveTab] = useState(() => initialUrlState.tab);
@@ -304,7 +318,7 @@ const IITMBSPrep = () => {
   }, [filterOffset]);
 
   useEffect(() => {
-    const urlState = parseIITMBSUrl(location.pathname);
+    const urlState = parseIITMBSUrl(statePath);
     setActiveTab(urlState.tab);
     
     // Sync state for the current tab from URL
@@ -328,7 +342,7 @@ const IITMBSPrep = () => {
     }
     
     setOpenDropdown(null);
-  }, [location.pathname]);
+  }, [statePath]);
 
   // Helper to build URL with current tab's filters
   const buildCurrentUrl = (tab: string, params: Record<string, string | undefined>) => {
@@ -353,11 +367,13 @@ const IITMBSPrep = () => {
     }
     // news and dates don't have params
     
+    if (fixed && newTab === 'tools') return; // already here
     navigate(buildCurrentUrl(newTab, params), { replace: true });
   };
 
   const handleToolSelect = (tool: string) => {
     setSelectedTool(tool);
+    if (fixed) return; // stay on this address
     navigate(buildCurrentUrl('tools', { branch: toolsBranch, level: toolsLevel, tool }), { replace: true });
   };
 
@@ -409,7 +425,7 @@ const IITMBSPrep = () => {
           newLevel = nextLevel;
         }
         if (type === 'level') { setToolsLevel(tempLevel); newLevel = tempLevel; }
-        navigate(buildCurrentUrl('tools', { 
+        if (!fixed) navigate(buildCurrentUrl('tools', { 
           branch: type === 'branch' ? normaliseProgramme(tempBranch) : toolsBranch,
           level: type === 'branch' ? newLevel : type === 'level' ? tempLevel : toolsLevel,
           tool: selectedTool 
@@ -609,7 +625,7 @@ const IITMBSPrep = () => {
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
       <NavBar />
       <main className="pt-16">
-        <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab={activeTab} pageTitle="IITM BS Degree Preparation" />
+        <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab={activeTab} pageTitle={fixed ? fixed.heading : "IITM BS Degree Preparation"} />
 
         {/* Sticky Filter Bar */}
         <div ref={filterRef} className={`w-full transition-shadow duration-300 z-[5000] ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
@@ -848,7 +864,7 @@ const IITMBSPrep = () => {
             />}
             {activeTab === "news" && <NewsTab sortOrder={sortOrder} />}
             {activeTab === "dates" && <ImportantDatesTab />}
-            <PageInfo pathname={location.pathname} />
+            {fixed ? below : <PageInfo pathname={location.pathname} />}
           </div>
         </section>
       </main>
