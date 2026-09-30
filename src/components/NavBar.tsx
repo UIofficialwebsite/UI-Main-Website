@@ -112,11 +112,12 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAd
   );
 };
 
-/** The Quiz Space mark (a magnifier over a quiz sheet) alone, in the nav bar. */
+/** The Quiz Space wordmark: its magnifier mark stands in for the Q, "uiz Space" follows it. */
 const QuizSpaceLogo = () => (
   <span className="flex items-center">
     <span className="sr-only">Quiz Space</span>
-    <img src="/quizspace/quizspace-mark.webp" alt="" aria-hidden="true" width={34} height={34} className="h-[34px] w-[34px] shrink-0" />
+    <img src="/quizspace/quizspace-mark.webp" alt="" aria-hidden="true" width={34} height={34} className="h-[30px] w-[30px] shrink-0" />
+    <span aria-hidden="true" className="ml-[1px] -translate-y-[1px] text-[19px] leading-none font-semibold tracking-[-0.015em] text-[#0c0a09]">uiz Space</span>
   </span>
 );
 
