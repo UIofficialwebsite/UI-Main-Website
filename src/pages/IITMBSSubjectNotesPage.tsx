@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { useIITMBranchNotes } from "@/components/iitm/hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import NavBar from "@/components/NavBar";
@@ -9,6 +9,7 @@ import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Search, Download } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
+import { hubPath } from "../../api/_shared/subjectHub";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -223,6 +224,21 @@ const IITMBSSubjectNotesPage = () => {
             </div>
           )}
         </section>
+
+        {/* THE SUBJECT'S HUB: papers, calculators and batches */}
+        {selectedSubject && branch && level && (
+          <section className="max-w-7xl mx-auto px-4 pb-12">
+            <div className="border-t border-gray-100 pt-8">
+              <h2 className="text-xl font-bold text-[#1f2937]">More for {selectedSubject}</h2>
+              <p className="mt-2 max-w-3xl text-[15px] text-gray-600">
+                Previous year papers to practise online, grade and CGPA calculators, and live batches, all for {selectedSubject}.
+              </p>
+              <Link to={hubPath(branch, level, selectedSubject)} className="mt-3 inline-block text-[15px] font-medium text-[#1E3A8A] hover:underline">
+                IITM BS {selectedSubject}: notes, PYQs &amp; tools
+              </Link>
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </div>
