@@ -187,6 +187,7 @@ const App = () => (
                   <Route path="/iitm-bs-grade-and-score-tools" element={<CompareResources path="/iitm-bs-grade-and-score-tools" />} />
                   <Route path="/iitm-bs-qualifier-preparation-resources" element={<CompareResources path="/iitm-bs-qualifier-preparation-resources" />} />
                   <Route path="/iitm-bs-study-path-by-level" element={<CompareResources path="/iitm-bs-study-path-by-level" />} />
+                  <Route path="/iitm-bs-official-website-guide" element={<CompareResources path="/iitm-bs-official-website-guide" />} />
                   {/* Short SEO tool URLs (in sitemap + prerendered) — send real users to the working tools tab. */}
                   <Route path="/iitm-tools/cgpa-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/cgpa-calculator" replace />} />
                   <Route path="/iitm-tools/grade-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/grade-calculator" replace />} />
