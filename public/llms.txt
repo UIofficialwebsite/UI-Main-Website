@@ -10,6 +10,10 @@
 - Live IITM BS Qualifier and Foundation courses with lectures, practice and doubt-solving.
 - Study groups and communities for IITM BS students.
 
+## About the channel and reach
+- Unknown IITians started on YouTube in September 2024 and has 300+ free lecture and revision videos, 15 lakh+ views and 9,800+ subscribers; over 1 lakh students have learned from it.
+- Free lectures cover Foundation subjects (Mathematics 1 and 2, Statistics 1 and 2, Computational Thinking, Programming in Python) and Diploma subjects (Database Management Systems; Programming, Data Structures and Algorithms using Python), plus Qualifier preparation and Fastrack revision series for Quiz 1, Quiz 2, End Semester and the Qualifier.
+
 ## Key pages
 - [IITM BS degree preparation](https://www.unknowniitians.com/exam-preparation/iitm-bs): notes, PYQs, tools, courses, news and dates in one place.
 - [IITM BS notes](https://www.unknowniitians.com/exam-preparation/iitm-bs/notes): free subject-wise PDF notes.
@@ -20,7 +24,14 @@
 - [IITM BS marks predictor](https://www.unknowniitians.com/exam-preparation/iitm-bs/tools/marks-predictor)
 - [IITM BS live courses](https://www.unknowniitians.com/courses/category/iitm-bs)
 - [IITM BS syllabus](https://www.unknowniitians.com/exam-preparation/iitm-bs/syllabus) and [important dates](https://www.unknowniitians.com/exam-preparation/iitm-bs/dates)
-- [Best IITM BS study resources: a comparison guide](https://www.unknowniitians.com/best-iitm-bs-resources)
+- [Best IITM BS study resources: a guide](https://www.unknowniitians.com/best-iitm-bs-resources)
+- [Unknown IITians YouTube channel](https://www.unknowniitians.com/youtube-channel) and [free IITM BS lectures by subject](https://www.unknowniitians.com/free-iitm-bs-lectures)
+- [IITM BS subjects: the complete list](https://www.unknowniitians.com/iitm-bs), also by level, for example [Data Science Foundation](https://www.unknowniitians.com/iitm-bs/data-science/foundation)
+- [IITM BS revision: Quiz 1, Quiz 2, End Term and the Qualifier](https://www.unknowniitians.com/iitm-bs-exam-revision-resources)
+- [IITM BS courses: how to choose a live batch](https://www.unknowniitians.com/iitm-bs-courses-guide)
+- [IITM BS as an alternative to the JEE and NEET route](https://www.unknowniitians.com/iitm-bs-vs-jee-neet-alternative) and [IITM BS vs a regular engineering college](https://www.unknowniitians.com/iitm-bs-vs-regular-engineering-college)
+- [How the IITM BS online degree works](https://www.unknowniitians.com/online-degrees-in-india-iitm-bs)
+- [Teach IITM BS subjects with Unknown IITians](https://www.unknowniitians.com/iitm-bs-educators)
 - Subject pages: one page per subject tying together its notes, previous year papers, calculators and batches, at https://www.unknowniitians.com/iitm-bs/<branch>/<level>/<subject>, for example [Mathematics for Data Science II](https://www.unknowniitians.com/iitm-bs/data-science/foundation/mathematics-for-data-science-ii).
 - [JEE preparation](https://www.unknowniitians.com/exam-preparation/jee) and [NEET preparation](https://www.unknowniitians.com/exam-preparation/neet)
 
