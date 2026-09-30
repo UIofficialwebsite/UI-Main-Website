@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
@@ -10,6 +10,7 @@ import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import LectureShelf from "@/components/iitm/LectureShelf";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { normaliseProgramme } from "@/components/iitm/data/curriculumConfig";
+import { SUBJECT_CALC } from "@/components/iitm/data/subjectCalcMap";
 import { supabase } from "@/integrations/supabase/client";
 import { slugify, unslugify } from "@/utils/urlHelpers";
 import { useDocumentTitle, useCanonicalUrl } from "@/utils/seoManager";
@@ -36,7 +37,11 @@ const IITMSubjectHub = () => {
   const [hub, setHub] = useState<HubContent | null>(null);
   const [name, setName] = useState("");
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
-  const [tab, setTab] = useState<TabId>("notes");
+  // ?tab=lectures|pyqs|grade|batches opens that tab, so a tab can be linked to directly.
+  const [searchParams] = useSearchParams();
+  const wanted = searchParams.get("tab");
+  const startTab: TabId = (["notes", "lectures", "pyqs", "grade", "batches"] as const).find((t) => t === wanted) ?? "notes";
+  const [tab, setTab] = useState<TabId>(startTab);
 
   const dbBranch = unslugify(branch);
   const dbLevel = unslugify(level);
@@ -52,7 +57,7 @@ const IITMSubjectHub = () => {
   useEffect(() => {
     let live = true;
     setState("loading");
-    setTab("notes");
+    setTab(startTab);
     (async () => {
       const { data: subjects } = await supabase
         .from("iitm_bs_subjects")
@@ -82,7 +87,7 @@ const IITMSubjectHub = () => {
       setState("ready");
     })();
     return () => { live = false; };
-  }, [dbBranch, dbLevel, subject]);
+  }, [dbBranch, dbLevel, subject, startTab]);
 
   const tabs: Array<[TabId, string]> = [["notes", "Notes"]];
   if (hub && hub.lectures.length > 0) tabs.push(["lectures", "Lectures"]);
@@ -122,7 +127,18 @@ const IITMSubjectHub = () => {
                   </div>
                 )}
                 {tab === "pyqs" && <PYQsTab branch={dbBranch} level={dbLevel} years={[]} examTypes={[]} subjects={[name]} />}
-                {tab === "grade" && <GradeCalculator branch={normaliseProgramme(dbBranch)} level={dbLevel.toLowerCase() === "qualifier" ? "foundation" : dbLevel.toLowerCase()} />}
+                {tab === "grade" && (() => {
+                  // This subject's own course, already chosen; the full calculator is one button away.
+                  const calc = SUBJECT_CALC[`${branch}/${level}/${subject}`];
+                  return (
+                    <GradeCalculator
+                      branch={normaliseProgramme(dbBranch)}
+                      level={calc ? calc[0] : dbLevel.toLowerCase() === "qualifier" ? "foundation" : dbLevel.toLowerCase()}
+                      lockedKey={calc ? calc[1] : ""}
+                      lockedName={name}
+                    />
+                  );
+                })()}
                 {tab === "batches" && <PaidCoursesTab branch={dbBranch} levels={[dbLevel]} subjects={[]} priceRange={null} newlyLaunched={false} fasttrackOnly={false} bestSellerOnly={false} />}
               </div>
             </section>
