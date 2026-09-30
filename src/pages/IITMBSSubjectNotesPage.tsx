@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Search, Download } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
 import { hubPath } from "../../api/_shared/subjectHub";
+import { displayName } from "../../api/_shared/subjectAliases";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,7 +36,7 @@ const IITMBSSubjectNotesPage = () => {
   
   // Dynamic page title and canonical based on subject and level
   usePageSEO(
-    selectedSubject ? getIITMNotesTitleSEO(selectedSubject, level || "Foundation") : "IITM BS Notes",
+    selectedSubject ? getIITMNotesTitleSEO(displayName(slugify(selectedSubject), selectedSubject), level || "Foundation") : "IITM BS Notes",
     branch && level && subjectSlug ? `/exam-preparation/iitm-bs/notes/${branch}/${level}/${subjectSlug}` : undefined
   );
   const [searchQuery, setSearchQuery] = useState("");
