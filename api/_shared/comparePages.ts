@@ -214,6 +214,65 @@ export const COMPARE_PAGES: ComparePage[] = [
     ],
     links: OUR_LINKS,
   },
+  {
+    path: "/iitm-bs-official-website-guide",
+    title: "IITM BS Official Website, Portal & Login: An Unofficial Guide",
+    description: "Looking for the official IITM BS website? An unofficial student guide to what is published officially, and the free notes, PYQs and calculators we add.",
+    h1: "IITM BS official website and portal: an unofficial guide",
+    intro:
+      "Unknown IITians is an independent study-resources site. It is not IIT Madras, and it is not affiliated with or endorsed by IIT Madras. If you are looking for the official IITM BS website, this guide explains what the official sources are for and what an independent site like ours adds.",
+    sections: [
+      {
+        heading: "Is this the official IITM BS website?",
+        paragraphs: [
+          "No. Unknown IITians is run by students and educators, independent of IIT Madras. Anything that must be exact, such as admissions, fees, eligibility, official dates, course registration and results, is published by IIT Madras, so check the official IITM BS website and your student portal for it.",
+        ],
+      },
+      {
+        heading: "What the official sources are for",
+        paragraphs: ["Use the official website and student login for the things only the institute can confirm."],
+        bullets: [
+          "Admissions, eligibility and the qualifier process.",
+          "Fees and payments.",
+          "The academic calendar, exam schedules and notices.",
+          "Course registration, grades and results in your student login.",
+          "The official course lectures and assignments.",
+        ],
+      },
+      {
+        heading: "What Unknown IITians adds",
+        paragraphs: ["Independent study help that goes alongside the official material:"],
+        bullets: [
+          "Free week-wise notes for Data Science and Electronic Systems subjects.",
+          "Previous year question papers, and Quiz Space to practise them online with answer keys.",
+          "Grade, score, CGPA and marks calculators for all four IITM BS branches.",
+          "Live Qualifier and Foundation courses, and study communities.",
+        ],
+      },
+      {
+        heading: "Using both",
+        paragraphs: [
+          "Use the official portal for anything that has to be exact, and independent resources to study and practise. If an independent site and the official source ever differ, the official source is right.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "Is Unknown IITians the official IITM BS website?",
+        a: "No. Unknown IITians is an independent study-resources site and is not affiliated with or endorsed by IIT Madras. For admissions, fees, official dates and results, use the official IITM BS website and your student portal.",
+      },
+      {
+        q: "Where do I find the official IITM BS website?",
+        a: "Look for the IIT Madras BS degree programme's own website (study.iitm.ac.in) and use its student login for registration, grades and results.",
+      },
+      {
+        q: "Are Unknown IITians' notes and papers official?",
+        a: "No. They are independent study resources. Check the official announcements for exam rules, syllabus changes and anything else that must be exact.",
+      },
+      { q: "Does Unknown IITians offer free IITM BS notes and papers?", a: "Yes. The notes and previous year papers are free, and Quiz Space is free with a Google sign-in." },
+    ],
+    links: [["https://study.iitm.ac.in", "The official IIT Madras BS degree website (opens in a new tab)"], ...OUR_LINKS],
+  },
 ];
 
 export function comparePageFor(path: string): ComparePage | undefined {
