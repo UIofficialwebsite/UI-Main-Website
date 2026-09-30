@@ -12,7 +12,7 @@
 import {
   CGPA_TOOL_FAQS, GRADE_TOOL_FAQS, HUB_FAQS, HUB_LINKS, MARKS_TOOL_FAQS, NOTES_FAQS, PYQ_FAQS, SCORE_CHECK_FAQ,
 } from "./_shared/seoContent";
-import { hubContent } from "./_shared/subjectHub";
+import { hubContent, hubPath } from "./_shared/subjectHub";
 import { COMPARE_DISCLAIMER, comparePageFor, type ComparePage } from "./_shared/comparePages";
 
 export const config = { runtime: "edge" };
@@ -632,7 +632,10 @@ async function notesSubjectDoc(path: string): Promise<string> {
     .join("");
   const body = `<h1>${esc(subjectName)} — IITM BS ${esc(dbLevel)} Notes</h1>
   <p>${esc(desc)}</p>
-  ${items ? `<h2>Notes in this subject</h2><ul>${items}</ul>` : ""}`;
+  ${items ? `<h2>Notes in this subject</h2><ul>${items}</ul>` : ""}
+  <h2>More for ${esc(subjectName)}</h2>
+  <p>Previous year papers to practise online, grade and CGPA calculators, and live batches, all for ${esc(subjectName)}.</p>
+  <p><a href="${esc(hubPath(dbBranch, dbLevel, subjectName))}">IITM BS ${esc(subjectName)}: notes, PYQs &amp; tools</a></p>`;
 
   return render({ title, description: desc, path, bodyHtml: body });
 }
@@ -739,7 +742,7 @@ async function notesLevelDoc(path: string): Promise<string> {
   const title = `IITM BS ${dbLevel} Notes: ${dbBranch} (Free PDFs) | ${BRAND}`;
   const desc = `Free IITM BS ${dbLevel} notes for ${dbBranch}: subject-wise, week-wise PDF notes for ${subjects.length} subjects, including ${subjects.slice(0, 3).map((x) => String(x.subject_name)).join(", ")}.`;
   const list = subjects
-    .map((x) => `<li><a href="${esc(`${path}/${slugify(String(x.subject_name))}`)}">${esc(String(x.subject_name))} notes</a></li>`)
+    .map((x) => `<li><a href="${esc(`${path}/${slugify(String(x.subject_name))}`)}">${esc(String(x.subject_name))} notes</a> — <a href="${esc(hubPath(dbBranch, dbLevel, String(x.subject_name)))}">${esc(String(x.subject_name))}: notes, PYQs &amp; tools</a></li>`)
     .join("");
   const body = `<h1>IITM BS ${esc(dbLevel)} Notes: ${esc(dbBranch)}</h1>\n  <p>${esc(desc)}</p>\n  <h2>Subjects</h2><ul>${list}</ul>`;
   return render({
