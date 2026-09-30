@@ -61,7 +61,8 @@ const NEETPrep = lazyWithRetry(() => import("./pages/NEETPrep"));
 const IITMBSPrep = lazyWithRetry(() => import("./pages/IITMBSPrep"));
 const IITMBSSubjectNotesPage = lazyWithRetry(() => import("./pages/IITMBSSubjectNotesPage"));
 const IITMSubjectHub = lazyWithRetry(() => import("./pages/IITMSubjectHub"));
-const CompareResources = lazyWithRetry(() => import("./pages/CompareResources"));
+const IITMSubjectsIndex = lazyWithRetry(() => import("./pages/IITMSubjectsIndex"));
+const GuideRoute = lazyWithRetry(() => import("./pages/GuideRoute"));
 const Career = lazyWithRetry(() => import("./pages/Career"));
 const CareerOpportunities = lazyWithRetry(() => import("./pages/CareerOpportunities"));
 const JobDetails = lazyWithRetry(() => import("./pages/JobDetails"));
@@ -182,12 +183,10 @@ const App = () => (
                   
                   {/* IITM BS ROUTES */}
                   <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
+                  <Route path="/iitm-bs" element={<IITMSubjectsIndex />} />
+                  <Route path="/iitm-bs/:branch/:level" element={<IITMSubjectsIndex />} />
                   <Route path="/iitm-bs/:branch/:level/:subject" element={<IITMSubjectHub />} />
-                  <Route path="/best-iitm-bs-resources" element={<CompareResources path="/best-iitm-bs-resources" />} />
-                  <Route path="/iitm-bs-grade-and-score-tools" element={<CompareResources path="/iitm-bs-grade-and-score-tools" />} />
-                  <Route path="/iitm-bs-qualifier-preparation-resources" element={<CompareResources path="/iitm-bs-qualifier-preparation-resources" />} />
-                  <Route path="/iitm-bs-study-path-by-level" element={<CompareResources path="/iitm-bs-study-path-by-level" />} />
-                  <Route path="/iitm-bs-official-website-guide" element={<CompareResources path="/iitm-bs-official-website-guide" />} />
+                  <Route path="/:slug" element={<GuideRoute />} />
                   {/* Short SEO tool URLs (in sitemap + prerendered) — send real users to the working tools tab. */}
                   <Route path="/iitm-tools/cgpa-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/cgpa-calculator" replace />} />
                   <Route path="/iitm-tools/grade-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/grade-calculator" replace />} />
