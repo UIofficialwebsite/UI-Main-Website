@@ -17,9 +17,6 @@ const ANON_KEY =
 const STATIC: Array<[string, string, string]> = [
   ["/", "daily", "1.0"],
   ["/courses", "daily", "0.9"],
-  ["/courses/category/jee", "weekly", "0.9"],
-  ["/courses/category/neet", "weekly", "0.9"],
-  ["/courses/category/iitm-bs", "weekly", "0.9"],
   ["/exam-preparation/jee/notes", "weekly", "0.8"],
   ["/exam-preparation/jee/pyqs", "weekly", "0.8"],
   ["/exam-preparation/neet/notes", "weekly", "0.8"],
@@ -108,7 +105,7 @@ export default async function handler(): Promise<Response> {
   // Pull live/active dynamic content in parallel. Any failing query just yields
   // an empty list — the sitemap still renders with everything else.
   const [courses, jobs, news, subjects, allSubjects] = await Promise.all([
-    fetchRows("courses?select=id,updated_at&is_live=eq.true"),
+    fetchRows("courses?select=id,updated_at,exam_category&is_live=eq.true"),
     fetchRows("jobs?select=id,updated_at&is_active=eq.true"),
     fetchRows("news_updates?select=id,updated_at"),
     fetchRpc("get_indexable_iitm_subjects"),
@@ -118,6 +115,12 @@ export default async function handler(): Promise<Response> {
   const parts: string[] = [];
   for (const [path, cf, pr] of STATIC) parts.push(urlTag(path, cf, pr, today));
 
+  // A category page is listed only when more than one category has live courses; with one, it is /courses itself.
+  const liveCats = [...new Set(courses.map((c) => String(c.exam_category || "")).filter(Boolean))];
+  if (liveCats.length > 1) {
+    const slugs: Record<string, string> = { "IITM BS": "iitm-bs", JEE: "jee", NEET: "neet" };
+    for (const cat of liveCats) if (slugs[cat]) parts.push(urlTag(`/courses/category/${slugs[cat]}`, "weekly", "0.9", today));
+  }
   for (const c of courses) {
     if (!c.id) continue;
     parts.push(urlTag(`/courses/${c.id}`, "weekly", "0.9", (c.updated_at as string) || today));
