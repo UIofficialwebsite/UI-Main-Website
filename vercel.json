@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/:path(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "^unknowniitians\\.com$"
+        }
+      ],
+      "destination": "https://www.unknowniitians.com/:path",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap.xml",
@@ -20,6 +33,17 @@
       "destination": "https://qzrvctpwefhmcduariuw.supabase.co/functions/v1/share-redirect?path=/:path"
     },
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(Googlebot|bingbot|Slurp|DuckDuckBot|Baiduspider|YandexBot|Applebot|Google-InspectionTool|GoogleOther|GPTBot|OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|anthropic-ai|Amazonbot|CCBot|DuckAssistBot|meta-externalagent|Bytespider|Google-Extended).*"
+        }
+      ],
+      "destination": "/api/seo?path=/"
+    },
+    {
       "source": "/:path((?!api/|s/).*)",
       "has": [
         {
@@ -39,13 +63,19 @@
     {
       "source": "/merchantcontactanantya",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
       ]
     },
     {
       "source": "/MerchantContactAnantya",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
       ]
     },
     {
