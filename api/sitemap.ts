@@ -42,6 +42,7 @@ const STATIC: Array<[string, string, string]> = [
   ["/iitm-bs-grade-and-score-tools", "monthly", "0.7"],
   ["/iitm-bs-qualifier-preparation-resources", "monthly", "0.7"],
   ["/iitm-bs-study-path-by-level", "monthly", "0.7"],
+  ["/iitm-bs-official-website-guide", "monthly", "0.8"],
   ["/career", "weekly", "0.6"],
   ["/career/openings", "weekly", "0.6"],
   ["/about", "monthly", "0.8"],
