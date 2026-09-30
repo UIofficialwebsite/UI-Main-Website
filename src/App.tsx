@@ -61,6 +61,7 @@ const NEETPrep = lazyWithRetry(() => import("./pages/NEETPrep"));
 const IITMBSPrep = lazyWithRetry(() => import("./pages/IITMBSPrep"));
 const IITMBSSubjectNotesPage = lazyWithRetry(() => import("./pages/IITMBSSubjectNotesPage"));
 const IITMSubjectHub = lazyWithRetry(() => import("./pages/IITMSubjectHub"));
+const CompareResources = lazyWithRetry(() => import("./pages/CompareResources"));
 const Career = lazyWithRetry(() => import("./pages/Career"));
 const CareerOpportunities = lazyWithRetry(() => import("./pages/CareerOpportunities"));
 const JobDetails = lazyWithRetry(() => import("./pages/JobDetails"));
@@ -182,6 +183,10 @@ const App = () => (
                   {/* IITM BS ROUTES */}
                   <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
                   <Route path="/iitm-bs/:branch/:level/:subject" element={<IITMSubjectHub />} />
+                  <Route path="/best-iitm-bs-resources" element={<CompareResources path="/best-iitm-bs-resources" />} />
+                  <Route path="/acegrade-alternative" element={<CompareResources path="/acegrade-alternative" />} />
+                  <Route path="/iitmdatascience-alternative" element={<CompareResources path="/iitmdatascience-alternative" />} />
+                  <Route path="/genziitian-alternative" element={<CompareResources path="/genziitian-alternative" />} />
                   {/* Short SEO tool URLs (in sitemap + prerendered) — send real users to the working tools tab. */}
                   <Route path="/iitm-tools/cgpa-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/cgpa-calculator" replace />} />
                   <Route path="/iitm-tools/grade-calculator" element={<Navigate to="/exam-preparation/iitm-bs/tools/data-science/foundation/grade-calculator" replace />} />
