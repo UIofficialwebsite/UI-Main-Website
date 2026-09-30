@@ -97,10 +97,15 @@ export const parseIITMBSUrl = (pathname: string): {
   
   // Parse params based on tab
   if (tab === 'tools') {
-    // tools: /branch/level/tool
-    if (urlParams[0]) branch = branchMap[urlParams[0]];
-    if (urlParams[1]) level = levelMap[urlParams[1]];
-    if (urlParams[2]) tool = toolMap[urlParams[2]];
+    if (urlParams[0] && toolMap[urlParams[0]]) {
+      // tools: /tool — the address search engines list, such as /tools/grade-calculator
+      tool = toolMap[urlParams[0]];
+    } else {
+      // tools: /branch/level/tool
+      if (urlParams[0]) branch = branchMap[urlParams[0]];
+      if (urlParams[1]) level = levelMap[urlParams[1]];
+      if (urlParams[2]) tool = toolMap[urlParams[2]];
+    }
   } else if (tab === 'courses') {
     // courses: /branch
     if (urlParams[0]) branch = branchMap[urlParams[0]];
