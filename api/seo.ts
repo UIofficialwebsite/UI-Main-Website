@@ -9,6 +9,10 @@
 // noindex, so only live batches stay in Google. Everything is edge-cached, so
 // repeat crawls don't re-hit Supabase.
 
+import {
+  CGPA_TOOL_FAQS, GRADE_TOOL_FAQS, HUB_FAQS, HUB_LINKS, MARKS_TOOL_FAQS, NOTES_FAQS, PYQ_FAQS, SCORE_CHECK_FAQ,
+} from "./_shared/seoContent";
+
 export const config = { runtime: "edge" };
 
 const SITE = "https://www.unknowniitians.com";
@@ -370,110 +374,13 @@ const HOME_FAQS: FAQ[] = [
   },
 ];
 
-const NOTES_FAQS: FAQ[] = [
-  {
-    q: "Are IITM BS notes on Unknown IITians free?",
-    a: "Yes. All IITM BS notes on Unknown IITians are free to download as subject-wise PDFs.",
-  },
-  {
-    q: "Which IITM BS subjects have notes?",
-    a: "Notes are available for IITM BS Data Science and Electronic Systems subjects across Qualifier, Foundation, Diploma and Degree levels, organised by branch, level and subject.",
-  },
-  {
-    q: "Do the notes cover all weeks of a subject?",
-    a: "Yes. Notes are organised week by week for each subject so you can follow the full course.",
-  },
-];
 
-// The four IITM BS branches the calculators now support. Kept in one place so
-// every tool FAQ names the same set (Management and Aeronautics are the newer
-// additions alongside the original Data Science and Electronic Systems).
-const TOOL_BRANCHES =
-  "Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems";
 
-const GRADE_TOOL_FAQS: FAQ[] = [
-  {
-    q: "Which IITM BS branches does the grade calculator support?",
-    a: `All four IITM BS branches — ${TOOL_BRANCHES} — across the Foundation, Diploma and Degree levels.`,
-  },
-  {
-    q: "How does the IITM BS grade calculator work?",
-    a: "Pick your branch, level and course, then enter your assignment eligibility average, quiz and end-term scores. It applies the official published grading formula for that course to estimate your final score and letter grade.",
-  },
-  {
-    q: "Is the IITM BS grade calculator free?",
-    a: "Yes. The IITM BS grade calculator on Unknown IITians is completely free to use.",
-  },
-];
 
-const CGPA_TOOL_FAQS: FAQ[] = [
-  {
-    q: "Which IITM BS branches does the CGPA calculator cover?",
-    a: `All four IITM BS branches — ${TOOL_BRANCHES}.`,
-  },
-  {
-    q: "How do I calculate my IITM BS CGPA?",
-    a: "Enter your current CGPA and completed credits, then add your semester subjects with their expected grades. The calculator weights each course by its credits to give your updated CGPA.",
-  },
-  {
-    q: "Is the IITM BS CGPA calculator free?",
-    a: "Yes. The IITM BS CGPA calculator is completely free.",
-  },
-];
 
-const MARKS_TOOL_FAQS: FAQ[] = [
-  {
-    q: "Which IITM BS branches does the marks predictor support?",
-    a: `All four IITM BS branches — ${TOOL_BRANCHES}.`,
-  },
-  {
-    q: "What does the IITM BS marks predictor do?",
-    a: "Enter the internal scores you already have and your target grade, and it works out the end-term score you need to reach that grade using the course's official grading formula.",
-  },
-  {
-    q: "Is the IITM BS marks predictor free?",
-    a: "Yes. The IITM BS marks predictor is completely free.",
-  },
-];
 
-const PYQ_FAQS: FAQ[] = [
-  {
-    q: "Where can I find IITM BS previous year question papers?",
-    a: "On the Unknown IITians PYQs page, free, organised by branch, level, subject, exam and year. You can also practise the same papers online, question by question with answer keys and timed mock tests, on Quiz Space (quizspace.unknowniitians.com).",
-  },
-  {
-    q: "Are the IITM BS PYQs free?",
-    a: "Yes. The previous year papers are free to view and download. Quiz Space is free with a Google sign-in.",
-  },
-  {
-    q: "Which IITM BS exams do the PYQs cover?",
-    a: "Qualifier, Quiz 1, Quiz 2, OPPE and End Term papers, for the Foundation, Diploma and Degree levels.",
-  },
-  {
-    q: "How do I practise IITM BS PYQs online?",
-    a: "Open Quiz Space, choose your branch, level and subject, and attempt any paper on a screen that works like the real exam, with the answer key and explanations after each question.",
-  },
-];
 
-const HUB_FAQS: FAQ[] = [
-  {
-    q: "What does Unknown IITians offer for the IITM BS degree?",
-    a: "Free subject-wise notes, previous year question papers, grade, CGPA and marks calculators, the syllabus and important dates, live Qualifier and Foundation courses, and Quiz Space for practising PYQs online.",
-  },
-  {
-    q: "How do I prepare for the IITM BS Qualifier?",
-    a: "Study the subject notes, solve previous year Qualifier papers under timed conditions on Quiz Space, and join a live Qualifier course if you want daily lectures and doubt-solving.",
-  },
-  {
-    q: "Which IITM BS branches and levels are covered?",
-    a: "Data Science and Electronic Systems across the Qualifier, Foundation, Diploma and Degree levels, with the calculators also covering Management and Aeronautics.",
-  },
-];
 
-const SCORE_CHECK_FAQ: FAQ = {
-  q: "Can I use this as an IITM BS score checker?",
-  a: "Yes. Enter your quiz, assignment and end-term marks and it shows your total score and grade using the course's official grading formula.",
-};
 
 const HOME_EXTRA_FAQS: FAQ[] = [
   {
@@ -534,18 +441,6 @@ function toolApp(name: string, path: string, description: string) {
   };
 }
 
-// Sections listed on the home page and the IITM BS hub, as plain links a crawler can follow.
-const HUB_LINKS: Array<[string, string]> = [
-  ["/exam-preparation/iitm-bs/notes", "IITM BS notes: free subject-wise PDFs"],
-  ["/exam-preparation/iitm-bs/pyqs", "IITM BS PYQs: previous year question papers"],
-  ["/exam-preparation/iitm-bs/tools/grade-calculator", "IITM BS grade calculator and score checker"],
-  ["/exam-preparation/iitm-bs/tools/cgpa-calculator", "IITM BS CGPA calculator"],
-  ["/exam-preparation/iitm-bs/tools/marks-predictor", "IITM BS marks predictor"],
-  ["/exam-preparation/iitm-bs/syllabus", "IITM BS syllabus"],
-  ["/exam-preparation/iitm-bs/dates", "IITM BS important dates"],
-  ["/exam-preparation/iitm-bs/news", "IITM BS news and updates"],
-  ["/courses/category/iitm-bs", "IITM BS live courses: Qualifier, Foundation and Diploma"],
-];
 
 /** Page-by-page extra content: heading, structured data, FAQs and links. */
 // Pages that get extra structured data + visible FAQ content.
@@ -560,16 +455,26 @@ const PAGE_EXTRAS: Record<string, { schema: unknown; faqs?: FAQ[]; h1?: string; 
     h1: "IITM BS Degree Preparation",
     schema: [breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs")!), faqSchema(HUB_FAQS)],
     faqs: HUB_FAQS,
-    links: HUB_LINKS,
+    links: [[QUIZ_SPACE, "Practise IITM BS PYQs online on Quiz Space"], ...HUB_LINKS],
   },
   "/exam-preparation/iitm-bs/pyqs": {
     h1: "IITM BS PYQs: previous year question papers",
     schema: [breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs/pyqs")!), faqSchema(PYQ_FAQS)],
     faqs: PYQ_FAQS,
+    links: [
+      [QUIZ_SPACE, "Practise IITM BS PYQs online on Quiz Space"],
+      ["/exam-preparation/iitm-bs/notes", "IITM BS notes: free subject-wise PDFs"],
+      ["/exam-preparation/iitm-bs/tools/grade-calculator", "IITM BS grade calculator and score checker"],
+    ],
   },
   "/exam-preparation/iitm-bs/notes": {
+    h1: "IITM BS Notes",
     schema: [breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs/notes")!), faqSchema(NOTES_FAQS)],
     faqs: NOTES_FAQS,
+    links: [
+      ["/exam-preparation/iitm-bs/pyqs", "IITM BS PYQs: previous year question papers"],
+      [QUIZ_SPACE, "Practise IITM BS PYQs online on Quiz Space"],
+    ],
   },
   "/exam-preparation/iitm-bs/tools/grade-calculator": {
     h1: "IITM BS Grade Calculator and Score Checker",
