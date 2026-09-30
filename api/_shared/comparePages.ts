@@ -8,25 +8,13 @@
  */
 export const QUIZ_SPACE = "https://quizspace.unknowniitians.com";
 
-export interface CompareSection {
-  heading: string;
-  paragraphs: string[];
-  bullets?: string[];
-}
+import type { ComparePage } from "./pageTypes";
+import { GUIDE_PAGES } from "./guidePages";
 
-export interface ComparePage {
-  path: string;
-  title: string;
-  description: string;
-  h1: string;
-  intro: string;
-  sections: CompareSection[];
-  faqs: Array<{ q: string; a: string }>;
-  links: Array<[string, string]>;
-}
+export type { ComparePage, CompareSection } from "./pageTypes";
 
 export const COMPARE_DISCLAIMER =
-  "Please check any calculator's result against your course's official grading document.";
+  "Unknown IITians is an independent study-resources site and is not affiliated with or endorsed by IIT Madras. Please check official sources for admissions, fees, dates and grading rules, and check any calculator's result against your course's official grading document.";
 
 const OUR_LINKS: Array<[string, string]> = [
   ["/exam-preparation/iitm-bs/tools/grade-calculator", "IITM BS grade calculator and score checker"],
@@ -275,6 +263,9 @@ export const COMPARE_PAGES: ComparePage[] = [
   },
 ];
 
+/** Every guide page: the study-resources guides and the channel and course guides. */
+export const ALL_GUIDES: ComparePage[] = [...COMPARE_PAGES, ...GUIDE_PAGES];
+
 export function comparePageFor(path: string): ComparePage | undefined {
-  return COMPARE_PAGES.find((p) => p.path === path);
+  return ALL_GUIDES.find((p) => p.path === path);
 }
