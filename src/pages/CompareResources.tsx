@@ -10,6 +10,7 @@ import { COMPARE_DISCLAIMER, comparePageFor } from "../../api/_shared/comparePag
  */
 const NAVY = "text-[#1E3A8A]";
 
+/** A guide by its address, or nothing: the route below only renders this for addresses that have one. */
 const CompareResources = ({ path }: { path: string }) => {
   const page = comparePageFor(path);
   useDocumentTitle(page?.title ?? "IITM BS resources", false);
@@ -36,6 +37,19 @@ const CompareResources = ({ path }: { path: string }) => {
               {sec.bullets && (
                 <ul className="mt-3 list-disc pl-5 space-y-1 text-[15px] text-gray-600">
                   {sec.bullets.map((b) => (<li key={b}>{b}</li>))}
+                </ul>
+              )}
+              {sec.links && (
+                <ul className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-2">
+                  {sec.links.map(([href, label]) => (
+                    <li key={href}>
+                      {href.startsWith("http") ? (
+                        <a href={href} target="_blank" rel="noopener" className={`text-[15px] font-medium ${NAVY} hover:underline`}>{label}</a>
+                      ) : (
+                        <Link to={href} className={`text-[15px] font-medium ${NAVY} hover:underline`}>{label}</Link>
+                      )}
+                    </li>
+                  ))}
                 </ul>
               )}
             </section>
