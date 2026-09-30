@@ -928,6 +928,7 @@ async function subjectHubDoc(path: string): Promise<string> {
   const body =
     `<h1>${esc(hub.h1)}</h1>\n  <p>${esc(hub.intro)}</p>` +
     `\n  <h2>Where to go</h2>${list(hub.links)}` +
+    (hub.lectures.length ? `\n  <h2>Free ${esc(subject.subject_name as string)} lectures</h2>${list(hub.lectures)}` : "") +
     (hub.noteTitles.length ? `\n  <h2>Notes in this subject</h2><ul>${hub.noteTitles.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : "") +
     (hub.batches.length ? `\n  <h2>Live batches for ${esc(dbLevel)}</h2>${list(hub.batches)}` : "") +
     (hub.siblingLinks.length ? `\n  <h2>Other ${esc(dbLevel)} subjects</h2>${list(hub.siblingLinks)}` : "") +
@@ -954,7 +955,10 @@ function compareDoc(page: ComparePage): string {
     )
     .join("\n  ");
   const body =
-    `<h1>${esc(page.h1)}</h1>\n  <p>${esc(page.intro)}</p>\n  ${sections}` +
+    `<h1>${esc(page.h1)}</h1>\n  <p>${esc(page.intro)}</p>` +
+    (page.answer ? `\n  <p><strong>${esc(page.answer)}</strong></p>` : "") +
+    (page.cta ? `\n  <p><a href="${esc(page.cta[0])}">${esc(page.cta[1])}</a></p>` : "") +
+    `\n  ${sections}` +
     `\n  <h2>Where to go</h2><ul>${links}</ul>\n  ${faqBody(page.faqs)}\n  <p><small>${esc(COMPARE_DISCLAIMER)}</small></p>`;
   return render({
     title: page.title,
