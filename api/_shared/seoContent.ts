@@ -102,6 +102,7 @@ export const HUB_LINKS: Array<[string, string]> = [
   ["/exam-preparation/iitm-bs/dates", "IITM BS important dates"],
   ["/exam-preparation/iitm-bs/news", "IITM BS news and updates"],
   ["/courses/category/iitm-bs", "IITM BS live courses: Qualifier, Foundation and Diploma"],
+  ["/best-iitm-bs-resources", "Best IITM BS study resources: a comparison guide"],
 ];
 
 export const TOOL_INFO: Record<string, { heading: string; intro: string; faqs: Faq[] }> = {
