@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
+import { LinkTable } from "@/components/seo/DataTables";
 
 /**
  * Unknown IITians in numbers, and where to go next. The figures are the owner's own statements about
- * the channel and its students; the links lead to the free lectures, the subject lists and the guides.
+ * the channel and its students; the table leads to the free lectures, the subject lists and the guides.
  */
 const STATS: Array<[string, string]> = [
   ["1 lakh+", "students have learned from Unknown IITians"],
@@ -11,15 +11,15 @@ const STATS: Array<[string, string]> = [
   ["Free", "notes, previous year papers and calculators"],
 ];
 
-const LINKS: Array<[string, string, boolean]> = [
-  ["/free-iitm-bs-lectures", "Free IITM BS lectures by subject", false],
-  ["/youtube-channel", "The Unknown IITians YouTube channel", false],
-  ["/iitm-bs", "Every IITM BS subject: Maths 1, Maths 2, Stats, CT, Python and more", false],
-  ["/iitm-bs-exam-revision-resources", "Revision for Quiz 1, Quiz 2, End Term and the Qualifier", false],
-  ["/iitm-bs-courses-guide", "IITM BS live batches for Qualifier, Foundation and Diploma", false],
-  ["/best-iitm-bs-resources", "Best IITM BS study resources: a student's guide", false],
-  ["/iitm-bs-vs-jee-neet-alternative", "IITM BS as an alternative to the JEE and NEET route", false],
-  ["/iitm-bs-educators", "Teach IITM BS subjects with Unknown IITians", false],
+const LINKS: Array<[string, string]> = [
+  ["/free-iitm-bs-lectures", "Free IITM BS lectures by subject"],
+  ["/youtube-channel", "The Unknown IITians YouTube channel"],
+  ["/iitm-bs", "Every IITM BS subject: Maths 1, Maths 2, Stats, CT, Python and more"],
+  ["/iitm-bs-exam-revision-resources", "Revision for Quiz 1, Quiz 2, End Term and the Qualifier"],
+  ["/iitm-bs-courses-guide", "IITM BS live batches for Qualifier, Foundation and Diploma"],
+  ["/best-iitm-bs-resources", "Best IITM BS study resources: a student's guide"],
+  ["/iitm-bs-vs-jee-neet-alternative", "IITM BS as an alternative to the JEE and NEET route"],
+  ["/iitm-bs-educators", "Teach IITM BS subjects with Unknown IITians"],
 ];
 
 const ReachSection = () => (
@@ -39,13 +39,9 @@ const ReachSection = () => (
         ))}
       </dl>
 
-      <ul className="mt-10 grid gap-x-8 gap-y-3 md:grid-cols-2">
-        {LINKS.map(([href, label]) => (
-          <li key={href}>
-            <Link to={href} className="text-[15px] font-medium text-[#1E3A8A] hover:underline">{label}</Link>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-10 max-w-4xl">
+        <LinkTable links={LINKS} heading="Where to start" />
+      </div>
     </div>
   </section>
 );
