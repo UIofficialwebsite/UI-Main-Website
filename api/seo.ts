@@ -120,10 +120,12 @@ interface Doc {
   ogImage?: string;
   bodyHtml?: string;
   jsonLd?: unknown;
+  /** The address search engines should treat as the page, when this one is a twin of it. */
+  canonicalPath?: string;
 }
 
 function render(d: Doc): string {
-  const canonical = `${SITE}${d.path}`;
+  const canonical = `${SITE}${d.canonicalPath ?? d.path}`;
   const robots = d.index === false ? "noindex, follow" : "index, follow";
   const og = d.ogImage || DEFAULT_OG;
   const ld = d.jsonLd
@@ -158,10 +160,43 @@ function render(d: Doc): string {
 // Keyword-optimised metadata for the fixed section pages (IITM BS is the niche
 // with the least competition — lead with it).
 const PAGES: Record<string, { title: string; description: string }> = {
-  "/": {
-    title: `${BRAND} — IITM BS, JEE & NEET Live Courses + Free Notes & PYQs`,
+  "/exam-preparation/iitm-bs": {
+    title: "IITM BS Degree Preparation: Notes, PYQs, Tools & Courses",
     description:
-      "Unknown IITians offers IITM BS Qualifier & Foundation live courses, plus free notes, previous year questions (PYQs), and tools for IITM BS, JEE and NEET aspirants.",
+      "All you need for the IIT Madras BS degree: free notes, previous year papers, grade & CGPA calculators, syllabus, dates and live Qualifier courses.",
+  },
+  "/exam-preparation/iitm-bs/courses": {
+    title: "IITM BS Courses: Live Qualifier & Foundation Batches | Unknown IITians",
+    description:
+      "Live IITM BS courses for the Qualifier and Foundation levels: daily live lectures, practice papers, doubt-solving and mentor guidance from Unknown IITians.",
+  },
+  "/exam-preparation/iitm-bs/news": {
+    title: "IITM BS News & Updates: Exams, Results, Notices | Unknown IITians",
+    description: "The latest IIT Madras BS degree news: exam schedules, results, portal notices and important announcements, kept up to date.",
+  },
+  "/exam-preparation/iitm-bs/communities": {
+    title: "IITM BS Communities: Study Groups & Discussions | Unknown IITians",
+    description: "Join IITM BS study groups and communities to discuss subjects, share notes and get help from other students.",
+  },
+  "/exam-preparation/iitm-bs/tools/grade-calculator": {
+    title: "IITM BS Grade Calculator: Check Your Score & Grade (Free)",
+    description:
+      "Free IITM BS grade calculator and score checker: enter quiz, assignment and end-term marks to see your total score and letter grade for all four branches.",
+  },
+  "/exam-preparation/iitm-bs/tools/cgpa-calculator": {
+    title: "IITM BS CGPA Calculator: Calculate Your CGPA (Free)",
+    description:
+      "Free IITM BS CGPA calculator: add your subjects, credits and grades to get your CGPA for Foundation, Diploma and Degree, across all four branches.",
+  },
+  "/exam-preparation/iitm-bs/tools/marks-predictor": {
+    title: "IITM BS Marks Predictor: Marks Needed for Your Target Grade",
+    description:
+      "Free IITM BS marks predictor: enter your current scores and target grade to see the end-term marks you need, using each course's official formula.",
+  },
+  "/": {
+    title: `${BRAND}: IITM BS Courses, Notes, PYQs & Free Tools`,
+    description:
+      "Live IITM BS Qualifier & Foundation courses, free notes, previous year papers, grade & CGPA calculators, and Quiz Space for online PYQ practice.",
   },
   "/courses": {
     title: `All Live Courses — IITM BS, JEE & NEET | ${BRAND}`,
@@ -187,9 +222,9 @@ const PAGES: Record<string, { title: string; description: string }> = {
       "Free IITM BS notes for Data Science and Electronic Systems, organised by branch, level and subject — download subject-wise PDF notes.",
   },
   "/exam-preparation/iitm-bs/pyqs": {
-    title: `IITM BS Previous Year Questions (PYQs) — Free PDFs | ${BRAND}`,
+    title: "IITM BS PYQs: Previous Year Question Papers with Solutions",
     description:
-      "Free IITM BS previous year question papers (PYQs) with solutions, organised by subject and term — download and practice.",
+      "Free IITM BS previous year question papers: Qualifier, Quiz 1, Quiz 2, OPPE and End Term. Download PDFs or practise online with answer keys on Quiz Space.",
   },
   "/exam-preparation/iitm-bs/syllabus": {
     title: `IITM BS Syllabus — Data Science & Electronic Systems | ${BRAND}`,
@@ -218,18 +253,6 @@ const PAGES: Record<string, { title: string; description: string }> = {
   "/exam-preparation/neet/pyqs": {
     title: `NEET Previous Year Questions (PYQs) — Free PDFs | ${BRAND}`,
     description: "Free NEET previous year question papers with solutions — download and practice.",
-  },
-  "/iitm-tools/cgpa-calculator": {
-    title: `IITM BS CGPA Calculator — All Branches (Free) | ${BRAND}`,
-    description: "Free IITM BS CGPA calculator for all four branches — Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems — across Foundation, Diploma and Degree levels.",
-  },
-  "/iitm-tools/grade-calculator": {
-    title: `IITM BS Grade Calculator — All Branches (Free) | ${BRAND}`,
-    description: "Free IITM BS grade calculator for all four branches (Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, Electronic Systems) — estimate your subject grade from quiz, assignment and end-term scores using the official grading formula.",
-  },
-  "/iitm-tools/marks-predictor": {
-    title: `IITM BS Marks Predictor — All Branches (Free) | ${BRAND}`,
-    description: "Free IITM BS marks predictor for all four branches — Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems — find the end-term score you need to reach your target grade.",
   },
   "/career": {
     title: `Careers at ${BRAND} — Jobs & Internships`,
@@ -280,9 +303,13 @@ const EDU_ORG = {
     "NEET",
   ],
   areaServed: "IN",
+  alternateName: ["UnknownIITians", "Unknown IITian", "Unknown IITians Quiz Space"],
   sameAs: [
     "https://www.youtube.com/@UnknownIITians",
     "https://www.instagram.com/unknown_iitians",
+    "https://www.linkedin.com/company/unknown-iitians/",
+    "https://t.me/bsdatascience_iitm",
+    "https://quizspace.unknowniitians.com",
   ],
 };
 
@@ -409,14 +436,170 @@ const MARKS_TOOL_FAQS: FAQ[] = [
   },
 ];
 
-// Pages that get extra structured data + visible FAQ content.
-const PAGE_EXTRAS: Record<string, { schema: unknown; faqs?: FAQ[] }> = {
-  "/": { schema: [EDU_ORG, WEBSITE_SCHEMA, faqSchema(HOME_FAQS)], faqs: HOME_FAQS },
-  "/exam-preparation/iitm-bs/notes": { schema: [faqSchema(NOTES_FAQS)], faqs: NOTES_FAQS },
-  "/iitm-tools/grade-calculator": { schema: [faqSchema(GRADE_TOOL_FAQS)], faqs: GRADE_TOOL_FAQS },
-  "/iitm-tools/cgpa-calculator": { schema: [faqSchema(CGPA_TOOL_FAQS)], faqs: CGPA_TOOL_FAQS },
-  "/iitm-tools/marks-predictor": { schema: [faqSchema(MARKS_TOOL_FAQS)], faqs: MARKS_TOOL_FAQS },
+const PYQ_FAQS: FAQ[] = [
+  {
+    q: "Where can I find IITM BS previous year question papers?",
+    a: "On the Unknown IITians PYQs page, free, organised by branch, level, subject, exam and year. You can also practise the same papers online, question by question with answer keys and timed mock tests, on Quiz Space (quizspace.unknowniitians.com).",
+  },
+  {
+    q: "Are the IITM BS PYQs free?",
+    a: "Yes. The previous year papers are free to view and download. Quiz Space is free with a Google sign-in.",
+  },
+  {
+    q: "Which IITM BS exams do the PYQs cover?",
+    a: "Qualifier, Quiz 1, Quiz 2, OPPE and End Term papers, for the Foundation, Diploma and Degree levels.",
+  },
+  {
+    q: "How do I practise IITM BS PYQs online?",
+    a: "Open Quiz Space, choose your branch, level and subject, and attempt any paper on a screen that works like the real exam, with the answer key and explanations after each question.",
+  },
+];
+
+const HUB_FAQS: FAQ[] = [
+  {
+    q: "What does Unknown IITians offer for the IITM BS degree?",
+    a: "Free subject-wise notes, previous year question papers, grade, CGPA and marks calculators, the syllabus and important dates, live Qualifier and Foundation courses, and Quiz Space for practising PYQs online.",
+  },
+  {
+    q: "How do I prepare for the IITM BS Qualifier?",
+    a: "Study the subject notes, solve previous year Qualifier papers under timed conditions on Quiz Space, and join a live Qualifier course if you want daily lectures and doubt-solving.",
+  },
+  {
+    q: "Which IITM BS branches and levels are covered?",
+    a: "Data Science and Electronic Systems across the Qualifier, Foundation, Diploma and Degree levels, with the calculators also covering Management and Aeronautics.",
+  },
+];
+
+const SCORE_CHECK_FAQ: FAQ = {
+  q: "Can I use this as an IITM BS score checker?",
+  a: "Yes. Enter your quiz, assignment and end-term marks and it shows your total score and grade using the course's official grading formula.",
 };
+
+const HOME_EXTRA_FAQS: FAQ[] = [
+  {
+    q: "What is Quiz Space?",
+    a: "Quiz Space is Unknown IITians' site for practising IITM BS previous year papers online, with answer keys, explanations and timed mock tests, at quizspace.unknowniitians.com.",
+  },
+];
+
+const TOOL_NAMES: Record<string, string> = {
+  "grade-calculator": "Grade Calculator",
+  "cgpa-calculator": "CGPA Calculator",
+  "marks-predictor": "Marks Predictor",
+};
+
+const CRUMB_NAMES: Record<string, string> = {
+  pyqs: "PYQs", notes: "Notes", tools: "Tools", courses: "Courses", news: "News",
+  communities: "Communities", syllabus: "Syllabus", dates: "Important dates", ...TOOL_NAMES,
+};
+
+function breadcrumbSchema(items: Array<[string, string]>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map(([name, path], i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name,
+      item: `${SITE}${path}`,
+    })),
+  };
+}
+
+/** Home > IITM BS > … for the IITM BS section's own pages. */
+function crumbsFor(path: string): Array<[string, string]> | null {
+  const parts = path.split("/").filter(Boolean);
+  if (parts[0] !== "exam-preparation" || parts[1] !== "iitm-bs") return null;
+  const out: Array<[string, string]> = [["Home", "/"], ["IITM BS", "/exam-preparation/iitm-bs"]];
+  let acc = "/exam-preparation/iitm-bs";
+  for (const seg of parts.slice(2)) {
+    acc += `/${seg}`;
+    out.push([CRUMB_NAMES[seg] ?? seg.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()), acc]);
+  }
+  return out;
+}
+
+function toolApp(name: string, path: string, description: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name,
+    url: `${SITE}${path}`,
+    description,
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Any",
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+    publisher: { "@type": "Organization", name: BRAND, url: SITE },
+  };
+}
+
+// Sections listed on the home page and the IITM BS hub, as plain links a crawler can follow.
+const HUB_LINKS: Array<[string, string]> = [
+  ["/exam-preparation/iitm-bs/notes", "IITM BS notes: free subject-wise PDFs"],
+  ["/exam-preparation/iitm-bs/pyqs", "IITM BS PYQs: previous year question papers"],
+  ["/exam-preparation/iitm-bs/tools/grade-calculator", "IITM BS grade calculator and score checker"],
+  ["/exam-preparation/iitm-bs/tools/cgpa-calculator", "IITM BS CGPA calculator"],
+  ["/exam-preparation/iitm-bs/tools/marks-predictor", "IITM BS marks predictor"],
+  ["/exam-preparation/iitm-bs/syllabus", "IITM BS syllabus"],
+  ["/exam-preparation/iitm-bs/dates", "IITM BS important dates"],
+  ["/exam-preparation/iitm-bs/news", "IITM BS news and updates"],
+  ["/courses/category/iitm-bs", "IITM BS live courses: Qualifier, Foundation and Diploma"],
+];
+
+/** Page-by-page extra content: heading, structured data, FAQs and links. */
+// Pages that get extra structured data + visible FAQ content.
+const PAGE_EXTRAS: Record<string, { schema: unknown; faqs?: FAQ[]; h1?: string; links?: Array<[string, string]> }> = {
+  "/": {
+    h1: `${BRAND}: IITM BS courses, notes, PYQs and free tools`,
+    schema: [EDU_ORG, WEBSITE_SCHEMA, faqSchema([...HOME_FAQS, ...HOME_EXTRA_FAQS])],
+    faqs: [...HOME_FAQS, ...HOME_EXTRA_FAQS],
+    links: [...HUB_LINKS, ["/courses", "All live courses"], ["/exam-preparation/jee", "JEE preparation"], ["/exam-preparation/neet", "NEET preparation"]],
+  },
+  "/exam-preparation/iitm-bs": {
+    h1: "IITM BS Degree Preparation",
+    schema: [breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs")!), faqSchema(HUB_FAQS)],
+    faqs: HUB_FAQS,
+    links: HUB_LINKS,
+  },
+  "/exam-preparation/iitm-bs/pyqs": {
+    h1: "IITM BS PYQs: previous year question papers",
+    schema: [breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs/pyqs")!), faqSchema(PYQ_FAQS)],
+    faqs: PYQ_FAQS,
+  },
+  "/exam-preparation/iitm-bs/notes": {
+    schema: [breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs/notes")!), faqSchema(NOTES_FAQS)],
+    faqs: NOTES_FAQS,
+  },
+  "/exam-preparation/iitm-bs/tools/grade-calculator": {
+    h1: "IITM BS Grade Calculator and Score Checker",
+    schema: [
+      breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs/tools/grade-calculator")!),
+      toolApp("IITM BS Grade Calculator", "/exam-preparation/iitm-bs/tools/grade-calculator", "Estimate your IITM BS subject score and grade from quiz, assignment and end-term marks."),
+      faqSchema([...GRADE_TOOL_FAQS, SCORE_CHECK_FAQ]),
+    ],
+    faqs: [...GRADE_TOOL_FAQS, SCORE_CHECK_FAQ],
+  },
+  "/exam-preparation/iitm-bs/tools/cgpa-calculator": {
+    h1: "IITM BS CGPA Calculator",
+    schema: [
+      breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs/tools/cgpa-calculator")!),
+      toolApp("IITM BS CGPA Calculator", "/exam-preparation/iitm-bs/tools/cgpa-calculator", "Calculate your IITM BS CGPA from subjects, credits and grades."),
+      faqSchema(CGPA_TOOL_FAQS),
+    ],
+    faqs: CGPA_TOOL_FAQS,
+  },
+  "/exam-preparation/iitm-bs/tools/marks-predictor": {
+    h1: "IITM BS Marks Predictor",
+    schema: [
+      breadcrumbSchema(crumbsFor("/exam-preparation/iitm-bs/tools/marks-predictor")!),
+      toolApp("IITM BS Marks Predictor", "/exam-preparation/iitm-bs/tools/marks-predictor", "Find the IITM BS end-term marks you need for your target grade."),
+      faqSchema(MARKS_TOOL_FAQS),
+    ],
+    faqs: MARKS_TOOL_FAQS,
+  },
+};
+
 
 // ---- route handlers --------------------------------------------------------
 
@@ -589,6 +772,75 @@ function toolBranchDoc(path: string): string {
   return render({ title, description: desc, path, jsonLd: faqSchema(faqs), bodyHtml: body });
 }
 
+const LEVEL_LABELS: Record<string, string> = {
+  foundation: "Foundation", diploma: "Diploma", degree: "Degree", qualifier: "Qualifier", bs: "BS Degree", bsc: "BSc Degree",
+};
+
+/** A calculator for one branch and level: /exam-preparation/iitm-bs/tools/<branch>/<level>/<tool>, or its /iitm-tools twin. */
+const TOOL_BRANCH_SHORT: Record<string, string> = {
+  "data-science": "Data Science",
+  "management-data-science": "Management",
+  "aeronautics-space-technology": "Aeronautics",
+  "electronic-systems": "Electronic Systems",
+};
+
+function toolLevelDoc(branch: string, level: string, tool: string, twin: boolean): string | null {
+  const name = TOOL_NAMES[tool];
+  const branchLabel = TOOL_BRANCH_LABELS[branch];
+  const levelLabel = LEVEL_LABELS[level];
+  if (!name || !branchLabel || !levelLabel) return null;
+  const canonical = `/exam-preparation/iitm-bs/tools/${branch}/${level}/${tool}`;
+  const path = twin ? `/iitm-tools/${tool}/${branch}/${level}` : canonical;
+  const short = TOOL_BRANCH_SHORT[branch] ?? branchLabel;
+  const title = `IITM BS ${name}: ${short} ${levelLabel} (Free)`;
+  const desc = `Free IITM BS ${name} for ${short} ${levelLabel}, using the official grading formula of each ${levelLabel} course. Works on phone and desktop.`;
+  const faqs: FAQ[] = [
+    {
+      q: `Does this ${name} cover IITM BS ${branchLabel} ${levelLabel}?`,
+      a: `Yes. It applies the official grading formula of each ${branchLabel} ${levelLabel} course.`,
+    },
+    {
+      q: `Is the IITM BS ${short} ${name} free?`,
+      a: `Yes. It is completely free to use on ${BRAND}.`,
+    },
+    ...(tool === "grade-calculator" ? [SCORE_CHECK_FAQ] : []),
+  ];
+  const links = HUB_LINKS.filter(([href]) => href.includes("/tools/") || href.endsWith("/pyqs") || href.endsWith("/notes"));
+  const body = `<h1>IITM BS ${esc(name)}: ${esc(branchLabel)} ${esc(levelLabel)}</h1>\n  <p>${esc(desc)}</p>\n  <h2>More for IITM BS students</h2>${linkList(links)}\n  ${faqBody(faqs)}`;
+  return render({
+    title, description: desc, path, canonicalPath: canonical,
+    jsonLd: [
+      breadcrumbSchema([["Home", "/"], ["IITM BS", "/exam-preparation/iitm-bs"], ["Tools", "/exam-preparation/iitm-bs/tools"], [`${name}: ${branchLabel} ${levelLabel}`, canonical]]),
+      toolApp(`IITM BS ${name}: ${branchLabel} ${levelLabel}`, canonical, desc),
+      faqSchema(faqs),
+    ],
+    bodyHtml: body,
+  });
+}
+
+/** The subjects of one branch and level, with a link to each one's notes. */
+async function notesLevelDoc(path: string): Promise<string> {
+  const [, , , , branchSlug, levelSlug] = path.split("/");
+  const dbBranch = branchToDb(branchSlug);
+  const dbLevel = levelToDb(levelSlug);
+  const subjects = await fetchRows(
+    `iitm_bs_subjects?select=id,subject_name&branch=eq.${encodeURIComponent(dbBranch)}&level=eq.${encodeURIComponent(dbLevel)}&order=subject_name.asc`
+  );
+  if (subjects.length === 0) {
+    return render({ title: `IITM BS ${dbLevel} Notes | ${BRAND}`, description: `Free IITM BS ${dbLevel} notes by ${BRAND}.`, path, index: false });
+  }
+  const title = `IITM BS ${dbLevel} Notes: ${dbBranch} (Free PDFs) | ${BRAND}`;
+  const desc = `Free IITM BS ${dbLevel} notes for ${dbBranch}: subject-wise, week-wise PDF notes for ${subjects.length} subjects, including ${subjects.slice(0, 3).map((x) => String(x.subject_name)).join(", ")}.`;
+  const list = subjects
+    .map((x) => `<li><a href="${esc(`${path}/${slugify(String(x.subject_name))}`)}">${esc(String(x.subject_name))} notes</a></li>`)
+    .join("");
+  const body = `<h1>IITM BS ${esc(dbLevel)} Notes: ${esc(dbBranch)}</h1>\n  <p>${esc(desc)}</p>\n  <h2>Subjects</h2><ul>${list}</ul>`;
+  return render({
+    title, description: desc, path, bodyHtml: body,
+    jsonLd: breadcrumbSchema([["Home", "/"], ["IITM BS", "/exam-preparation/iitm-bs"], ["Notes", "/exam-preparation/iitm-bs/notes"], [`${dbBranch} ${dbLevel}`, path]]),
+  });
+}
+
 function titleFromPath(path: string): string {
   const last = path.split("/").filter(Boolean).pop() || "";
   const words = last.replace(/[-_]/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -627,24 +879,42 @@ export default async function handler(req: Request): Promise<Response> {
 
   const courseMatch = path.match(/^\/courses\/([0-9a-fA-F-]{36})$/);
   const notesSubjectMatch = /^\/exam-preparation\/iitm-bs\/notes\/[^/]+\/[^/]+\/[^/]+$/.test(path);
+  const notesLevelMatch = /^\/exam-preparation\/iitm-bs\/notes\/[^/]+\/[^/]+$/.test(path);
   const toolBranchMatch = /^\/iitm-tools\/[^/]+\/[^/]+$/.test(path);
+  const toolTwinLevel = path.match(/^\/iitm-tools\/([^/]+)\/([^/]+)\/([^/]+)$/);
+  const toolLevel = path.match(/^\/exam-preparation\/iitm-bs\/tools\/([^/]+)\/([^/]+)\/([^/]+)$/);
+  // The old /iitm-tools/<tool> addresses are twins of the tool pages under /exam-preparation:
+  // same page, one canonical, so their rankings add up instead of competing.
+  const twinOf = path.match(/^\/iitm-tools\/(grade-calculator|cgpa-calculator|marks-predictor)$/);
+  let levelDoc: string | null = null;
+  if (toolTwinLevel) levelDoc = toolLevelDoc(toolTwinLevel[2], toolTwinLevel[3], toolTwinLevel[1], true);
+  else if (toolLevel) levelDoc = toolLevelDoc(toolLevel[1], toolLevel[2], toolLevel[3], false);
+
   if (courseMatch) {
     html = await courseDoc(courseMatch[1]);
   } else if (notesSubjectMatch) {
     html = await notesSubjectDoc(path);
+  } else if (notesLevelMatch) {
+    html = await notesLevelDoc(path);
+  } else if (levelDoc) {
+    html = levelDoc;
   } else if (toolBranchMatch) {
     html = toolBranchDoc(path);
   } else if (path === "/courses" || path.startsWith("/courses/category/")) {
     html = await listingDoc(path);
-  } else if (PAGES[path]) {
-    const meta = PAGES[path];
-    const extra = PAGE_EXTRAS[path];
-    const practice = path === "/exam-preparation/iitm-bs/pyqs" ? `\n  ${quizSpacePractice()}` : "";
+  } else if (PAGES[twinOf ? `/exam-preparation/iitm-bs/tools/${twinOf[1]}` : path]) {
+    const key = twinOf ? `/exam-preparation/iitm-bs/tools/${twinOf[1]}` : path;
+    const meta = PAGES[key];
+    const extra = PAGE_EXTRAS[key];
+    const practice = key === "/exam-preparation/iitm-bs/pyqs" ? `\n  ${quizSpacePractice()}` : "";
+    const links = extra?.links ? `\n  <h2>Explore</h2>${linkList(extra.links)}` : "";
     const bodyHtml =
-      extra?.faqs || practice
-        ? `<h1>${esc(meta.title)}</h1>\n  <p>${esc(meta.description)}</p>${practice}${extra?.faqs ? `\n  ${faqBody(extra.faqs)}` : ""}`
+      extra || practice
+        ? `<h1>${esc(extra?.h1 ?? meta.title)}</h1>\n  <p>${esc(meta.description)}</p>${practice}${links}${extra?.faqs ? `\n  ${faqBody(extra.faqs)}` : ""}`
         : undefined;
-    html = render({ ...meta, path, jsonLd: extra?.schema, bodyHtml });
+    const crumbs = crumbsFor(key);
+    const jsonLd = extra?.schema ?? (crumbs ? breadcrumbSchema(crumbs) : undefined);
+    html = render({ ...meta, path, canonicalPath: twinOf ? key : undefined, jsonLd, bodyHtml });
   } else {
     // Generic fallback: derive a sensible title from the path.
     html = render({
