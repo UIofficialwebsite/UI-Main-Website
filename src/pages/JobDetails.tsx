@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { usePageSEO, getJobTitleSEO } from "@/utils/seoManager";
 import { supabase } from "@/integrations/supabase/client";
 
-const SITE = "https://unknowniitians.com";
+const SITE = "https://www.unknowniitians.com";
 
 const JobDetails = () => {
   const { jobId } = useParams<{ jobId: string }>();
