@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import PageInfo from "@/components/iitm/PageInfo";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import SubjectBlock from "@/components/SubjectBlock";
 import JEEPYQTab from "@/components/JEEPYQTab";
@@ -336,7 +337,10 @@ const JEEPrep = () => {
             {activeTab === "important-dates" && <ImportantDatesTab examType="JEE" sortOrder={sortOrder} />}
           </div>
         </section>
-      </main>
+            <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+        <PageInfo pathname={location.pathname} />
+      </div>
+</main>
       <Footer />
     </div>
   );
