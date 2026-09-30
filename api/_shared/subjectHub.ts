@@ -8,6 +8,7 @@
  * with no Quiz Space counterpart (mostly labs) link to their level's page there instead.
  */
 import { lecturesFor } from "./lectures";
+import { aliasForSubject, displayName } from "./subjectAliases";
 
 export const QUIZ_SPACE = "https://quizspace.unknowniitians.com";
 export const YOUTUBE_CHANNEL = "https://www.youtube.com/@UnknownIITians";
@@ -121,41 +122,59 @@ export function hubContent(i: HubInput): HubContent {
   const tools = `/exam-preparation/iitm-bs/tools/${slugify(branch)}/${slugify(level)}`;
   const quiz = quizSpaceLink(branch, level, subject);
   const n = i.notes.length;
+  const lectures = lecturesFor(slugify(branch), slugify(level), slugify(subject));
 
-  const title = `IITM BS ${subject}: Notes, PYQs & Tools`;
+  // The name students search: "Maths 2", not "Mathematics for Data Science II".
+  const alias = aliasForSubject(slugify(subject));
+  const short = alias?.short ?? subject;
+  const isShort = short !== subject;
+  const spellings = alias ? alias.also.filter((x) => x !== subject && x !== short) : [];
+
+  const title = `${short} IITM BS ${level}: Notes, PYQs & Tools`;
   const description =
-    `IITM BS ${subject} (${level}): ${n > 0 ? `${n} free week-wise notes, ` : "free notes, "}PYQs to practise online, and grade, CGPA and marks calculators.`;
+    `IITM BS ${short}${isShort ? ` (${subject})` : ""}, ${level}: ${n > 0 ? `${n} free notes, ` : "free notes, "}PYQs to practise online, ` +
+    `${lectures.length ? "free lectures " : ""}and a grade calculator.`;
   const intro =
-    `${subject} is a ${level}-level subject of the IIT Madras BS degree in ${branch}. ` +
-    `Here are the free week-wise notes, previous year question papers you can practise online, and the grade, CGPA and marks calculators for it.`;
+    `${isShort ? `${short} is short for ${subject}, a` : `${subject} is a`} ${level}-level subject of the IIT Madras BS degree in ${branch}. ` +
+    `${spellings.length ? `Students also search it as ${spellings.slice(0, 3).join(", ")}. ` : ""}` +
+    `Here are its free week-wise notes, previous year question papers you can practise online, ${lectures.length ? "free lectures, " : ""}and the grade calculator.`;
 
   const links: Array<[string, string]> = [
-    [notesPath, `${subject} notes: free week-wise PDFs`],
-    [quiz.href, quiz.exact ? `Practise ${subject} PYQs online on Quiz Space` : `Practise ${level} PYQs online on Quiz Space`],
+    [notesPath, `${short} notes: free week-wise PDFs`],
+    [quiz.href, quiz.exact ? `Practise ${short} PYQs online on Quiz Space` : `Practise ${level} PYQs online on Quiz Space`],
     ["/exam-preparation/iitm-bs/pyqs", "IITM BS PYQs: previous year question papers"],
     [`${tools}/grade-calculator`, `${level} grade calculator and score checker`],
     [`${tools}/marks-predictor`, `${level} marks predictor`],
     [`${tools}/cgpa-calculator`, `${level} CGPA calculator`],
-    [`${YOUTUBE_CHANNEL}/search?query=${encodeURIComponent(`IITM BS ${subject}`)}`, `Watch IITM BS ${subject} videos on YouTube`],
+    [`${YOUTUBE_CHANNEL}/search?query=${encodeURIComponent(`IITM BS ${short}`)}`, `Watch IITM BS ${short} videos on YouTube`],
   ];
-  const lectures = lecturesFor(slugify(branch), slugify(level), slugify(subject));
 
   const batches = i.batches.map((b): [string, string] => [`/courses/${b.id}`, b.price ? `${b.title} (₹${Math.round(b.price)})` : `${b.title} (free)`]);
 
   const faqs = [
+    ...(isShort
+      ? [{ q: `What is ${short} in IITM BS?`, a: `${short} is short for ${subject}, a ${level}-level subject in the IITM BS ${branch} degree.${spellings.length ? ` It is also written ${spellings.slice(0, 3).join(", ")}.` : ""}` }]
+      : []),
     {
-      q: `Where can I get IITM BS ${subject} notes?`,
-      a: `Unknown IITians has free week-wise ${subject} notes for IITM BS ${branch} ${level}${n > 0 ? `, ${n} in all` : ""}. Open the notes page for this subject and download the PDFs.`,
+      q: `Where can I get IITM BS ${short} notes?`,
+      a: `Unknown IITians has free week-wise ${short} notes for IITM BS ${branch} ${level}${n > 0 ? `, ${n} in all` : ""}. Open the Notes tab on this page and download the PDFs.`,
     },
     {
-      q: `Where can I practise IITM BS ${subject} previous year questions?`,
+      q: `Where can I practise IITM BS ${short} previous year questions?`,
       a: quiz.exact
         ? `On Quiz Space, question by question with the answer key, on a screen that works like the real exam. It is free with a Google sign-in.`
         : `On Quiz Space, which has previous year papers for the ${level} level with answer keys and timed mock tests. It is free with a Google sign-in.`,
     },
+    ...(lectures.length
+      ? [{ q: `Are there free IITM BS ${short} lectures?`, a: `Yes. The Lectures tab plays the free ${short} lecture playlists from the Unknown IITians YouTube channel, and there are Fastrack revision series for the exams.` }]
+      : []),
     {
-      q: `How do I calculate my ${subject} grade?`,
-      a: `Use the ${level} grade calculator: pick ${subject}, enter your quiz, assignment and end-term marks, and it shows your total score and letter grade with the course's official formula.`,
+      q: `How do I calculate my ${short} grade?`,
+      a: `Use the Grade calculator tab: it is set to ${short}, so enter your quiz, assignment and end-term marks and it shows your total score and letter grade with the course's official formula.`,
+    },
+    {
+      q: `Where is the ${short} syllabus?`,
+      a: `The IITM BS syllabus page lists the syllabus for each level, and the week-wise notes here follow the course week by week.`,
     },
     {
       q: `Is there a live batch for IITM BS ${level}?`,
@@ -169,19 +188,19 @@ export function hubContent(i: HubInput): HubContent {
     path,
     title,
     description,
-    h1: `IITM BS ${subject}`,
+    h1: isShort ? `IITM BS ${short} (${subject})` : `IITM BS ${subject}`,
     intro,
     links,
     lectures,
     noteTitles: i.notes.map((x) => x.title),
     batches,
-    siblingLinks: i.siblings.filter((s) => s !== subject).map((s): [string, string] => [hubPath(branch, level, s), `${s}`]),
+    siblingLinks: i.siblings.filter((s) => s !== subject).map((s): [string, string] => [hubPath(branch, level, s), displayName(slugify(s), s)]),
     faqs,
     crumbs: [
       ["Home", "/"],
       ["IITM BS", "/exam-preparation/iitm-bs"],
       [`${branch} ${level}`, `/exam-preparation/iitm-bs/notes/${slugify(branch)}/${slugify(level)}`],
-      [subject, path],
+      [short, path],
     ],
   };
 }
