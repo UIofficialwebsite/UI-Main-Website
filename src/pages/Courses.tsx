@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import PageInfo from "@/components/iitm/PageInfo";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import CourseCard from "@/components/courses/CourseCard";
 import HeroCarousel from "@/components/HeroCarousel";
@@ -154,7 +155,10 @@ const Courses = () => {
             })}
           </section>
         </div>
-      </main>
+            <div className="max-w-6xl mx-auto px-4 md:px-8 pb-12">
+        <PageInfo pathname={location.pathname} />
+      </div>
+</main>
 
       <Footer />
     </div>
