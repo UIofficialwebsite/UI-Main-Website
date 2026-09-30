@@ -125,9 +125,63 @@ export const TOOL_INFO: Record<string, { heading: string; intro: string; faqs: F
   },
 };
 
+
+export const COURSES_FAQS: Faq[] = [
+  {
+    q: "What live courses does Unknown IITians offer?",
+    a: "Live IITM BS batches for the Qualifier, Foundation and Diploma levels, with lectures, practice papers and doubt-solving. The batches open for enrolment are listed on this page.",
+  },
+  {
+    q: "How much do the live batches cost?",
+    a: "Prices differ by batch. Some batches have their own price; in others you choose the subjects you want and pay per subject. Each course page shows its price and what it covers.",
+  },
+  {
+    q: "Do you have JEE and NEET courses?",
+    a: "Free JEE and NEET notes and previous year questions are on the site. Live JEE and NEET batches appear here when they are open.",
+  },
+  {
+    q: "Where are the free IITM BS resources?",
+    a: "Free notes, previous year papers, calculators and Quiz Space are on the IITM BS preparation page.",
+  },
+];
+
+const COURSES_LINKS: Array<[string, string]> = [
+  ["/exam-preparation/iitm-bs", "IITM BS degree preparation: notes, PYQs and tools"],
+  ["/exam-preparation/iitm-bs/notes", "IITM BS notes: free subject-wise PDFs"],
+  ["/exam-preparation/iitm-bs/pyqs", "IITM BS PYQs: previous year question papers"],
+  [QUIZ_SPACE, "Practise IITM BS PYQs online on Quiz Space"],
+];
+
+const JEE_FAQS: Faq[] = [
+  { q: "Are JEE notes and PYQs free on Unknown IITians?", a: "Yes. Free JEE notes for Physics, Chemistry and Mathematics, and free JEE previous year question papers, are available to download." },
+  { q: "Which JEE subjects have notes?", a: "Physics, Chemistry and Mathematics, as subject-wise PDF notes." },
+];
+
+const NEET_FAQS: Faq[] = [
+  { q: "Are NEET notes and PYQs free on Unknown IITians?", a: "Yes. Free NEET notes for Physics, Chemistry and Biology, and free NEET previous year question papers, are available to download." },
+  { q: "Which NEET subjects have notes?", a: "Physics, Chemistry and Biology, as subject-wise PDF notes." },
+];
+
 /** What to show below the page at this address, or null where the page needs nothing more. */
 export function infoFor(pathname: string): InfoBlock | null {
   const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] === "courses" && (parts.length === 1 || (parts[1] === "category" && parts.length === 3))) {
+    return {
+      heading: "About IITM BS live courses",
+      intro: "Live batches from Unknown IITians, with lectures, practice papers and doubt-solving. Open a course to see its dates, price and what it covers.",
+      links: COURSES_LINKS,
+      faqs: COURSES_FAQS,
+    };
+  }
+  if (parts[0] === "exam-preparation" && (parts[1] === "jee" || parts[1] === "neet") && parts.length <= 3) {
+    const exam = parts[1] === "jee" ? "JEE" : "NEET";
+    return {
+      heading: `${exam} preparation: free notes and PYQs`,
+      intro: `Free ${exam} notes and previous year question papers from Unknown IITians, to download and practise.`,
+      links: [[`/exam-preparation/${parts[1]}/notes`, `${exam} notes: free subject-wise PDFs`], [`/exam-preparation/${parts[1]}/pyqs`, `${exam} PYQs: previous year question papers`]],
+      faqs: parts[1] === "jee" ? JEE_FAQS : NEET_FAQS,
+    };
+  }
   if (parts[0] !== "exam-preparation" || parts[1] !== "iitm-bs") return null;
 
   if (parts.length === 2) {
