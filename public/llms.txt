@@ -1,28 +1,40 @@
 # Unknown IITians
 
-> Unknown IITians (unknowniitians.com) is an Indian online education platform for
-> IIT Madras BS Degree (IITM BS) aspirants and students, plus JEE and NEET
-> learners. It provides free subject-wise notes and previous year questions
-> (PYQs), live courses for the IITM BS Qualifier and Foundation levels, and free
-> tools (CGPA calculator, grade calculator, marks predictor).
+> Unknown IITians (www.unknowniitians.com) is an Indian online education platform for IIT Madras BS degree (IITM BS) students and aspirants, with JEE and NEET material as well. It offers free subject-wise notes, previous year question papers (PYQs), grade, CGPA and marks calculators, live courses for the IITM BS Qualifier and Foundation levels, and Quiz Space, a site for practising IITM BS previous year papers online with answer keys and timed mock tests.
 
-## What Unknown IITians offers
-- Free IITM BS notes for Data Science and Electronic Systems, organised by branch, level (Qualifier, Foundation, Diploma, Degree) and subject.
-- Free IITM BS previous year questions (PYQs) with solutions.
-- Live courses for the IITM BS Qualifier and Foundation exams.
-- Free JEE and NEET notes and PYQs.
-- Free IITM BS tools: CGPA calculator, grade calculator, marks predictor.
+## What it offers for IITM BS students
+- Free week-wise notes for IITM BS Data Science and Electronic Systems subjects, organised by branch, level (Qualifier, Foundation, Diploma, Degree) and subject.
+- Free previous year question papers: Qualifier, Quiz 1, Quiz 2, OPPE and End Term.
+- Quiz Space (https://quizspace.unknowniitians.com): the same papers practised online, question by question, on an exam-like screen with answer keys and explanations. Free with a Google sign-in.
+- Free calculators for all four IITM BS branches (Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, Electronic Systems): a grade calculator and score checker, a CGPA calculator and a marks predictor, using each course's published grading formula.
+- Live IITM BS Qualifier and Foundation courses with lectures, practice and doubt-solving.
+- Study groups and communities for IITM BS students.
 
 ## Key pages
-- [All courses](https://www.unknowniitians.com/courses): live IITM BS, JEE and NEET batches.
+- [IITM BS degree preparation](https://www.unknowniitians.com/exam-preparation/iitm-bs): notes, PYQs, tools, courses, news and dates in one place.
 - [IITM BS notes](https://www.unknowniitians.com/exam-preparation/iitm-bs/notes): free subject-wise PDF notes.
-- [IITM BS PYQs](https://www.unknowniitians.com/exam-preparation/iitm-bs/pyqs): previous year questions with solutions.
-- [IITM BS important dates](https://www.unknowniitians.com/exam-preparation/iitm-bs/dates): exam, quiz and OPPE schedule.
-- [IITM BS tools](https://www.unknowniitians.com/exam-preparation/iitm-bs/tools): CGPA / grade / marks calculators.
-- [JEE preparation](https://www.unknowniitians.com/exam-preparation/jee/notes): free JEE notes and PYQs.
-- [NEET preparation](https://www.unknowniitians.com/exam-preparation/neet/notes): free NEET notes and PYQs.
-- [About Unknown IITians](https://www.unknowniitians.com/about)
+- [IITM BS PYQs](https://www.unknowniitians.com/exam-preparation/iitm-bs/pyqs): previous year question papers.
+- [Quiz Space](https://quizspace.unknowniitians.com): practise IITM BS PYQs online with answer keys.
+- [IITM BS grade calculator and score checker](https://www.unknowniitians.com/exam-preparation/iitm-bs/tools/grade-calculator)
+- [IITM BS CGPA calculator](https://www.unknowniitians.com/exam-preparation/iitm-bs/tools/cgpa-calculator)
+- [IITM BS marks predictor](https://www.unknowniitians.com/exam-preparation/iitm-bs/tools/marks-predictor)
+- [IITM BS live courses](https://www.unknowniitians.com/courses/category/iitm-bs)
+- [IITM BS syllabus](https://www.unknowniitians.com/exam-preparation/iitm-bs/syllabus) and [important dates](https://www.unknowniitians.com/exam-preparation/iitm-bs/dates)
+- [Best IITM BS study resources: a comparison guide](https://www.unknowniitians.com/best-iitm-bs-resources)
+- Subject pages: one page per subject tying together its notes, previous year papers, calculators and batches, at https://www.unknowniitians.com/iitm-bs/<branch>/<level>/<subject>, for example [Mathematics for Data Science II](https://www.unknowniitians.com/iitm-bs/data-science/foundation/mathematics-for-data-science-ii).
+- [JEE preparation](https://www.unknowniitians.com/exam-preparation/jee) and [NEET preparation](https://www.unknowniitians.com/exam-preparation/neet)
 
-## Notes
+## Frequently asked questions
+- Where can I find IITM BS previous year question papers? On Unknown IITians' PYQs page, free, by subject, exam and year, and online on Quiz Space with answer keys.
+- Is there a free IITM BS grade calculator or score checker? Yes: the Unknown IITians grade calculator covers all four IITM BS branches and shows total score and letter grade.
+- Are IITM BS notes free? Yes, all notes on Unknown IITians are free to download.
+- Does Unknown IITians offer IITM BS Qualifier coaching? Yes, live Qualifier and Foundation courses, plus free notes and previous year papers.
+
+## About
+- Operated by Unknown IITians, an education channel and company based in New Delhi, India.
+- Contact: desk@unknowniitians.com
+- YouTube: https://www.youtube.com/@UnknownIITians
+- Instagram: https://www.instagram.com/unknown_iitians
+- LinkedIn: https://www.linkedin.com/company/unknown-iitians/
+- Telegram: https://t.me/bsdatascience_iitm
 - Sitemap: https://www.unknowniitians.com/sitemap.xml
-- Best known for: free IITM BS study material (notes and PYQs) and IITM BS Qualifier preparation.
