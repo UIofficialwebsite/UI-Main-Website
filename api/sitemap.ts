@@ -102,11 +102,12 @@ export default async function handler(): Promise<Response> {
 
   // Pull live/active dynamic content in parallel. Any failing query just yields
   // an empty list — the sitemap still renders with everything else.
-  const [courses, jobs, news, subjects] = await Promise.all([
+  const [courses, jobs, news, subjects, allSubjects] = await Promise.all([
     fetchRows("courses?select=id,updated_at&is_live=eq.true"),
     fetchRows("jobs?select=id,updated_at&is_active=eq.true"),
     fetchRows("news_updates?select=id,updated_at"),
     fetchRpc("get_indexable_iitm_subjects"),
+    fetchRows("iitm_bs_subjects?select=subject_name,branch,level"),
   ]);
 
   const parts: string[] = [];
@@ -147,6 +148,15 @@ export default async function handler(): Promise<Response> {
     if (!branch || !level || !subject) continue;
     const path = `/exam-preparation/iitm-bs/notes/${slugify(branch)}/${slugify(level)}/${slugify(subject)}`;
     parts.push(urlTag(path, "monthly", "0.7", today));
+  }
+
+  // One hub per subject: /iitm-bs/<branch>/<level>/<subject> (notes, PYQs, tools and batches together).
+  for (const s of allSubjects) {
+    const branch = s.branch as string;
+    const level = s.level as string;
+    const subject = s.subject_name as string;
+    if (!branch || !level || !subject) continue;
+    parts.push(urlTag(`/iitm-bs/${slugify(branch)}/${slugify(level)}/${slugify(subject)}`, "monthly", "0.7", today));
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${parts.join("\n")}\n</urlset>\n`;
