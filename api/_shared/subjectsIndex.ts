@@ -4,6 +4,7 @@
  * Imports only the hub module's helpers.
  */
 import { hubPath, slugify } from "./subjectHub";
+import { displayName } from "./subjectAliases";
 
 export interface IndexSubject {
   branch: string;
@@ -41,22 +42,26 @@ export function indexContent(branch: string | null, level: string | null, all: I
     return {
       heading: `${b} ${l}`,
       path: levelIndexPath(b, l),
-      links: scoped.filter((s) => keyOf(s) === k).map((s): [string, string] => [hubPath(b, l, s.name), s.name]),
+      links: scoped.filter((s) => keyOf(s) === k).map((s): [string, string] => {
+        const short = displayName(slugify(s.name), s.name);
+        return [hubPath(b, l, s.name), short === s.name ? s.name : `${short} (${s.name})`];
+      }),
     };
   });
 
   const path = branch && level ? levelIndexPath(branch, level) : "/iitm-bs";
-  const names = scoped.map((s) => s.name);
+  const names = scoped.map((s) => displayName(slugify(s.name), s.name));
   const n = names.length;
   const title = branch && level ? `IITM BS ${branch} ${level} Subjects: Complete List` : "IITM BS Subjects: Complete List for Every Level and Branch";
+  const listed = names.length <= 8 ? names.join(", ") : `${names.slice(0, 7).join(", ")} and more`;
   const description =
     branch && level
-      ? `All ${n} IITM BS ${branch} ${level} subjects, from ${names[0]} to ${names[n - 1]}, each with free notes, PYQs, lectures and calculators.`
-      : "Every IITM BS subject by branch and level, with free notes, PYQs, lectures and calculators: Maths, Stats, Computational Thinking, Python, DBMS and more.";
+      ? `All ${n} IITM BS ${branch} ${level} subjects: ${listed}. Free notes, PYQs and lectures for each.`
+      : "Every IITM BS subject by branch and level: Maths 1, Maths 2, Stats 1, Stats 2, CT, English, Python, DBMS, PDSA, MAD, ML and more, with free notes, PYQs and lectures.";
   const h1 = branch && level ? `IITM BS ${branch} ${level} subjects` : "IITM BS subjects: every level and branch";
   const intro =
     branch && level
-      ? `The IITM BS ${branch} ${level} level has ${n} subjects. Open any subject for its free notes, previous year papers, lectures, calculators and live batches.`
+      ? `The IITM BS ${branch} ${level} level has ${n} subjects: ${names.join(", ")}. Open any subject for its free notes, previous year papers, lectures, calculators and live batches.`
       : "Every IITM BS subject on Unknown IITians, by branch and level. Open a subject for its free notes, previous year papers, lectures, calculators and live batches.";
 
   const faqs =
