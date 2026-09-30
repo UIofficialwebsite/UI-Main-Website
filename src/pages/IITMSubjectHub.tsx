@@ -8,6 +8,7 @@ import PYQsTab from "@/components/iitm/PYQsTab";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import LectureShelf from "@/components/iitm/LectureShelf";
+import { FaqTable, LinkTable, TableSection } from "@/components/seo/DataTables";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { normaliseProgramme } from "@/components/iitm/data/curriculumConfig";
 import { SUBJECT_CALC } from "@/components/iitm/data/subjectCalcMap";
@@ -151,27 +152,13 @@ const IITMSubjectHub = () => {
                   <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-gray-600">{hub.intro}</p>
                 </div>
                 {hub.siblingLinks.length > 0 && (
-                  <div>
-                    <h2 className="text-xl font-bold text-[#1f2937]">Other {dbLevel} subjects</h2>
-                    <ul className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-2">
-                      {hub.siblingLinks.map(([href, label]) => (<li key={href}><Link to={href} className={`text-[15px] font-medium ${NAVY} hover:underline`}>{label}</Link></li>))}
-                    </ul>
-                  </div>
+                  <TableSection heading={`Other ${dbLevel} subjects`}>
+                    <LinkTable links={hub.siblingLinks} heading="Subject" />
+                  </TableSection>
                 )}
-                <div>
-                  <h2 className="text-xl font-bold text-[#1f2937]">Frequently asked questions</h2>
-                  <div className="mt-4 divide-y divide-gray-100 rounded-xl border border-gray-100 bg-white">
-                    {hub.faqs.map((faq) => (
-                      <details key={faq.q} className="group px-5 py-4">
-                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-[#1f2937]">
-                          {faq.q}
-                          <span aria-hidden="true" className="text-gray-400 transition-transform group-open:rotate-45">+</span>
-                        </summary>
-                        <p className="mt-3 text-[15px] leading-relaxed text-gray-600">{faq.a}</p>
-                      </details>
-                    ))}
-                  </div>
-                </div>
+                <TableSection heading="Frequently asked questions">
+                  <FaqTable faqs={hub.faqs} />
+                </TableSection>
               </div>
             </section>
           </>
