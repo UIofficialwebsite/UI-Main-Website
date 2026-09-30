@@ -8,10 +8,11 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
 import Footer from "@/components/Footer";
 import HomepagePopup from "@/components/HomepagePopup";
-import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
+import { useDocumentTitle, useCanonicalUrl, SEO_TITLES } from "@/utils/seoManager";
 
 const Index = () => {
-  usePageSEO(SEO_TITLES.HOME, "/");
+  useDocumentTitle(SEO_TITLES.HOME, false);
+  useCanonicalUrl("/");
   return (
     <>
       <NavBar />
