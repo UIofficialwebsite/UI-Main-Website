@@ -112,6 +112,15 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard, isAd
   );
 };
 
+/** The Quiz Space wordmark: its magnifier mark stands in for the Q, "uiz Space" follows it. */
+const QuizSpaceLogo = () => (
+  <span className="flex items-center">
+    <span className="sr-only">Quiz Space</span>
+    <img src="/quizspace/quizspace-mark.webp" alt="" aria-hidden="true" width={34} height={34} className="h-[30px] w-[30px] shrink-0" />
+    <span aria-hidden="true" className="ml-[1px] -translate-y-[1px] text-[19px] leading-none font-semibold tracking-[-0.015em] text-[#0c0a09]">uiz Space</span>
+  </span>
+);
+
 const NavBar = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { courses, loadCourses } = useBackend();
@@ -224,7 +233,7 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <a href={QUIZ_SPACE} target="_blank" rel="noopener" className="text-gray-700 hover:text-royal transition-colors font-medium">Quizspace</a>
+            <a href={QUIZ_SPACE} target="_blank" rel="noopener" aria-label="Quiz Space by Unknown IITians" title="Quiz Space" className="flex items-center opacity-90 hover:opacity-100 transition-opacity"><QuizSpaceLogo /></a>
             
             <NavigationMenu className="static">
               <NavigationMenuList>
@@ -312,7 +321,7 @@ const NavBar = () => {
                       <button onClick={() => setActivePane("courses")} className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] text-left">
                         All Courses <ChevronRight className="h-4 w-4 text-[#333]" />
                       </button>
-                      <a href={QUIZ_SPACE} target="_blank" rel="noopener" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>Quizspace</a>
+                      <a href={QUIZ_SPACE} target="_blank" rel="noopener" aria-label="Quiz Space by Unknown IITians" className="px-5 py-4 flex items-center border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}><QuizSpaceLogo /></a>
                       <button onClick={() => setActivePane("examprep")} className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] text-left">
                         Exam Preparation <ChevronRight className="h-4 w-4 text-[#333]" />
                       </button>
