@@ -14,6 +14,7 @@ import {
 } from "./_shared/seoContent";
 import { hubContent, hubPath } from "./_shared/subjectHub";
 import { COMPARE_DISCLAIMER, comparePageFor, type ComparePage } from "./_shared/comparePages";
+import { infoFor } from "./_shared/seoContent";
 
 export const config = { runtime: "edge" };
 
@@ -170,6 +171,14 @@ const PAGES: Record<string, { title: string; description: string }> = {
     title: "IITM BS Degree Preparation: Notes, PYQs, Tools & Courses",
     description:
       "All you need for the IIT Madras BS degree: free notes, previous year papers, grade & CGPA calculators, syllabus, dates and live Qualifier courses.",
+  },
+  "/exam-preparation/jee": {
+    title: "JEE Preparation: Free Notes & PYQs for Physics, Chemistry & Maths",
+    description: "Free JEE notes for Physics, Chemistry and Mathematics and JEE Main previous year question papers, to download and practise, from Unknown IITians.",
+  },
+  "/exam-preparation/neet": {
+    title: "NEET Preparation: Free Notes & PYQs for Physics, Chemistry & Biology",
+    description: "Free NEET notes for Physics, Chemistry and Biology and NEET previous year question papers, to download and practise, from Unknown IITians.",
   },
   "/exam-preparation/iitm-bs/courses": {
     title: "IITM BS Courses: Live Qualifier & Foundation Batches | Unknown IITians",
@@ -446,7 +455,12 @@ function toolApp(name: string, path: string, description: string) {
 
 /** Page-by-page extra content: heading, structured data, FAQs and links. */
 // Pages that get extra structured data + visible FAQ content.
+const jeeInfo = infoFor("/exam-preparation/jee")!;
+const neetInfo = infoFor("/exam-preparation/neet")!;
+
 const PAGE_EXTRAS: Record<string, { schema: unknown; faqs?: FAQ[]; h1?: string; links?: Array<[string, string]> }> = {
+  "/exam-preparation/jee": { h1: jeeInfo.heading, schema: [faqSchema(jeeInfo.faqs)], faqs: jeeInfo.faqs, links: jeeInfo.links },
+  "/exam-preparation/neet": { h1: neetInfo.heading, schema: [faqSchema(neetInfo.faqs)], faqs: neetInfo.faqs, links: neetInfo.links },
   "/": {
     h1: `${BRAND}: IITM BS courses, notes, PYQs and free tools`,
     schema: [EDU_ORG, WEBSITE_SCHEMA, faqSchema([...HOME_FAQS, ...HOME_EXTRA_FAQS])],
@@ -511,9 +525,13 @@ const PAGE_EXTRAS: Record<string, { schema: unknown; faqs?: FAQ[]; h1?: string; 
 // ---- route handlers --------------------------------------------------------
 
 async function courseDoc(id: string): Promise<string> {
-  const rows = await fetchRows(
-    `courses?select=title,description,price,discounted_price,image_url,start_date,is_live,exam_category,subject,language,duration&id=eq.${id}&limit=1`
-  );
+  const [rows, faqRows, addonRows] = await Promise.all([
+    fetchRows(
+      `courses?select=title,description,price,discounted_price,image_url,start_date,is_live,exam_category,subject,language,duration,level,branch&id=eq.${id}&limit=1`
+    ),
+    fetchRows(`course_faqs?select=question,answer&course_id=eq.${id}&order=created_at.asc`),
+    fetchRows(`course_addons?select=subject_name,price&course_id=eq.${id}&price=gt.0&order=price.asc`),
+  ]);
   const c = rows[0];
   const path = `/courses/${id}`;
   if (!c) {
@@ -524,29 +542,50 @@ async function courseDoc(id: string): Promise<string> {
       index: false,
     });
   }
-  const title = `${c.title} | ${BRAND}`;
-  const desc = clean(String(c.description || `${c.title} — live course by ${BRAND}.`));
-  const price = (c.discounted_price as number) ?? (c.price as number) ?? undefined;
+  const isBs = c.exam_category === "IITM BS";
+  const level = c.level ? String(c.level) : "";
+  const title = isBs ? `${c.title}: Live IITM BS Course` : `${c.title} | ${BRAND}`;
+  const addons = addonRows.map((a) => Number(a.price));
+  const cost = batchPrice(c.price, c.discounted_price, addons);
+  const price = cost.price;
+  const facts = [
+    isBs && level ? `Live IITM BS ${level} course` : "Live course",
+    c.start_date ? `starts ${shortDate(c.start_date)}` : "",
+    priceText(cost),
+  ].filter(Boolean);
+  const fallback = `${c.title}: ${facts.join(", ")}. Lectures, practice and doubt-solving by ${BRAND}.`;
+  // The search snippet is the clean composed line; the page's own text is the course's full description.
+  const desc = clean(fallback, 155);
+  const fullText = clean(String(c.description || fallback), 700);
   const isLive = c.is_live === true;
+  const faqs: FAQ[] = faqRows
+    .filter((f) => f.question && f.answer)
+    .map((f) => ({ q: String(f.question), a: clean(String(f.answer), 400) }));
 
-  const jsonLd = {
+  const course = {
     "@context": "https://schema.org",
     "@type": "Course",
     name: c.title,
-    description: desc,
+    description: clean(fullText, 300),
     provider: { "@type": "Organization", name: BRAND, sameAs: SITE },
     ...(c.image_url ? { image: c.image_url } : {}),
-    ...(price !== undefined
+    offers: cost.from
       ? {
-          offers: {
-            "@type": "Offer",
-            price: String(price),
-            priceCurrency: "INR",
-            availability: isLive ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
-            url: `${SITE}${path}`,
-          },
+          "@type": "AggregateOffer",
+          lowPrice: String(Math.min(...addons.filter((x) => x > 0))),
+          highPrice: String(Math.max(...addons.filter((x) => x > 0))),
+          offerCount: addons.filter((x) => x > 0).length,
+          priceCurrency: "INR",
+          availability: isLive ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+          url: `${SITE}${path}`,
         }
-      : {}),
+      : {
+          "@type": "Offer",
+          price: String(price),
+          priceCurrency: "INR",
+          availability: isLive ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+          url: `${SITE}${path}`,
+        },
     hasCourseInstance: {
       "@type": "CourseInstance",
       courseMode: "online",
@@ -557,11 +596,13 @@ async function courseDoc(id: string): Promise<string> {
 
   const body = `
   <h1>${esc(String(c.title))}</h1>
-  ${c.exam_category ? `<p><strong>Exam:</strong> ${esc(String(c.exam_category))}</p>` : ""}
+  ${c.exam_category ? `<p><strong>Exam:</strong> ${esc(String(c.exam_category))}${level ? ` — ${esc(level)}` : ""}</p>` : ""}
   ${c.subject ? `<p><strong>Subjects:</strong> ${esc(String(c.subject))}</p>` : ""}
+  ${c.start_date ? `<p><strong>Starts:</strong> ${esc(shortDate(c.start_date))}</p>` : ""}
   ${c.duration ? `<p><strong>Duration:</strong> ${esc(String(c.duration))}</p>` : ""}
-  ${price !== undefined ? `<p><strong>Price:</strong> ₹${esc(String(price))}</p>` : ""}
-  <p>${esc(desc)}</p>`;
+  <p><strong>Price:</strong> ${esc(priceText(cost))}${cost.from ? " (choose your subjects)" : ""}</p>
+  <p>${esc(fullText)}</p>
+  <p><a href="${SITE}/courses">All live courses</a></p>${faqs.length ? `\n  ${faqBody(faqs)}` : ""}`;
 
   return render({
     title,
@@ -570,30 +611,115 @@ async function courseDoc(id: string): Promise<string> {
     index: isLive,
     ogImage: (c.image_url as string) || DEFAULT_OG,
     bodyHtml: body,
-    jsonLd,
+    jsonLd: [course, breadcrumbSchema([["Home", "/"], ["Courses", "/courses"], [String(c.title), path]]), ...(faqs.length ? [faqSchema(faqs)] : [])],
   });
 }
 
-// Listing pages: include live course titles as links (content + internal links).
+/** The questions and links shown under the courses pages, for visitors and crawlers alike. */
+function infoForCourses(path: string) {
+  return infoFor(path);
+}
+
+function inr(n: number): string {
+  return n === 0 ? "free" : `₹${Math.round(n).toLocaleString("en-IN")}`;
+}
+
+/**
+ * What a batch costs, the way the course card on the site shows it: its own price when it has
+ * one; when the base is free and subjects are sold as add-ons, "from" the cheapest add-on;
+ * only a batch with neither is free.
+ */
+function batchPrice(base: unknown, discounted: unknown, addons: number[]): { price: number; from: boolean } {
+  const own = Number((discounted as number | null) ?? (base as number | null) ?? 0);
+  const b = Number((base as number | null) ?? 0);
+  if (b > 0 || own > 0) return { price: own, from: false };
+  const paid = addons.filter((x) => x > 0);
+  return paid.length ? { price: Math.min(...paid), from: true } : { price: 0, from: false };
+}
+
+function priceText(p: { price: number; from: boolean }): string {
+  return p.from ? `from ${inr(p.price)}` : inr(p.price);
+}
+
+
+function shortDate(value: unknown): string {
+  const d = new Date(String(value));
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+}
+
+// Listing pages: the live courses, described from the data (what is open, from when, at what price).
 async function listingDoc(path: string): Promise<string> {
-  const meta = PAGES[path] || {
-    title: `Courses | ${BRAND}`,
-    description: "Live courses at Unknown IITians.",
-  };
   const catSlug = path.split("/courses/category/")[1];
   const exam = catSlug ? CATEGORY_MAP[catSlug] : undefined;
-  const query = exam
-    ? `courses?select=id,title&is_live=eq.true&exam_category=eq.${encodeURIComponent(exam)}&limit=100`
-    : `courses?select=id,title&is_live=eq.true&limit=100`;
-  const courses = await fetchRows(query);
-  const items = courses
-    .filter((c) => c.id && c.title)
-    .map((c) => `<li><a href="${SITE}/courses/${c.id}">${esc(String(c.title))}</a></li>`)
+  const [all, addonRows] = await Promise.all([
+    fetchRows("courses?select=id,title,price,discounted_price,start_date,level,exam_category,is_live&is_live=eq.true&order=start_date.asc&limit=100"),
+    fetchRows("course_addons?select=course_id,price&price=gt.0&limit=1000"),
+  ]);
+  const addonsOf = (id: unknown) => addonRows.filter((a) => a.course_id === id).map((a) => Number(a.price));
+  const live = all.filter((c) => c.id && c.title);
+  const shown = exam ? live.filter((c) => c.exam_category === exam) : live;
+  const cats = [...new Set(live.map((c) => String(c.exam_category || "")).filter(Boolean))];
+  const label = exam ?? (cats.length === 1 ? cats[0] : "IITM BS, JEE & NEET");
+
+  // A category with nothing open is not listed as if it were selling something.
+  if (exam && shown.length === 0) {
+    return render({
+      title: `${exam} Live Courses | ${BRAND}`,
+      description: `${BRAND} has no ${exam} live batch open right now. Free ${exam} notes and previous year questions are available.`,
+      path,
+      index: false,
+      bodyHtml: `<h1>${esc(exam)} live courses</h1><p>No ${esc(exam)} live batch is open right now.</p>`,
+    });
+  }
+
+  const costs = shown.map((c) => batchPrice(c.price, c.discounted_price, addonsOf(c.id)));
+  const paidCosts = costs.filter((x) => x.price > 0).map((x) => x.price);
+  const cheapest = paidCosts.length ? Math.min(...paidCosts) : 0;
+  const anyFree = costs.some((x) => x.price === 0);
+  const first = shown.map((c) => shortDate(c.start_date)).find(Boolean);
+  const title = `${label} Live Courses & Batches: Enrol Now | ${BRAND}`;
+  const description =
+    `${shown.length} live ${label} ${shown.length === 1 ? "batch is" : "batches are"} open now` +
+    `${first ? `, starting ${first}` : ""}${cheapest > 0 ? `, from ${inr(cheapest)}` : ""}${anyFree ? ", including free ones" : ""}: ` +
+    `with lectures, practice papers and doubt-solving from ${BRAND}.`;
+
+  const items = shown
+    .map((c) => {
+      const price = batchPrice(c.price, c.discounted_price, addonsOf(c.id));
+      const bits = [c.level ? String(c.level) : "", c.start_date ? `starts ${shortDate(c.start_date)}` : "", priceText(price)].filter(Boolean);
+      return `<li><a href="${SITE}/courses/${c.id}">${esc(String(c.title))}</a> (${esc(bits.join(", "))})</li>`;
+    })
     .join("");
-  const body = `<h1>${esc(meta.title)}</h1><p>${esc(meta.description)}</p>${
-    items ? `<ul>${items}</ul>` : ""
-  }`;
-  return render({ ...meta, path, bodyHtml: body });
+  const info = infoForCourses(path);
+  const body =
+    `<h1>${esc(label)} live courses and batches</h1>\n  <p>${esc(description)}</p>` +
+    (items ? `\n  <h2>Open now</h2><ul>${items}</ul>` : "") +
+    (info ? `\n  <h2>Explore</h2>${linkList(info.links)}\n  ${faqBody(info.faqs)}` : "");
+
+  const listSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: shown.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE}/courses/${c.id}`,
+      item: {
+        "@type": "Course",
+        name: String(c.title),
+        description: `${String(c.title)}: a live ${String(c.exam_category || "")} course by ${BRAND}.`,
+        provider: { "@type": "Organization", name: BRAND, sameAs: SITE },
+        url: `${SITE}/courses/${c.id}`,
+      },
+    })),
+  };
+  return render({
+    title,
+    description,
+    path,
+    canonicalPath: exam && cats.length === 1 ? "/courses" : undefined,
+    bodyHtml: body,
+    jsonLd: [breadcrumbSchema([["Home", "/"], ["Courses", "/courses"]]), listSchema, ...(info ? [faqSchema(info.faqs)] : [])],
+  });
 }
 
 // Programmatic IITM BS notes-subject page:
