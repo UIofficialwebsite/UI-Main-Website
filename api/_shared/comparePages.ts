@@ -96,9 +96,10 @@ export const COMPARE_PAGES: ComparePage[] = [
     path: "/iitm-bs-grade-and-score-tools",
     title: "IITM BS Grade & Score Tools: How to Check Your Score",
     description: "How to check your IITM BS score and grade: what a good calculator does, how to use one step by step, and free tools for every branch.",
-    h1: "IITM BS grade and score tools: how to check your score",
+    h1: "IITM BS grade and score checker",
+    embed: "tools",
     intro:
-      "Checking your score and grade early tells you where to spend your effort. Here is what a good IITM BS grade calculator does, how to use one, and the free tools Unknown IITians offers for every branch.",
+      "Choose your branch and level, enter your marks, and see your total score and grade right on this page. Below: what a good calculator does, and how to use it.",
     sections: [
       {
         heading: "What a good calculator does",
@@ -135,7 +136,11 @@ export const COMPARE_PAGES: ComparePage[] = [
       { q: "Which IITM BS branches do the calculators cover?", a: "All four: Data Science and Applications, Management and Data Science, Aeronautics and Space Technology, and Electronic Systems." },
       { q: "How accurate is an IITM BS grade calculator?", a: "It is as accurate as the formula it uses. Compare the result with your course's official grading document, and re-check it when the course's marking scheme changes." },
     ],
-    links: OUR_LINKS,
+    links: [
+      ["/exam-preparation/iitm-bs/notes", "IITM BS notes: free subject-wise PDFs"],
+      ["/exam-preparation/iitm-bs/pyqs", "IITM BS PYQs: previous year question papers"],
+      [QUIZ_SPACE, "Practise IITM BS PYQs online on Quiz Space"],
+    ],
   },
   {
     path: "/iitm-bs-qualifier-preparation-resources",
