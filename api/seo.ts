@@ -793,7 +793,7 @@ async function subjectHubDoc(path: string): Promise<string> {
   });
 }
 
-/** The "alternative" and "best resources" pages: /best-iitm-bs-resources, /acegrade-alternative, … */
+/** The buyer's guides: /best-iitm-bs-resources and the guides beside it. */
 function compareDoc(page: ComparePage): string {
   const links = page.links.map(([href, label]) => `<li><a href="${esc(href)}">${esc(label)}</a></li>`).join("");
   const sections = page.sections
@@ -826,12 +826,23 @@ function titleFromPath(path: string): string {
 // case-insensitively; also reinforced by an X-Robots-Tag header in vercel.json.
 const NOINDEX = new Set(["/merchantcontactanantya"]);
 
+// Pages that were published and then withdrawn. They answer 410 Gone (not a soft "not found"),
+// so search engines drop them at once and nothing under those addresses is ever listed.
+const RETIRED = new Set(["/acegrade-alternative", "/iitmdatascience-alternative", "/genziitian-alternative"]);
+
 export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   let path = (url.searchParams.get("path") || "/").split("?")[0];
   if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
 
   let html: string;
+
+  if (RETIRED.has(path.toLowerCase())) {
+    return new Response("Gone", {
+      status: 410,
+      headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex, nofollow", "cache-control": "public, s-maxage=3600" },
+    });
+  }
 
   if (NOINDEX.has(path.toLowerCase())) {
     return new Response(
